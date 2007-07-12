@@ -4,7 +4,7 @@
 	Version="8.00"
 	Name="noxserverd"
 	ProjectGUID="{A3A04E47-43A2-4C08-90B3-029CEF558594}"
-	RootNamespace="mangosd"
+	RootNamespace="noxserverd"
 	>
 	<Platforms>
 		<Platform
@@ -38,18 +38,18 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				TypeLibraryName=".\..\..\bin\Release/mangosd.tlb"
+				TypeLibraryName=".\..\..\bin\Release/noxserverd.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories="..\..\dep\include,..\..\src\framework,..\..\src\shared,..\..\src\game,..\..\src\mangosd"
+				AdditionalIncludeDirectories="..\..\dep\include,..\..\src\framework,..\..\src\shared,..\..\src\game,..\..\src\noxserverd"
 				PreprocessorDefinitions="VERSION=&quot;0.7-SVN&quot;;WIN32;NDEBUG;_CONSOLE;ENABLE_CLI"
 				StringPooling="true"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				RuntimeTypeInfo="true"
-				PrecompiledHeaderFile=".\Release\mangosd.pch"
+				PrecompiledHeaderFile=".\Release\noxserverd.pch"
 				AssemblerListingLocation=".\Release/"
 				ObjectFile=".\Release/"
 				ProgramDataBaseFileName=".\Release/"
@@ -74,14 +74,14 @@
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
 				AdditionalDependencies="libmySQL.lib libeay32.lib ws2_32.lib winmm.lib odbc32.lib odbccp32.lib"
-				OutputFile=".\..\..\bin\release\mangosd.exe"
+				OutputFile=".\..\..\bin\release\noxserverd.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="..\..\dep\lib\release"
 				GenerateDebugInformation="false"
-				ProgramDatabaseFile=".\..\..\bin\Release/mangosd.pdb"
+				ProgramDatabaseFile=".\..\..\bin\Release/noxserverd.pdb"
 				SubSystem="1"
-				ImportLibrary="$(OutDir)/mangosd.lib"
+				ImportLibrary="$(OutDir)/noxserverd.lib"
 				Profile="true"
 			/>
 			<Tool
@@ -134,18 +134,18 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				TypeLibraryName=".\..\..\bin\Debug/mangosd.tlb"
+				TypeLibraryName=".\..\..\bin\Debug/noxserverd.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\dep\include,..\..\src\framework,..\..\src\shared,..\..\src\game,..\..\src\mangosd"
+				AdditionalIncludeDirectories="..\..\dep\include,..\..\src\framework,..\..\src\shared,..\..\src\game,..\..\src\noxserverd"
 				PreprocessorDefinitions="VERSION=&quot;0.7-SVN&quot;;WIN32;_DEBUG;MANGOS_DEBUG;_CONSOLE;ENABLE_CLI"
 				IgnoreStandardIncludePath="false"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
 				RuntimeTypeInfo="true"
-				PrecompiledHeaderFile=".\Debug\mangosd.pch"
+				PrecompiledHeaderFile=".\Debug\noxserverd.pch"
 				AssemblerListingLocation=".\Debug/"
 				ObjectFile=".\Debug/"
 				ProgramDataBaseFileName=".\Debug/"
@@ -170,15 +170,16 @@
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
 				AdditionalDependencies="libmySQL.lib libeay32.lib ws2_32.lib winmm.lib odbc32.lib odbccp32.lib"
-				OutputFile=".\..\..\bin\Debug\mangosd.exe"
+				OutputFile=".\..\..\bin\Debug\noxserverd.exe"
 				Version=""
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="..\..\dep\lib\debug"
+				DelayLoadDLLs=""
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile=".\..\..\bin\Debug/mangosd.pdb"
+				ProgramDatabaseFile=".\..\..\bin\Debug/noxserverd.pdb"
 				SubSystem="1"
-				ImportLibrary="$(OutDir)/mangosd.lib"
+				ImportLibrary="$(OutDir)/noxserverd.lib"
 				Profile="true"
 			/>
 			<Tool
@@ -244,39 +245,39 @@
 			</File>
 		</Filter>
 		<File
-			RelativePath="..\..\src\mangosd\CliRunnable.cpp"
+			RelativePath="..\..\src\noxserverd\CliRunnable.cpp"
 			>
 		</File>
 		<File
-			RelativePath="..\..\src\mangosd\CliRunnable.h"
+			RelativePath="..\..\src\noxserverd\CliRunnable.h"
 			>
 		</File>
 		<File
-			RelativePath="..\..\src\mangosd\Main.cpp"
+			RelativePath="..\..\src\noxserverd\Main.cpp"
 			>
 		</File>
 		<File
-			RelativePath="..\..\src\mangosd\Master.cpp"
+			RelativePath="..\..\src\noxserverd\Master.cpp"
 			>
 		</File>
 		<File
-			RelativePath="..\..\src\mangosd\Master.h"
+			RelativePath="..\..\src\noxserverd\Master.h"
 			>
 		</File>
 		<File
-			RelativePath="..\..\src\mangosd\RASocket.cpp"
+			RelativePath="..\..\src\noxserverd\RASocket.cpp"
 			>
 		</File>
 		<File
-			RelativePath="..\..\src\mangosd\RASocket.h"
+			RelativePath="..\..\src\noxserverd\RASocket.h"
 			>
 		</File>
 		<File
-			RelativePath="..\..\src\mangosd\WorldRunnable.cpp"
+			RelativePath="..\..\src\noxserverd\WorldRunnable.cpp"
 			>
 		</File>
 		<File
-			RelativePath="..\..\src\mangosd\WorldRunnable.h"
+			RelativePath="..\..\src\noxserverd\WorldRunnable.h"
 			>
 		</File>
 	</Files>

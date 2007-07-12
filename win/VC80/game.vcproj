@@ -349,6 +349,34 @@
 				>
 			</File>
 		</Filter>
+		<Filter
+			Name="Nox Files"
+			>
+			<File
+				RelativePath="..\..\src\game\NoxBuffer.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\game\NoxBuffer.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\game\NoxCrypt.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\game\NoxCrypt.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\game\NoxMap.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\game\NoxMap.h"
+				>
+			</File>
+		</Filter>
 	</Files>
 	<Globals>
 	</Globals>
