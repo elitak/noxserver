@@ -32,6 +32,13 @@
 
 using namespace std;
 
+Object::Object(uint16 type)
+{
+	Object::Object();
+
+	m_objectType = type;
+}
+
 Object::Object( )
 {
  /*   m_objectTypeId      = TYPEID_OBJECT;
@@ -572,6 +579,17 @@ void Object::_SetPackGUID(ByteBuffer *buffer, const uint64 &guid64) const
     }
 }*/
 
+void Object::_BuildUpdatePacket(WorldPacket& packet)
+{
+	packet.SetOpcode(MSG_UPDATE_STREAM);
+	packet << (uint8)0xFF;
+	packet << (uint16)GetExtent();
+	packet << (uint16)GetType();
+	packet << (uint16)GetPosition().x_coord;
+	packet << (uint16)GetPosition().y_coord;
+	packet << (uint8)0x00;  // This is going to be here until we figure a way to make efficient use of relative coords.
+}
+
 WorldObject::WorldObject( WorldObject *instantiator )
 {
   /*  m_positionX         = 0.0f;
@@ -591,20 +609,8 @@ WorldObject::WorldObject( WorldObject *instantiator )
         m_InstanceId = instantiator->GetInstanceId();
     }*/
 }
-void WorldObject::_BuildUpdatePacket(WorldPacket& packet)
-{
-	packet.SetOpcode(MSG_UPDATE_STREAM);
-	packet << (uint8)0xFF;
-	packet << (uint16)GetExtent();
-	packet << (uint16)GetType();
-	packet << (uint16)GetPosition().x_coord;
-	packet << (uint16)GetPosition().y_coord;
-	packet << (uint8)0x00;  // This is going to be here until we figure a way to make efficient use of relative coords.
-}
 void WorldObject::SendUpdatePacket(WorldSession* session)
 {
-	if(session->PlayerLoading())
-		return;
 	WorldPacket packet(MSG_UPDATE_STREAM);
 	_BuildUpdatePacket(packet);
 	packet << (uint8)0x00;

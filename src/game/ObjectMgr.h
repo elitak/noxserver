@@ -24,6 +24,7 @@
 #include "Database/DatabaseEnv.h"
 #include "Object.h"
 #include "ObjectDefines.h"
+#include "NoxMap.h"
 #include "Policies/Singleton.h"
 #include "Database/SQLStorage.h"
 
@@ -113,9 +114,8 @@ class ObjectMgr
 
 			bool RequestExtent(uint16 extent)
 			{
-				if(extent == 0 || objectTable.find(extent) != objectTable.end())
+				if(extent > MAX_EXTENT || !IsExtentAvailable(extent))
 					return false;
-
 				freeExtents[extent-1] = 1;
 				return true;
 			}
@@ -128,7 +128,12 @@ class ObjectMgr
 
 			bool IsExtentAvailable(uint16 extent)
 			{
+				if(extent == 0 || objectTable.find(extent) != objectTable.end())
+					return false;
+				return true;
 			}
+
+			Object* CreateObjectFromFile(NoxBuffer* rdr, NoxObjectTOC* toc);
 
         OpcodeTableMap opcodeTable;
     protected:

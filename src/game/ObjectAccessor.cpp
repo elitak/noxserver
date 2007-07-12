@@ -115,27 +115,35 @@ ObjectAccessor::RemovePlayer(Player *pl)
 void
 ObjectAccessor::_update()
 {
-    UpdateDataMapType update_players;
+    //UpdateDataMapType update_players;
     {
         Guard guard(i_updateGuard);
+		Guard guard2(i_playerGuard);
+
         for(std::set<Object *>::iterator iter=i_objects.begin(); iter != i_objects.end(); ++iter)
         {
             // check for valid pointer
             if (!*iter)
                 continue;
-            _buildUpdateObject(*iter, update_players);
+
+			for(PlayersMapType::iterator iter2 =i_players.begin(); iter2 != i_players.end(); ++iter2)
+			{
+				if(iter2->second->CanSeePoint((*iter)->GetPositionX(), (*iter)->GetPositionY(), 0))
+					iter2->second->AddUpdateObject(*iter);
+			}
+//            _buildUpdateObject(*iter, update_players);
 //            (*iter)->ClearUpdateMask(false);
         }
         i_objects.clear();
     }
 
-    WorldPacket packet; // here we allocate a std::vector with a size of 0x10000
+    /*WorldPacket packet; // here we allocate a std::vector with a size of 0x10000
     for(UpdateDataMapType::iterator iter = update_players.begin(); iter != update_players.end(); ++iter)
     {
         iter->second.BuildPacket(&packet);
         iter->first->GetSession()->SendPacket(&packet);
         packet.clear(); // clean the string
-    }
+    }*/
 }
 
 void
@@ -300,6 +308,7 @@ ObjectAccessor::_buildChangeObjectForPlayer(WorldObject *obj, UpdateDataMapType 
 void
 ObjectAccessor::Update(const uint32  &diff)
 {
+	_update();
     {
         Guard guard(i_playerGuard);
         for(PlayersMapType::iterator iter=i_players.begin(); iter != i_players.end(); ++iter)
@@ -307,8 +316,6 @@ ObjectAccessor::Update(const uint32  &diff)
             iter->second->Update(diff);
         }
     }
-
-    _update();
 }
 
 bool
@@ -340,3 +347,25 @@ ObjectAccessor::ObjectChangeAccumulator::Visit(PlayerMapType &m)
         ObjectAccessor::_buildPacket(iter->second, &i_object, i_updateDatas);
 }
 
+
+void
+ObjectAccessor::SendPacketToAll(WorldPacket* packet)
+{
+	Guard guard(i_playerGuard);
+	
+	for(PlayersMapType::iterator iter = i_players.begin();iter != i_players.end();++iter)
+		iter->second->GetSession()->SendPacket(packet);
+}
+void
+ObjectAccessor::SendPacketToTeam(WorldPacket* packet, uint8 teamId)
+{
+	Guard guard(i_playerGuard);
+	
+	for(PlayersMapType::iterator iter = i_players.begin();iter != i_players.end();++iter)
+		if(iter->second->GetTeam() == teamId)
+			iter->second->GetSession()->SendPacket(packet);
+}
+void
+ObjectAccessor::SendTextMessageToAll(wchar_t* message, uint16 x, uint16 y)
+{
+}

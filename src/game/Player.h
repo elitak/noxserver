@@ -101,6 +101,7 @@ enum PlayerStateType
     PLAYER_STATE_FLAG_ALL          = 0xFF000000,
 };
 
+typedef std::queue<Object*> UpdateQueueType;
 
 class MANGOS_DLL_SPEC Player : public Unit
 {
@@ -116,10 +117,18 @@ class MANGOS_DLL_SPEC Player : public Unit
 
 		void Update(time_t time);
 
+		void AddUpdateObject(Object* obj) { updateQueue.push(obj); }
+		void RemoveUpdateObject(Object* obj) { }
+		bool CanSeePoint(uint16 x, uint16 y, uint32 size);
+
     protected:
 		PlayerInfo plrInfo;
 		WorldSession* m_session;
+		
+		UpdateQueueType updateQueue;
 
+		virtual void SendUpdatePacket();
 		virtual void _BuildUpdatePacket(WorldPacket& packet);
+		virtual void _BuildNewPlayerPacket(WorldPacket& packet);
 };
 #endif

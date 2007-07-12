@@ -816,7 +816,7 @@ void WorldSession::HandleClientReadyOpcode(WorldPacket &recvPacket)
 	if(m_playerLoading)
 	{
 		m_playerLoading = false;
-		_player->SendUpdatePacket(this);
+		_player->SendUpdatePacket();
 		_SendFadeBeginOpcode();
 		_SendPlayerRespawnOpcode();	
 	}
@@ -845,7 +845,9 @@ void WorldSession::HandleTextMessageOpcode(WorldPacket &recvPacket)
     {
 		char* buffer;
 		uint16 length;
+		size_t pstart, pend;
 
+		pstart = recvPacket.rpos();
 		recvPacket.read<uint16>(); //extent
 		recvPacket.read<uint8>(); //flag?
 		recvPacket.read<uint16>(); //x
@@ -855,10 +857,16 @@ void WorldSession::HandleTextMessageOpcode(WorldPacket &recvPacket)
 		buffer = new char[length];
 		recvPacket.read((uint8*)buffer, length*sizeof(char));
 		buffer[length-1] = 0x0;
+		pend = recvPacket.rpos();
 
 		sLog.outDebug("Player say: %s", buffer);
 
 		delete[] buffer;
+
+		// Send out to all players
+		WorldPacket packet(MSG_TEXT_MESSAGE, 0, 0, pend-pstart);
+		packet.append(recvPacket.contents() + pstart, pend-pstart);
+		ObjectAccessor::Instance().SendPacketToAll(&packet);
     }
     catch(ByteBuffer::error &)
     {
@@ -1307,11 +1315,10 @@ void WorldSession::_SendGameSettingsOpcode()
 }
 void WorldSession::_SendNewPlayerOpcode()
 {
-	WorldPacket packet(MSG_NEW_PLAYER, 0x0, _client, 0x80);
-	packet << (uint16)_player->GetExtent();
-	packet.append((uint8*)(&_player->plrInfo), 0x7E);
-
-	SendPacket(&packet, false);
+	WorldPacket packet;
+	_player->_BuildNewPlayerPacket(packet);
+	ObjectAccessor::Instance().SendPacketToAll(&packet);
+	//SendPacket(&packet, false);
 }
 void WorldSession::_SendUseMapOpcode()
 {

@@ -49,7 +49,7 @@ void Player::SetName(const wchar_t* name)
 void Player::Update(time_t time)
 {
 	// TODO: health/mana regen, death stuff, etc.
-	SendUpdatePacket(m_session);
+	SendUpdatePacket();
 
 	Unit::Update(time);
 }
@@ -68,4 +68,33 @@ void Player::_BuildUpdatePacket(WorldPacket& packet)
 	packet << (uint8)m_action;
 	packet << (uint8)0x00;
 	packet << (uint8)0x00;  // This is going to be here until we figure a way to make efficient use of relative coords.
+}
+
+void Player::_BuildNewPlayerPacket(WorldPacket& packet)
+{
+	packet.Initialize(MSG_NEW_PLAYER, 0x0, 0, 0x80);
+	packet << (uint16)GetExtent();
+	packet.append((uint8*)(&plrInfo), 0x7E);
+}
+
+void Player::SendUpdatePacket()
+{
+	WorldPacket packet(MSG_UPDATE_STREAM);
+	
+	_BuildUpdatePacket(packet);
+	while(!updateQueue.empty())
+	{
+		updateQueue.front()->_BuildUpdatePacket(packet);
+		updateQueue.pop();
+	}
+
+	GetSession()->SendPacket(&packet);
+}
+
+bool Player::CanSeePoint(uint16 x, uint16 y, uint32 size)
+{
+	int newx = x - m_position.x_coord;
+	int newy = y - m_position.y_coord;
+	int len = newy*newy + newx*newx - size*size;
+	return (len < 10000);
 }

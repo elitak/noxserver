@@ -67,6 +67,9 @@ class MANGOS_DLL_DECL ObjectAccessor : public MaNGOS::Singleton<ObjectAccessor, 
         void Update(const uint32 &diff);
 
         bool PlayersNearGrid(const uint32 &x, const uint32 &y) const;
+		void SendPacketToAll(WorldPacket* packet);
+		void SendTextMessageToAll(wchar_t* message, uint16 x, uint16 y);
+		void SendPacketToTeam(WorldPacket* packet, uint8 teamId);
 
         static void UpdateObject(Object* obj, Player* exceptPlayer);
         static void _buildUpdateObject(Object *, UpdateDataMapType &);

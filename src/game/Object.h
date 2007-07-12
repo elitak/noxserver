@@ -206,8 +206,11 @@ class MANGOS_DLL_SPEC Object
 		uint16 GetPositionX() { return m_position.x_coord; }
 		uint16 GetPositionY() { return m_position.y_coord; }
 
+		virtual void _BuildUpdatePacket(WorldPacket& packet);
+
     protected:
         Object ( );
+		Object (uint16 type);
 
         /*void _InitValues();
         void _Create (uint32 guidlow, uint32 guidhigh);
@@ -250,6 +253,9 @@ class MANGOS_DLL_SPEC Object
 
         Object(const Object&);                              // prevent generation copy constructor
         Object& operator=(Object const&);                   // prevent generation assigment operator
+
+		typedef std::vector<Object*> InventoryType;
+		InventoryType m_inventory;
 };
 
 class MANGOS_DLL_SPEC WorldObject : public Object
@@ -328,11 +334,12 @@ class MANGOS_DLL_SPEC WorldObject : public Object
 
         uint32 GetInstanceId() const { return m_InstanceId; }
         void SetInstanceId(uint32 val) { m_InstanceId = val; }*/
+		uint8 GetTeam() { return m_teamId; }
+		void SetTeam(uint8 team) { m_teamId = team; }
 
     protected:
         WorldObject( WorldObject *instantiator );
 
-		virtual void _BuildUpdatePacket(WorldPacket& packet);
 		virtual void SendUpdatePacket(WorldSession* session);
 
         /*std::string m_name;*/
@@ -348,7 +355,6 @@ class MANGOS_DLL_SPEC WorldObject : public Object
         bool mSemaphoreTeleport;
 
         uint32 m_InstanceId;*/
-		typedef std::list<WorldObject*> InventoryType;
-		InventoryType m_inventory;
+		uint8 m_teamId;
 };
 #endif
