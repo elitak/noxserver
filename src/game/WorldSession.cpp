@@ -36,6 +36,7 @@
 #include "ObjectAccessor.h"
 #include "Spell.h"
 #include "WorldLog.h"
+#include "NoxThinglib.h"
 
 #include <cmath>
 
@@ -497,6 +498,13 @@ bool WorldSession::Update(uint32 diff)
 {
     WorldPacket *packet = NULL;
 
+	// Always send new timestamp
+	if(m_status == STATUS_LOGGEDIN && !PlayerLoading())
+	{
+		m_timestamp++;
+		_SendPartialTimestampOpcode();
+	}
+
     ///- Retrieve packets from the receive queue and call the appropriate handlers
     /// \todo Is there a way to consolidate the OpcondeHandlerTable and the g_worldOpcodeNames to only maintain 1 list?
     /// answer : there is a way, but this is better, because it would use redundand RAM
@@ -565,13 +573,6 @@ bool WorldSession::Update(uint32 diff)
 		}
     }
 
-	// Always send new timestamp
-	if(m_status == STATUS_LOGGEDIN && !m_playerLoading)
-	{
-		m_timestamp++;
-		_SendPartialTimestampOpcode();
-	}
-
 	if(sendPacket.GetOpcode())
 		_SendPacket(&sendPacket);
 
@@ -600,14 +601,12 @@ void WorldSession::HandleJoinConfirmation()
 	packet << (uint8)0;
 	packet << (uint8)xorKey;
 	_socket->SendPacket(&packet);
+	m_status = STATUS_CONFIRMED;
 }
 
 void WorldSession::HandlePlayerJoinOpcode(WorldPacket &recvPacket)
 {
-	uint8 data[0x20];
-
-	m_status = STATUS_LOGGEDIN;
-	
+	uint8 data[0x20];	
 	_player = new Player(this);
 
 	try
@@ -619,7 +618,7 @@ void WorldSession::HandlePlayerJoinOpcode(WorldPacket &recvPacket)
 		recvPacket.read(data, 0x1F);
 		recvPacket.read((uint8*)_player->plrInfo.username, 9);
 		_player->plrInfo.username[8] = 0;
-		recvPacket.read(_player->plrInfo.unk1, 0x0D);
+		recvPacket.read(_player->plrInfo.unk1, 0x0C);
 		recvPacket.read(data, 0x03);
     }
     catch(ByteBuffer::error &)
@@ -627,6 +626,12 @@ void WorldSession::HandlePlayerJoinOpcode(WorldPacket &recvPacket)
         sLog.outDetail("Incomplete join packet");
         return;
     }
+	if(m_status == STATUS_LOGGEDIN)
+	{
+		delete _player;
+		return;
+	}
+	m_status = STATUS_LOGGEDIN;
 
 	ObjectAccessor::Instance().InsertPlayer(_player);
 	m_unk++;
@@ -634,9 +639,9 @@ void WorldSession::HandlePlayerJoinOpcode(WorldPacket &recvPacket)
 	//_player->SetName(name);
 
 	WorldPacket packet(0xA9, 0x80, _client, 0x5);
-	//packet << (uint8)0x0C;
-	//packet << (uint32)1;
-	//SendPacket(&packet);
+	packet << (uint8)0x0C;
+	packet << (uint32)1;
+	SendPacket(&packet, false);
 
 	_SendFullTimestampOpcode();
 	_SendJoinDataOpcode();
@@ -651,6 +656,10 @@ void WorldSession::HandlePlayerJoinOpcode(WorldPacket &recvPacket)
 	packet.SetUnk(0x00);
 	packet.clear();
 	SendPacket(&packet, false, false);
+	_SendPacket(&sendPacket); //clear the send buffer
+
+	m_timestamp++;
+	_SendPartialTimestampOpcode();
 }
 
 
@@ -748,8 +757,7 @@ void WorldSession::HandleImportantOpcode(WorldPacket &recvPacket)
 {
 	try
     {
-		_SendImportantAckOpcode();
-		recvPacket.read<uint32>(); //timestamp
+		_SendImportantAckOpcode(recvPacket.read<uint32>());
     }
     catch(ByteBuffer::error &)
     {
@@ -812,13 +820,22 @@ void WorldSession::HandleServerCmdOpcode(WorldPacket &recvPacket)
 
 void WorldSession::HandleClientReadyOpcode(WorldPacket &recvPacket)
 {
-	m_unk = recvPacket.GetUnk();
+	m_unk = recvPacket.GetUnk() + 1;
 	if(m_playerLoading)
 	{
 		m_playerLoading = false;
+		m_timestamp++;
+		_SendPartialTimestampOpcode();
 		_player->SendUpdatePacket();
 		_SendFadeBeginOpcode();
 		_SendPlayerRespawnOpcode();	
+		ObjectAccessor::Instance().SendPlayerInfo(this);
+
+		_player->ForceUpdateAll();
+
+		uint16 type = sThingBin.Thing.Object.GetIndex("Sword");
+		if(type)
+			_player->NewPickup(type);
 	}
 }
 
@@ -1244,6 +1261,8 @@ void WorldSession::LogoutPlayer(bool Save)
         delete _player;
         _player = 0;
 	}
+
+	_socket = 0;
 }
 
 /// Kick a player out of the World
@@ -1318,22 +1337,22 @@ void WorldSession::_SendNewPlayerOpcode()
 	WorldPacket packet;
 	_player->_BuildNewPlayerPacket(packet);
 	ObjectAccessor::Instance().SendPacketToAll(&packet);
-	//SendPacket(&packet, false);
+	//SendPacket(&packet, false); // to all won't send to the current player due to playerLoading variable, so we to do this ourselves
 }
 void WorldSession::_SendUseMapOpcode()
 {
 	m_playerLoading = true;
 
 	WorldPacket packet(MSG_USE_MAP, 0x80, _client, 0x28);
-	packet.append("oasis.map\0\0\0\0", 0xD); //0xD
+	packet.append("manamine.map\0", 0xD); //0xD // 0x20?
 	packet << (uint16)0x0;
-	packet << (uint32)0x00416BEB;
-	packet << (uint32)0x8A854454;
-	packet << (uint16)0x615C;
-	packet << (uint32)0xCF700002;
-	packet << (uint16)0x0024;
+	packet << (uint32)0x0;
+	packet << (uint32)0x0;
+	packet << (uint32)0x0;
+	packet << (uint16)0x0;
+	packet << (uint16)0x0;
 	packet << (uint8)0;
-	packet << (uint32)0x59AE93DA;
+	packet << (uint32)0xEB0D1373; //checksum
 	packet << (uint32)m_timestamp;
 	SendPacket(&packet, false);
 }
@@ -1350,22 +1369,21 @@ void WorldSession::_SendFadeBeginOpcode()
 	packet << (uint8)1;
 	SendPacket(&packet, false);
 }
-void WorldSession::_SendImportantAckOpcode()
+void WorldSession::_SendImportantAckOpcode(uint32 timestamp)
 {
 	WorldPacket packet(MSG_IMPORTANT_ACK, 0x0, _client, 4);
-	packet << (uint32)m_timestamp;
+	packet << (uint32)timestamp;
 	SendPacket(&packet, false);
 }
 void WorldSession::_SendPlayerRespawnOpcode()
 {
 	WorldPacket packet(MSG_PLAYER_RESPAWN, 0x0, _client, 10);
 	packet << (uint16)_player->GetExtent();
-	packet << (uint32)0x525;
+	packet << (uint32)m_timestamp;
 	packet << (uint8)0xFF;
 	packet << (uint8)0x01;
 	SendPacket(&packet, false);
 }
-
 /*void WorldSession::_SendUpdateStreamOpcode()
 {
 	WorldPacket packet(MSG_UPDATE_STREAM, 0x0, _client, 11);

@@ -57,7 +57,23 @@ public:
 		string[length] = 0;
 		return length;
 	}
-	template <typename T> size_t readstring (wchar_t* string, size_t maxlength); //length is in chars, not bytes
+	template <typename T> size_t readstring (wchar_t* string, size_t maxlength) //length is in chars, not bytes
+	{
+		size_t length = read<T>();
+		size_t extra = 0;
+		maxlength--;
+		if(length > maxlength)
+		{
+			read((uint8*) string, maxlength * 2);
+			rpos(rpos() + length - maxlength);
+			length = maxlength;
+		}
+		else
+			read((uint8*) string, length * 2);
+		
+		string[length] = 0;
+		return length;
+	}
 
 	int encrypt(NoxCryptFileTypes fileType)
 	{

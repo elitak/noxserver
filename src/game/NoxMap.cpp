@@ -18,6 +18,7 @@
 
 #include "Errors.h"
 #include "NoxMap.h"
+#include "WorldLog.h"
 #include "ObjectMgr.h"
 
 bool NoxMap::open(char *fileName)
@@ -124,6 +125,7 @@ void NoxObjectTOC::read(NoxBuffer* rdr)
 	{
 		id = rdr->read<uint16>();
 		insert(NoxObjectTOCPair(id, std::string(buffer, rdr->readstring<uint8>(buffer, 0xFF))));
+		sWorldLog.Log("TOC: %s\n", (*this)[id].c_str());
 	}
 	
 	ASSERT(size() == entries);

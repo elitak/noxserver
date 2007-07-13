@@ -71,6 +71,13 @@ struct MANGOS_DLL_DECL CoordPair
 
     uint32 x_coord;
     uint32 y_coord;
+	bool in(CoordPair leftTop, CoordPair rightBottom)
+	{
+		if(leftTop.x_coord <= x_coord && rightBottom.x_coord >= x_coord && leftTop.y_coord <= y_coord && rightBottom.y_coord >= y_coord)
+			return true;
+		else
+			return false;
+	}
 };
 
 typedef CoordPair<5880> GridPair;

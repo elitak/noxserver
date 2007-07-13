@@ -23,6 +23,7 @@
 #include "Common.h"
 #include "ByteBuffer.h"
 #include "GridDefines.h"
+#include "NoxThinglib.h"
 #include "World.h"
 #include "UpdateFields.h"
 #include "UpdateData.h"
@@ -84,6 +85,7 @@ class MANGOS_DLL_SPEC Object
 {
 	friend ObjectMgr;
     public:
+		Object (uint16 type, uint16 extent = 0);
         virtual ~Object ( );
 
         virtual void Update ( float time ) { }
@@ -205,12 +207,22 @@ class MANGOS_DLL_SPEC Object
 		void SetPosition(GridPair position) { m_position = position; }
 		uint16 GetPositionX() { return m_position.x_coord; }
 		uint16 GetPositionY() { return m_position.y_coord; }
+		GNHT* GetObjectInfo() 
+		{ 
+			return sThingBin.Thing.Object.Objects.Get(GetType()-1); 
+		}
+
+		bool IsImmobile() { return (GetObjectInfo()->classes)&CLASS_IMMOBILE; }
+		void AddToInventory(Object* obj) 
+		{
+			obj->SetPosition(GridPair(0, 0));
+			m_inventory.push_back(obj);
+		}
 
 		virtual void _BuildUpdatePacket(WorldPacket& packet);
 
     protected:
         Object ( );
-		Object (uint16 type);
 
         /*void _InitValues();
         void _Create (uint32 guidlow, uint32 guidhigh);
@@ -244,6 +256,9 @@ class MANGOS_DLL_SPEC Object
 		uint16 m_extent;
 		uint16 m_objectType;
 		GridPair m_position;
+
+		
+		bool CanSeePoint(uint16 x, uint16 y, uint32 size);
 
     private:
         /*ByteBuffer m_PackGUID;

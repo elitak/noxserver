@@ -91,10 +91,10 @@ ObjectAccessor::FindPlayerByName(const wchar_t *name)
 void
 ObjectAccessor::InsertPlayer(Player *pl)
 {
+	objmgr.AddObject(pl);
+
     i_players[pl->GetExtent()] = pl;
     _update();
-
-	objmgr.AddObject(pl);
 }
 
 void
@@ -368,4 +368,19 @@ ObjectAccessor::SendPacketToTeam(WorldPacket* packet, uint8 teamId)
 void
 ObjectAccessor::SendTextMessageToAll(wchar_t* message, uint16 x, uint16 y)
 {
+}
+void
+ObjectAccessor::SendPlayerInfo(WorldSession* session)
+{
+    Guard guard(i_playerGuard);
+	WorldPacket packet(MSG_NEW_PLAYER);
+    for(PlayersMapType::iterator iter=i_players.begin(); iter != i_players.end(); ++iter)
+    {
+        if(iter->second != session->GetPlayer())
+		{
+			iter->second->_BuildNewPlayerPacket(packet);
+			session->SendPacket(&packet);
+			packet.clear();
+		}
+    }
 }

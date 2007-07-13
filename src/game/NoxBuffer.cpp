@@ -21,24 +21,6 @@
 #include "ByteBuffer.h"
 #include "NoxBuffer.h"
 
-template<typename T> size_t NoxBuffer::readstring(wchar_t *string, size_t maxlength)
-{
-	size_t length = read<T>();
-	size_t extra = 0;
-	maxlength--;
-	if(length > maxlength)
-	{
-		read((uint8*) string, maxlength * 2);
-		rpos(rpos() + length - maxlength);
-		length = maxlength;
-	}
-	else
-		read((uint8*) string, length * 2);
-	
-	string[length] = 0;
-	return length;
-}
-
 bool NoxBuffer::open(char *fileName)
 {
 	FILE * file;

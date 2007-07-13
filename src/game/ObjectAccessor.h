@@ -70,6 +70,7 @@ class MANGOS_DLL_DECL ObjectAccessor : public MaNGOS::Singleton<ObjectAccessor, 
 		void SendPacketToAll(WorldPacket* packet);
 		void SendTextMessageToAll(wchar_t* message, uint16 x, uint16 y);
 		void SendPacketToTeam(WorldPacket* packet, uint8 teamId);
+		void SendPlayerInfo(WorldSession* session);
 
         static void UpdateObject(Object* obj, Player* exceptPlayer);
         static void _buildUpdateObject(Object *, UpdateDataMapType &);
@@ -101,4 +102,6 @@ class MANGOS_DLL_DECL ObjectAccessor : public MaNGOS::Singleton<ObjectAccessor, 
         LockType i_updateGuard;
         LockType i_removeGuard;
 };
+
+#define objacc ObjectAccessor::Instance()
 #endif

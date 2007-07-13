@@ -35,15 +35,16 @@ struct PlayerInfo //size = 0x7E
 	{
 		unk0 = 0;
 		unk2 = 0;
+		unk4 = 0;
 		flag = 0x10;
 	}
 	wchar_t name[0x21]; //0x19
 	uint8  pclass;
 	uint8 unk3;
 	uint8 info[0x1D];
-
 	uint8 unk0;
-	uint8 unk1[0x0D];
+	uint8 unk1[0x0C];
+	uint8 unk4;
 	uint32 unk2;
 	char username[9];
 	uint8 flag;
@@ -101,13 +102,13 @@ enum PlayerStateType
     PLAYER_STATE_FLAG_ALL          = 0xFF000000,
 };
 
-typedef std::queue<Object*> UpdateQueueType;
+typedef std::set<Object*> UpdateQueueType;
 
 class MANGOS_DLL_SPEC Player : public Unit
 {
     friend class WorldSession;
-    //friend void Item::AddToUpdateQueueOf(Player *player);
-    //friend void Item::RemoveFromUpdateQueueOf(Player *player);
+	friend class ObjectAccessor;
+
     public:
         explicit Player (WorldSession *session);
         ~Player ( );
@@ -117,13 +118,20 @@ class MANGOS_DLL_SPEC Player : public Unit
 
 		void Update(time_t time);
 
-		void AddUpdateObject(Object* obj) { updateQueue.push(obj); }
+		void AddUpdateObject(Object* obj) { updateQueue.insert(obj); }
 		void RemoveUpdateObject(Object* obj) { }
-		bool CanSeePoint(uint16 x, uint16 y, uint32 size);
+
+		void Move(int16 deltax, int16 deltay);
+		void SetPosition(GridPair position);
+		void ForceUpdateAll() { updateAll = true; };
+		void Pickup(Object* obj);
+		void NewPickup(uint16 type, uint16 extent = 0, uint32 modifier = 0xFFFFFFFF);
 
     protected:
 		PlayerInfo plrInfo;
 		WorldSession* m_session;
+		
+		bool updateAll;
 		
 		UpdateQueueType updateQueue;
 

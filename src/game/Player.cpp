@@ -21,6 +21,7 @@
 #include "Database/DatabaseEnv.h"
 #include "Log.h"
 #include "Opcodes.h"
+#include "ObjectAccessor.h"
 #include "ObjectMgr.h"
 #include "World.h"
 #include "WorldPacket.h"
@@ -30,11 +31,15 @@
 
 Player::Player (WorldSession *session): Unit( 0 )
 {
-	//m_extent = 1000;
+	//m_extent = 100;
 	m_objectType = 0x2C9;
 	m_position.x_coord = 3000;
 	m_position.y_coord = 3000;
 	m_session = session;
+
+	memset(&plrInfo, 0, sizeof(plrInfo));
+	plrInfo.flag = 0x20;
+	updateAll = false;
 }
 
 Player::~Player ()
@@ -48,6 +53,14 @@ void Player::SetName(const wchar_t* name)
 
 void Player::Update(time_t time)
 {
+	if(updateAll)
+	{
+		std::vector<Object*> v = objmgr.GetObjectsInRect(GridPair(GetPositionX() - 300, GetPositionY() - 300), GridPair(GetPositionX() + 300, GetPositionY() + 300));
+		updateQueue.insert(v.begin(), v.end());
+
+		updateAll = false;
+	}
+	
 	// TODO: health/mana regen, death stuff, etc.
 	SendUpdatePacket();
 
@@ -59,6 +72,8 @@ const uint8 rot_data[] = { 0x40, 0x70, 0x60, 0x50, 0x30, 0x00, 0x10, 0x20 };
 void Player::_BuildUpdatePacket(WorldPacket& packet)
 {
 	packet.SetOpcode(MSG_UPDATE_STREAM);
+	if(packet.size()) // If we are the first in the stream, then we can't/don't need this first byte
+		packet << (uint8)0x00;  // This is going to be here until we figure a way to make efficient use of relative coords.
 	packet << (uint8)0xFF;
 	packet << (uint16)GetExtent();
 	packet << (uint16)GetType();
@@ -66,8 +81,6 @@ void Player::_BuildUpdatePacket(WorldPacket& packet)
 	packet << (uint16)GetPosition().y_coord;
 	packet << (uint8)( rot_data[(uint8)floor((double)GetAngle() / 0x20 + 0.5) & 0x7] );
 	packet << (uint8)m_action;
-	packet << (uint8)0x00;
-	packet << (uint8)0x00;  // This is going to be here until we figure a way to make efficient use of relative coords.
 }
 
 void Player::_BuildNewPlayerPacket(WorldPacket& packet)
@@ -80,21 +93,75 @@ void Player::_BuildNewPlayerPacket(WorldPacket& packet)
 void Player::SendUpdatePacket()
 {
 	WorldPacket packet(MSG_UPDATE_STREAM);
-	
+	// every object that starts stream must have the two bytes after the x,y
+	/*packet << (uint8)0xFF;
+	packet << (uint8)0x00;
+	packet << (uint8)0x00;
+	packet << (uint8)0x00;
+	packet << (uint8)0x00;
+	packet << (uint16)3000;
+	packet << (uint16)3000;
+	packet << (uint8)0;
+	packet << (uint8)0;*/
+
+	updateQueue.erase(this);
+	// Always update ourselves, we have to be first due to reasons above
 	_BuildUpdatePacket(packet);
-	while(!updateQueue.empty())
-	{
-		updateQueue.front()->_BuildUpdatePacket(packet);
-		updateQueue.pop();
-	}
+
+	for(UpdateQueueType::iterator iter = updateQueue.begin(); iter != updateQueue.end(); ++iter)
+		if(*iter)
+			(*iter)->_BuildUpdatePacket(packet);
+	updateQueue.clear();
+
+	// Three zeroes denotes end of MSG_UPDATE_STREAM
+	packet << (uint8)0x00;
+	packet << (uint8)0x00;
+	packet << (uint8)0x00;
 
 	GetSession()->SendPacket(&packet);
 }
 
-bool Player::CanSeePoint(uint16 x, uint16 y, uint32 size)
+void Player::Move(int16 deltax, int16 deltay)
 {
-	int newx = x - m_position.x_coord;
-	int newy = y - m_position.y_coord;
-	int len = newy*newy + newx*newx - size*size;
-	return (len < 10000);
+	Unit::Move(deltax, deltay);
+	if(deltax)
+	{
+		GridPair leftTop(deltax < 0 ? GetPositionX() - 300 : GetPositionX() - deltax + 300, GetPositionY() - 300);
+		GridPair rightBottom(leftTop.x_coord + abs(deltax), GetPositionY() + 300);
+		std::vector<Object*> v = objmgr.GetObjectsInRect(leftTop, rightBottom);
+		updateQueue.insert(v.begin(), v.end());
+	}
+	if(deltay)
+	{
+		GridPair leftTop(GetPositionX() - 300, deltay < 0 ? GetPositionY() - 300 : GetPositionY() - deltay + 300);
+		GridPair rightBottom(GetPositionX() + 300, leftTop.y_coord + abs(deltay));
+		std::vector<Object*> v = objmgr.GetObjectsInRect(leftTop, rightBottom);
+		updateQueue.insert(v.begin(), v.end());
+	}
+}
+void Player::SetPosition(GridPair position)
+{
+	Unit::SetPosition(position);
+
+}
+void Player::Pickup(Object* obj)
+{
+	AddToInventory(obj);
+
+	WorldPacket packet(MSG_REPORT_PICKUP);
+	packet << obj->GetExtent();
+	packet << this->GetExtent();
+
+	objacc.SendPacketToAll(&packet);
+}
+void Player::NewPickup(uint16 type, uint16 extent, uint32 modifier)
+{
+	Object* obj = new Object(type, extent);
+
+	WorldPacket packet(MSG_REPORT_MODIFIABLE_PICKUP);
+	packet << obj->GetExtent();
+	packet << obj->GetType();
+	packet << modifier;
+
+	m_session->SendPacket(&packet);
 }

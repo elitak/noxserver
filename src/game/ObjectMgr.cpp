@@ -22,8 +22,10 @@
 #include "Database/SQLStorage.h"
 
 #include "Log.h"
+#include "WorldLog.h"
 #include "ObjectMgr.h"
 #include "NoxMap.h"
+#include "NoxThinglib.h"
 #include "UpdateMask.h"
 #include "World.h"
 #include "WorldSession.h"
@@ -47,22 +49,30 @@ Object* ObjectMgr::CreateObjectFromFile(NoxBuffer* rdr, NoxObjectTOC* toc)
 	char buffer[256];
 	uint8 inventory = 0;
 
-	uint16 type = rdr->read<uint16>();
-	if(!type)
+	uint16 type = rdr->read<uint16>(), type2 = 0;
+	if(toc->find(type) == toc->end())
 		return NULL;
 	rdr->skip();
-	sLog.outDebug((*toc)[type].c_str()); // get string object name
+	
+	type2 = sThingBin.Thing.Object.GetIndex((*toc)[type].c_str(), (*toc)[type].size());
+	sWorldLog.Log("Object: %s %s (0x%.4X)",(*toc)[type].c_str(), sThingBin.Thing.Object.Objects.Get(type2-1)->Name, type2); // get string object name
+	ASSERT(type2 != 0);
 
-	Object* obj = new Object(0x50);
+	Object* obj = new Object(type2);
 	size_t finish = rdr->read<int64>() + rdr->rpos();
 
 	rdr->read<uint16>(); // properties
-	uint16 type2 = rdr->read<uint16>(); // type2
-	obj->m_extent = rdr->read<uint16>(); // extent
+	type2 = rdr->read<uint16>(); // type2
+	ChangeObjectExtent(obj, rdr->read<uint16>()); // extent
 	rdr->read<uint16>();
 	rdr->read<uint32>();
+
+	float x = rdr->read<float>();
+	float y = rdr->read<float>();
 	
-	obj->SetPosition(GridPair(rdr->read<float>(), rdr->read<float>())); // x, y are floats
+	sWorldLog.Log("\tX: %f Y: %f\n", x, y);
+
+	obj->SetPosition(GridPair(x, y)); // x, y are floats
 	if(rdr->read<uint8>() == 0xFF)
 	{
 		rdr->read<uint8>();
@@ -96,6 +106,16 @@ Object* ObjectMgr::CreateObjectFromFile(NoxBuffer* rdr, NoxObjectTOC* toc)
 			break;
 	}
 
-	AddObject(obj);
 	return obj;
+}
+
+std::vector<Object*> ObjectMgr::GetObjectsInRect(GridPair leftTop, GridPair rightBottom)
+{
+	std::vector<Object*> v;
+	for(ObjectTableMap::iterator iter = objectTable.begin(); iter != objectTable.end(); ++iter)
+	{
+		if(iter->second->GetPosition().in(leftTop, rightBottom))
+			v.push_back(iter->second);
+	}
+	return v;
 }

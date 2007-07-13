@@ -73,26 +73,31 @@ void Unit::Update( uint32 p_time )
 
 void Unit::MoveToward(uint16 _x, uint16 _y)
 {
-	float x = (int32)_x - (int32)m_position.x_coord;
-	float y = (int32)_y - (int32)m_position.y_coord;
+	float x = (int32)_x - (int32)GetPositionX();
+	float y = (int32)_y - (int32)GetPositionY();
 	double len = sqrt(x*x+y*y);
 	double unit_x = x/len;
 	double unit_y = y/len;
 
 	float SPEED;
-	if(len > 10.0)
+	if(len > 30.0)
 	{
-		SPEED = 5.0;
+		SPEED = 10.0;
 		m_action = ACTION_RUN;
 		m_action_time = 50;
 	}
 	else
 	{
-		SPEED = 2.5;
+		SPEED = 5.0;
 		m_action = ACTION_WALK;
 		m_action_time = 50;
 	}
 
-	m_position >> unit_x*SPEED;
-	m_position += unit_y*SPEED;
+	Move(unit_x*SPEED, unit_y*SPEED);
+}
+
+void Unit::Move(int16 deltax, int16 deltay)
+{
+	m_position >> deltax;
+	m_position += deltay;
 }

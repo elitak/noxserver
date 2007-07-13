@@ -220,7 +220,7 @@ class MANGOS_DLL_SPEC WorldSession
 		void _SendFadeBeginOpcode();
 		void _SendPlayerRespawnOpcode();
 		//void _SendUpdateStreamOpcode();
-		void _SendImportantAckOpcode();
+		void _SendImportantAckOpcode(uint32 timestamp);
 		void _SendClientStatusOpcode();
 
 		void _SendPacket(WorldPacket* packet);

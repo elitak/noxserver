@@ -420,6 +420,7 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
         virtual ~Unit ( );
         virtual void Update( uint32 time );
 		virtual void MoveToward( uint16 x, uint16 y );
+		virtual void Move( int16 deltax, int16 deltay );
 		
 		void SetAngle (uint8 angle) { m_angle = angle; }
 		uint8 GetAngle () { return m_angle; }

@@ -32,11 +32,13 @@
 
 using namespace std;
 
-Object::Object(uint16 type)
+Object::Object(uint16 type, uint16 extent)
 {
 	Object::Object();
 
 	m_objectType = type;
+	m_extent = extent;
+	objmgr.AddObject(this);
 }
 
 Object::Object( )
@@ -578,16 +580,25 @@ void Object::_SetPackGUID(ByteBuffer *buffer, const uint64 &guid64) const
         }
     }
 }*/
+bool Object::CanSeePoint(uint16 x, uint16 y, uint32 size)
+{
+	int newx = x - m_position.x_coord;
+	int newy = y - m_position.y_coord;
+	int len = newy*newy + newx*newx - size*size;
+	return (len < 10000);
+}
 
 void Object::_BuildUpdatePacket(WorldPacket& packet)
 {
+	if(IsImmobile())
+		return;
 	packet.SetOpcode(MSG_UPDATE_STREAM);
+	packet << (uint8)0x00;  // This is going to be here until we figure a way to make efficient use of relative coords.
 	packet << (uint8)0xFF;
 	packet << (uint16)GetExtent();
 	packet << (uint16)GetType();
 	packet << (uint16)GetPosition().x_coord;
 	packet << (uint16)GetPosition().y_coord;
-	packet << (uint8)0x00;  // This is going to be here until we figure a way to make efficient use of relative coords.
 }
 
 WorldObject::WorldObject( WorldObject *instantiator )

@@ -68,7 +68,6 @@ World::World()
     m_maxSessionsCount = 0;
 
 	// Initialize Free IDs
-	m_freeids.insert(0);
 	m_freeids.insert(1);
 	m_freeids.insert(2);
 	m_freeids.insert(3);

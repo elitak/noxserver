@@ -60,80 +60,82 @@ class ObjectMgr
         ObjectMgr();
         ~ObjectMgr();
 
-            ObjectTableMap::iterator
-            Begin() { return objectTable.begin(); }
-            ObjectTableMap::iterator
-            End() { return objectTable.end(); }
-            Object* GetObject(const uint16 extent)
-        {
-            ObjectTableMap::const_iterator itr =
-                objectTable.find(extent);
-            if(itr == objectTable.end() || itr->second->GetExtent() != extent)
-                return NULL;
-            else
-                return itr->second;
-        }
-            void AddObject(Object *obj)
-        {
-            ASSERT(obj);
+        ObjectTableMap::iterator
+        Begin() { return objectTable.begin(); }
+        ObjectTableMap::iterator
+        End() { return objectTable.end(); }
+        Object* GetObject(const uint16 extent)
+		{
+			ObjectTableMap::const_iterator itr =
+				objectTable.find(extent);
+			if(itr == objectTable.end() || itr->second->GetExtent() != extent)
+				return NULL;
+			else
+				return itr->second;
+		}
+        void AddObject(Object *obj)
+		{
+			ASSERT(obj);
 			if(!obj->GetExtent() || !RequestExtent(obj->GetExtent()))
 				obj->m_extent = RequestExtent();
-            objectTable[obj->GetExtent()] = obj;
-        }
-            bool RemoveObject(Object *obj)
-        {
+			objectTable[obj->GetExtent()] = obj;
+		}
+        bool RemoveObject(Object *obj)
+		{
 			ObjectTableMap::iterator i = objectTable.find(obj->GetExtent());
-            if(i == objectTable.end())
-                return false;
+			if(i == objectTable.end())
+				return false;
 			ReturnExtent(obj->GetExtent());
 			obj->m_extent = 0;
-            objectTable.erase(i);
-            return true;
-        }
-			bool ChangeObjectExtent(Object *obj, uint16 newExtent)
-			{
-				if(!IsExtentAvailable(newExtent))
-					return false;
-				RemoveObject(obj);
-				obj->m_extent = newExtent;
-				AddObject(obj);
-				return true;
-			}
-			uint16 RequestExtent()
-			{
-				uint8* ptr = (uint8*)memchr(freeExtents, 0, 0xFFFF);
-				if(ptr == NULL)
-					return INVALID_EXTENT;
-				
-				uint16 extent = (uint16)((ptr - freeExtents + 1));
-				if(RequestExtent(extent))
-					return extent;
-				else
-					return INVALID_EXTENT;
-			}
+			objectTable.erase(i);
+			return true;
+		}
+		bool ChangeObjectExtent(Object *obj, uint16 newExtent)
+		{
+			if(!IsExtentAvailable(newExtent))
+				return false;
+			RemoveObject(obj);
+			obj->m_extent = newExtent;
+			AddObject(obj);
+			return true;
+		}
+		uint16 RequestExtent()
+		{
+			uint8* ptr = (uint8*)memchr(freeExtents, 0, 0xFFFF);
+			if(ptr == NULL)
+				return INVALID_EXTENT;
+			
+			uint16 extent = (uint16)((ptr - freeExtents + 1));
+			if(RequestExtent(extent))
+				return extent;
+			else
+				return INVALID_EXTENT;
+		}
 
-			bool RequestExtent(uint16 extent)
-			{
-				if(extent > MAX_EXTENT || !IsExtentAvailable(extent))
-					return false;
-				freeExtents[extent-1] = 1;
-				return true;
-			}
+		bool RequestExtent(uint16 extent)
+		{
+			if(extent > MAX_EXTENT || !IsExtentAvailable(extent))
+				return false;
+			freeExtents[extent-1] = 1;
+			return true;
+		}
 
-			void ReturnExtent(uint16 extent)
-			{
-				if(extent > 0 && extent <= MAX_EXTENT)
-					freeExtents[extent-1] = 0;
-			}
+		void ReturnExtent(uint16 extent)
+		{
+			if(extent > 0 && extent <= MAX_EXTENT)
+				freeExtents[extent-1] = 0;
+		}
 
-			bool IsExtentAvailable(uint16 extent)
-			{
-				if(extent == 0 || objectTable.find(extent) != objectTable.end())
-					return false;
-				return true;
-			}
+		bool IsExtentAvailable(uint16 extent)
+		{
+			if(extent == 0 || objectTable.find(extent) != objectTable.end())
+				return false;
+			return true;
+		}
 
-			Object* CreateObjectFromFile(NoxBuffer* rdr, NoxObjectTOC* toc);
+		std::vector<Object*> GetObjectsInRect(GridPair rightCorner, GridPair leftCorner);
+
+		Object* CreateObjectFromFile(NoxBuffer* rdr, NoxObjectTOC* toc);
 
         OpcodeTableMap opcodeTable;
     protected:
