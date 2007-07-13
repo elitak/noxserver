@@ -89,6 +89,12 @@ void Player::_BuildNewPlayerPacket(WorldPacket& packet)
 	packet << (uint16)GetExtent();
 	packet.append((uint8*)(&plrInfo), 0x7E);
 }
+void Player::_BuildClientStatusPacket(WorldPacket& packet)
+{
+	packet.Initialize(MSG_REPORT_CLIENT_STATUS, 0x0, 0, 6);
+	packet << (uint16)GetExtent();
+	packet << (uint32)m_session->IsObserving();
+}
 
 void Player::SendUpdatePacket()
 {
@@ -124,6 +130,7 @@ void Player::SendUpdatePacket()
 void Player::Move(int16 deltax, int16 deltay)
 {
 	Unit::Move(deltax, deltay);
+	m_session->MoveMouse(deltax, deltay);
 	if(deltax)
 	{
 		GridPair leftTop(deltax < 0 ? GetPositionX() - 300 : GetPositionX() - deltax + 300, GetPositionY() - 300);
@@ -144,24 +151,52 @@ void Player::SetPosition(GridPair position)
 	Unit::SetPosition(position);
 
 }
-void Player::Pickup(Object* obj)
+bool Player::Equip(Object* obj)
 {
-	AddToInventory(obj);
+	if(Unit::Equip(obj))
+	{
+		WorldPacket packet(MSG_REPORT_EQUIP);
+		packet << (uint16)obj->GetExtent();
+		m_session->SendPacket(&packet);
 
-	WorldPacket packet(MSG_REPORT_PICKUP);
-	packet << obj->GetExtent();
-	packet << this->GetExtent();
-
-	objacc.SendPacketToAll(&packet);
+		return true;
+	}
+	else
+		return false;
 }
-void Player::NewPickup(uint16 type, uint16 extent, uint32 modifier)
+bool Player::Dequip(Object* obj)
 {
-	Object* obj = new Object(type, extent);
+	if(Unit::Dequip(obj))
+	{
+		WorldPacket packet(MSG_REPORT_DEQUIP);
+		packet << (uint16)obj->GetExtent();
+		m_session->SendPacket(&packet);
 
-	WorldPacket packet(MSG_REPORT_MODIFIABLE_PICKUP);
-	packet << obj->GetExtent();
-	packet << obj->GetType();
-	packet << modifier;
+		return true;
+	}
+	else
+		return false;
+}
+bool Player::Pickup(Object* obj, uint32 max_dist)
+{
+	if(Unit::Pickup(obj, max_dist))
+	{
+		WorldPacket packet(MSG_REPORT_MODIFIABLE_PICKUP);
+		packet << obj->GetExtent();
+		packet << obj->GetType();
+		packet << (uint32)0xFFFFFFFF;
 
-	m_session->SendPacket(&packet);
+		m_session->SendPacket(&packet);
+		return true;
+	}
+	else
+		return false;
+}
+void Player::ObjectOutOfSight(Object* obj)
+{
+	updateQueue.erase(obj);
+
+	WorldPacket packet(MSG_OBJECT_OUT_OF_SIGHT);
+	packet << (uint16)obj->GetExtent();
+	GetSession()->SendPacket(&packet);
 }

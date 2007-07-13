@@ -37,6 +37,8 @@ Unit::Unit( WorldObject *instantiator ) : WorldObject( instantiator )
  //   m_updateFlag = (UPDATEFLAG_HIGHGUID | UPDATEFLAG_ALL | UPDATEFLAG_LIVING | UPDATEFLAG_HASPOSITION);
 	m_action = ACTION_IDLE;
 	m_angle = 0;
+
+	memset(m_equipment, 0, SLOT_SIZE * sizeof(Object*));
 }
 
 Unit::~Unit()
@@ -98,6 +100,34 @@ void Unit::MoveToward(uint16 _x, uint16 _y)
 
 void Unit::Move(int16 deltax, int16 deltay)
 {
-	m_position >> deltax;
-	m_position += deltay;
+	Object::SetPosition(GridPair(m_position.x_coord+deltax, m_position.y_coord+deltay));
+}
+
+bool Unit::Equip(Object *obj)
+{
+	if(!obj || !InMyInventory(obj))
+		return false;
+
+	uint32 slot = obj->GetObjectInfo()->subclass;
+	if(slot > SUBCLASS_SLOT_LAST && (slot & SUBCLASS_WEAPON)) //this can only be true for weapons
+		slot = SLOT_WEP_PRIMARY;
+	Dequip(m_equipment[slot]); //Dequip will check for NULL object
+
+	m_equipment[slot] = obj;
+	return true;
+}
+
+bool Unit::Dequip(Object *obj)
+{
+	if(!obj)
+		return false;
+	for(int i = 0; i < SLOT_SIZE; i++)
+	{
+		if(m_equipment[i] == obj)
+		{
+			m_equipment[i] = 0;
+			return true;
+		}
+	}
+	return false;
 }

@@ -78,6 +78,10 @@ struct MANGOS_DLL_DECL CoordPair
 		else
 			return false;
 	}
+	uint32 distance(CoordPair b)
+	{
+		return (uint32)sqrt( pow((double)x_coord - b.x_coord, 2) + pow((double)y_coord - b.y_coord, 2) );
+	}
 };
 
 typedef CoordPair<5880> GridPair;

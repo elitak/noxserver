@@ -101,7 +101,7 @@ Object* ObjectMgr::CreateObjectFromFile(NoxBuffer* rdr, NoxObjectTOC* toc)
 	{
 		Object* child = CreateObjectFromFile(rdr, toc);
 		if(child != NULL)
-			obj->m_inventory.push_back(child);
+			obj->m_inventory.insert(child);
 		else
 			break;
 	}

@@ -43,7 +43,7 @@
 /// WorldSession constructor
 WorldSession::WorldSession(uint32 id, WorldSocket *sock, uint32 sec) : _player(NULL), _socket(sock),
 _security(sec), _accountId(id), _logoutTime(0), m_playerLoading(false), m_playerRecentlyLogout(false),
-m_status(STATUS_AUTHED), xorKey(0), m_timestamp(1000), m_unk(0)
+m_status(STATUS_AUTHED), xorKey(0), m_timestamp(1000), m_unk(0), m_playerObserving(true)
 {
     FillOpcodeHandlerHashTable();
 	FillSpellHandlerHashTable();
@@ -678,6 +678,7 @@ void WorldSession::HandlePlayerInputOpcode(WorldPacket &recvPacket)
 			case 0x06:
 				sLog.outDebug("Player attacked.");
 				//if observer
+				m_playerObserving = false;
 				_SendClientStatusOpcode();
 				break;
 			case 0x07:
@@ -694,7 +695,7 @@ void WorldSession::HandlePlayerInputOpcode(WorldPacket &recvPacket)
 			recvPacket.read<uint8>();
 			break;
 		case 0x0F: //move: 0F 02 00 00 00 01
-			_player->MoveToward(_mouse.x_cor, _mouse.y_cor);
+			_player->MoveToward(_mouse.x_coord, _mouse.y_coord);
 			recvPacket.read<uint32>();
 			recvPacket.read<uint8>();
 			break;
@@ -732,8 +733,8 @@ void WorldSession::HandleMouseOpcode(WorldPacket &recvPacket)
 {
 	try
     {
-		_mouse.x_cor = recvPacket.read<uint16>(); //x
-		_mouse.y_cor = recvPacket.read<uint16>(); //y
+		_mouse.x_coord = recvPacket.read<uint16>(); //x
+		_mouse.y_coord = recvPacket.read<uint16>(); //y
     }
     catch(ByteBuffer::error &)
     {
@@ -835,7 +836,9 @@ void WorldSession::HandleClientReadyOpcode(WorldPacket &recvPacket)
 
 		uint16 type = sThingBin.Thing.Object.GetIndex("Sword");
 		if(type)
-			_player->NewPickup(type);
+		{
+			_player->Equip(_player->NewPickup(type));
+		}
 	}
 }
 
@@ -950,9 +953,10 @@ void WorldSession::HandleTryDropOpcode(WorldPacket& recv_data)
 }
 void WorldSession::HandleTryGetOpcode(WorldPacket& recv_data)
 {
-    sLog.outDebug("New Unknown Opcode %u", recv_data.GetOpcode());
-    recv_data.hexlike();
-	recv_data.read<uint16>();
+    //sLog.outDebug("New Unknown Opcode %u", recv_data.GetOpcode());
+    //recv_data.hexlike();
+	Object* obj = objmgr.GetObj(recv_data.read<uint16>());
+	_player->Pickup(obj, 75);
 }
 void WorldSession::HandleTryUseOpcode(WorldPacket& recv_data)
 {
@@ -962,15 +966,17 @@ void WorldSession::HandleTryUseOpcode(WorldPacket& recv_data)
 }
 void WorldSession::HandleTryEquipOpcode(WorldPacket& recv_data)
 {
-    sLog.outDebug("New Unknown Opcode %u", recv_data.GetOpcode());
-    recv_data.hexlike();
-	recv_data.read<uint16>();
+    //sLog.outDebug("New Unknown Opcode %u", recv_data.GetOpcode());
+    //recv_data.hexlike();
+	Object* obj = objmgr.GetObj(recv_data.read<uint16>());
+	_player->Equip(obj);
 }
 void WorldSession::HandleTryDequipOpcode(WorldPacket& recv_data)
 {
-    sLog.outDebug("New Unknown Opcode %u", recv_data.GetOpcode());
-    recv_data.hexlike();
-	recv_data.read<uint16>();
+    //sLog.outDebug("New Unknown Opcode %u", recv_data.GetOpcode());
+    //recv_data.hexlike();
+	Object* obj = objmgr.GetObj(recv_data.read<uint16>());
+	_player->Dequip(obj);
 }
 void WorldSession::HandleTryCreatureCommandOpcode(WorldPacket& recv_data)
 {
@@ -1382,7 +1388,13 @@ void WorldSession::_SendPlayerRespawnOpcode()
 	packet << (uint32)m_timestamp;
 	packet << (uint8)0xFF;
 	packet << (uint8)0x01;
-	SendPacket(&packet, false);
+	objacc.SendPacketToAll(&packet);
+	packet.Initialize(MSG_SIMPLE_OBJ);
+	packet << (uint16)_player->GetExtent();
+	packet << (uint16)_player->GetType();
+	packet << (uint16)_player->GetPositionX();
+	packet << (uint16)_player->GetPositionY();
+	objacc.SendPacketToAll(&packet);
 }
 /*void WorldSession::_SendUpdateStreamOpcode()
 {
@@ -1404,6 +1416,7 @@ void WorldSession::_SendClientStatusOpcode()
 {
 	WorldPacket packet(MSG_REPORT_CLIENT_STATUS, 0x0, _client, 2);
 	packet << (uint16)_player->GetExtent();
-	packet << (uint32)0;
-	SendPacket(&packet);
+	packet << (uint32)m_playerObserving;
+	
+	objacc.SendPacketToAll(&packet);
 }

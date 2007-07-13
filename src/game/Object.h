@@ -204,7 +204,7 @@ class MANGOS_DLL_SPEC Object
 		uint16 GetExtent() { return m_extent; }
 		uint16 GetType() { return m_objectType; }
 		GridPair GetPosition() { return m_position; }
-		void SetPosition(GridPair position) { m_position = position; }
+		void SetPosition(GridPair position);
 		uint16 GetPositionX() { return m_position.x_coord; }
 		uint16 GetPositionY() { return m_position.y_coord; }
 		GNHT* GetObjectInfo() 
@@ -213,11 +213,29 @@ class MANGOS_DLL_SPEC Object
 		}
 
 		bool IsImmobile() { return (GetObjectInfo()->classes)&CLASS_IMMOBILE; }
-		void AddToInventory(Object* obj) 
+		bool AddToInventory(Object* obj) 
 		{
-			obj->SetPosition(GridPair(0, 0));
-			m_inventory.push_back(obj);
+			if(!obj || obj->InAnInventory())
+				return false;
+			obj->SetPosition(GridPair(5880, 5880));
+			m_inventory.insert(obj);
+			return true;
 		}
+		bool InMyInventory(Object* obj)
+		{
+			return m_inventory.find(obj) == m_inventory.end();
+		}
+		bool InAnInventory()
+		{
+			return m_position == GridPair(5880, 5880);
+		}
+		void RemoveFromInventory(Object* obj, GridPair newPos)
+		{
+			obj->SetPosition(newPos);
+			m_inventory.erase(obj);
+		}
+		virtual bool Pickup(Object* obj, uint32 max_dist = 0);
+		Object* NewPickup(uint16 type, uint16 extent = 0, uint32 modifier = 0xFFFFFFFF);
 
 		virtual void _BuildUpdatePacket(WorldPacket& packet);
 
@@ -269,7 +287,7 @@ class MANGOS_DLL_SPEC Object
         Object(const Object&);                              // prevent generation copy constructor
         Object& operator=(Object const&);                   // prevent generation assigment operator
 
-		typedef std::vector<Object*> InventoryType;
+		typedef std::set<Object*> InventoryType;
 		InventoryType m_inventory;
 };
 

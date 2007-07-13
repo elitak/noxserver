@@ -154,29 +154,6 @@ enum sheathTypes
     SHEATHETYPE_SHIELD                 = 7
 };
 
-enum CharacterSlot
-{
-    SLOT_HEAD                          = 0,
-    SLOT_NECK                          = 1,
-    SLOT_SHOULDERS                     = 2,
-    SLOT_SHIRT                         = 3,
-    SLOT_CHEST                         = 4,
-    SLOT_WAIST                         = 5,
-    SLOT_LEGS                          = 6,
-    SLOT_FEET                          = 7,
-    SLOT_WRISTS                        = 8,
-    SLOT_HANDS                         = 9,
-    SLOT_FINGER1                       = 10,
-    SLOT_FINGER2                       = 11,
-    SLOT_TRINKET1                      = 12,
-    SLOT_TRINKET2                      = 13,
-    SLOT_BACK                          = 14,
-    SLOT_MAIN_HAND                     = 15,
-    SLOT_OFF_HAND                      = 16,
-    SLOT_RANGED                        = 17,
-    SLOT_TABARD                        = 18,
-    SLOT_EMPTY                         = 19
-};
 
 enum Language
 {

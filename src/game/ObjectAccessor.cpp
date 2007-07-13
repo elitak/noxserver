@@ -120,13 +120,22 @@ ObjectAccessor::_update()
         Guard guard(i_updateGuard);
 		Guard guard2(i_playerGuard);
 
+		for(PlayersMapType::iterator iter = i_players.begin(); iter != i_players.end(); ++iter)
+		{
+			for(PlayersMapType::iterator iter2 = i_players.begin(); iter2 != i_players.end(); ++iter2)
+			{
+				if(iter->second != iter2->second && iter2->second->CanSeePoint((iter->second)->GetPositionX(), (iter->second)->GetPositionY(), 0))
+					iter2->second->AddUpdateObject(iter->second);
+			}
+		}
+
         for(std::set<Object *>::iterator iter=i_objects.begin(); iter != i_objects.end(); ++iter)
         {
             // check for valid pointer
             if (!*iter)
                 continue;
 
-			for(PlayersMapType::iterator iter2 =i_players.begin(); iter2 != i_players.end(); ++iter2)
+			for(PlayersMapType::iterator iter2 = i_players.begin(); iter2 != i_players.end(); ++iter2)
 			{
 				if(iter2->second->CanSeePoint((*iter)->GetPositionX(), (*iter)->GetPositionY(), 0))
 					iter2->second->AddUpdateObject(*iter);
@@ -318,26 +327,16 @@ ObjectAccessor::Update(const uint32  &diff)
     }
 }
 
-bool
-ObjectAccessor::PlayersNearGrid(const uint32 &x, const uint32 &y) const
+std::set<Player*>
+ObjectAccessor::PlayersCanSeePoint(uint16 x, uint16 y, uint32 size)
 {
-    /*CellPair cell_min(x*MAX_NUMBER_OF_CELLS, y*MAX_NUMBER_OF_CELLS);
-    CellPair cell_max(cell_min.x_coord + MAX_NUMBER_OF_CELLS, cell_min.y_coord+MAX_NUMBER_OF_CELLS);
-    cell_min << 2;
-    cell_min -= 2;
-    cell_max >> 2;
-    cell_max += 2;
-
-    Guard guard(const_cast<ObjectAccessor *>(this)->i_playerGuard);
-    for(PlayersMapType::const_iterator iter=i_players.begin(); iter != i_players.end(); ++iter)
-    {
-        CellPair p = MaNGOS::ComputeCellPair(iter->second->GetPositionX(), iter->second->GetPositionY());
-        if( (cell_min.x_coord <= p.x_coord && p.x_coord <= cell_max.x_coord) &&
-            (cell_min.y_coord <= p.y_coord && p.y_coord <= cell_max.y_coord) )
-            return true;
-    }
-	*/
-    return false;
+	std::set<Player*> v;
+	
+	Guard guard(i_playerGuard);
+	for(PlayersMapType::iterator iter = i_players.begin();iter != i_players.end();++iter)
+		if(iter->second->CanSeePoint(x, y, size))
+			v.insert(iter->second);
+	return v;
 }
 
 void
@@ -380,7 +379,8 @@ ObjectAccessor::SendPlayerInfo(WorldSession* session)
 		{
 			iter->second->_BuildNewPlayerPacket(packet);
 			session->SendPacket(&packet);
-			packet.clear();
+			iter->second->_BuildClientStatusPacket(packet);
+			session->SendPacket(&packet);
 		}
     }
 }

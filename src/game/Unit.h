@@ -414,6 +414,24 @@ enum UnitActionType
 	ACTION_HARPOONTHROW
 };
 
+enum UnitSlotType
+{
+	SLOT_HELMET = 0x0, //these correspond with SUBCLASS enum
+	SLOT_BREASTPLATE = 0x1,
+	SLOT_ARM_ARMOR = 0x2,
+	SLOT_PANTS = 0x3,
+	SLOT_BOOTS = 0x4,
+	SLOT_SHIRT = 0x5,
+	SLOT_LEG_ARMOR = 0x6,
+	SLOT_BACK = 0x7,
+	SLOT_SHIELD = 0x8,
+	SLOT_FLAG = 0x9,
+	SLOT_QUIVER = 0xA,
+	SLOT_WEP_PRIMARY,// this and below does not directly correspond
+	SLOT_WEP_SECONDARY,// however, everything with &0x40 is a weapon
+	SLOT_SIZE //this works since enum goes 0, 1, ...
+};
+
 class MANGOS_DLL_SPEC Unit : public WorldObject
 {
     public:
@@ -421,6 +439,9 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
         virtual void Update( uint32 time );
 		virtual void MoveToward( uint16 x, uint16 y );
 		virtual void Move( int16 deltax, int16 deltay );
+
+		virtual bool Equip( Object* obj );
+		virtual bool Dequip( Object* obj );
 		
 		void SetAngle (uint8 angle) { m_angle = angle; }
 		uint8 GetAngle () { return m_angle; }
@@ -430,6 +451,7 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
 		time_t m_action_time;
 
 		uint8 m_angle;
+		Object* m_equipment[SLOT_SIZE];
    
     private:
 

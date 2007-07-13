@@ -64,7 +64,7 @@ class ObjectMgr
         Begin() { return objectTable.begin(); }
         ObjectTableMap::iterator
         End() { return objectTable.end(); }
-        Object* GetObject(const uint16 extent)
+        Object* GetObj(const uint16 extent)
 		{
 			ObjectTableMap::const_iterator itr =
 				objectTable.find(extent);

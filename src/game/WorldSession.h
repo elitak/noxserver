@@ -141,6 +141,14 @@ class MANGOS_DLL_SPEC WorldSession
         void SendTaxiMenu( uint64 guid );
         void SendDoFlight( uint16 MountId, uint32 path );
         bool SendLearnNewTaxiNode( uint64 guid );
+
+		//Cursor
+		void MoveMouse( uint16 deltax, uint16 deltay )
+		{
+			_mouse >> deltax;
+			_mouse += deltay;
+		}
+		bool IsObserving() { return m_playerObserving; }
     protected:
 
 		// Spells
@@ -233,11 +241,12 @@ class MANGOS_DLL_SPEC WorldSession
 
         uint32 _security;
         uint32 _accountId;
-		POSITION _mouse;
+		GridPair _mouse;
 
         time_t _logoutTime;
         bool m_playerLoading;
         bool m_playerRecentlyLogout;
+		bool m_playerObserving;
 
 		uint8 xorKey;
 		SessionStatus m_status;

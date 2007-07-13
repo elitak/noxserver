@@ -24,6 +24,7 @@
 #include "World.h"
 #include "Object.h"
 #include "Player.h"
+#include "ObjectAccessor.h"
 #include "ObjectMgr.h"
 #include "WorldSession.h"
 #include "UpdateData.h"
@@ -71,6 +72,44 @@ Object::~Object( )
         delete [] m_uint32Values_mirror;
         //DEBUG_LOG("Object desctr 2 check (%p)",(void*)this);
     }*/
+	objmgr.RemoveObject(this);
+}
+
+bool Object::Pickup(Object* obj, uint32 max_dist)
+{
+	if(!obj || obj->InAnInventory())
+		return false;
+	if(max_dist && GetPosition().distance(obj->GetPosition()) > max_dist)
+		return false;
+	return AddToInventory(obj);
+}
+Object* Object::NewPickup(uint16 type, uint16 extent, uint32 modifier)
+{
+	Object* obj = new Object(type, extent);
+	if(!Pickup(obj))
+	{
+		delete obj;
+		obj = NULL;
+	}
+	return obj;
+}
+void Object::SetPosition(GridPair position)
+{
+	std::set<Player*> oldPlayers = objacc.PlayersCanSeePoint(m_position.x_coord, m_position.y_coord, 1);
+	std::set<Player*> newPlayers = objacc.PlayersCanSeePoint(position.x_coord, position.y_coord, 1);
+	m_position = position;
+
+	if(!InAnInventory())
+	{
+		for(std::set<Player*>::iterator iter = newPlayers.begin(); iter != newPlayers.end(); ++iter)
+		{
+			if(oldPlayers.find(*iter) != oldPlayers.end())
+				oldPlayers.erase(*iter);
+			(*iter)->AddUpdateObject(this);
+		}
+	}
+	for(std::set<Player*>::iterator iter = oldPlayers.begin(); iter != oldPlayers.end(); ++iter)
+		(*iter)->ObjectOutOfSight(this);
 }
 /*
 void Object::_InitValues()
@@ -582,17 +621,14 @@ void Object::_SetPackGUID(ByteBuffer *buffer, const uint64 &guid64) const
 }*/
 bool Object::CanSeePoint(uint16 x, uint16 y, uint32 size)
 {
-	int newx = x - m_position.x_coord;
-	int newy = y - m_position.y_coord;
-	int len = newy*newy + newx*newx - size*size;
-	return (len < 10000);
+	return GridPair(x, y).in(GridPair(m_position.x_coord - 300, m_position.y_coord - 300), GridPair(m_position.x_coord + 300, m_position.y_coord + 300));
 }
 
 void Object::_BuildUpdatePacket(WorldPacket& packet)
 {
 	if(IsImmobile())
 		return;
-	packet.SetOpcode(MSG_UPDATE_STREAM);
+	packet.SetOpcode(MSG_UPDATE_STREAM);	
 	packet << (uint8)0x00;  // This is going to be here until we figure a way to make efficient use of relative coords.
 	packet << (uint8)0xFF;
 	packet << (uint16)GetExtent();

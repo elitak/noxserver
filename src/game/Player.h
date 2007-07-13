@@ -124,8 +124,10 @@ class MANGOS_DLL_SPEC Player : public Unit
 		void Move(int16 deltax, int16 deltay);
 		void SetPosition(GridPair position);
 		void ForceUpdateAll() { updateAll = true; };
-		void Pickup(Object* obj);
-		void NewPickup(uint16 type, uint16 extent = 0, uint32 modifier = 0xFFFFFFFF);
+		bool Equip(Object* obj);
+		bool Dequip(Object* obj);
+		bool Pickup(Object* obj, uint32 max_dist = 0);
+		void ObjectOutOfSight(Object* obj);
 
     protected:
 		PlayerInfo plrInfo;
@@ -138,5 +140,6 @@ class MANGOS_DLL_SPEC Player : public Unit
 		virtual void SendUpdatePacket();
 		virtual void _BuildUpdatePacket(WorldPacket& packet);
 		virtual void _BuildNewPlayerPacket(WorldPacket& packet);
+		virtual void _BuildClientStatusPacket(WorldPacket& packet);
 };
 #endif
