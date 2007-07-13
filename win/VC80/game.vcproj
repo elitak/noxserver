@@ -376,6 +376,14 @@
 				RelativePath="..\..\src\game\NoxMap.h"
 				>
 			</File>
+			<File
+				RelativePath="..\..\src\game\NoxThinglib.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\game\NoxThinglib.h"
+				>
+			</File>
 		</Filter>
 	</Files>
 	<Globals>
