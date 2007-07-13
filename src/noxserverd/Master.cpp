@@ -37,6 +37,7 @@
 #include "Config/ConfigEnv.h"
 #include "Database/DatabaseEnv.h"
 #include "NoxMap.h"
+#include "NoxThinglib.h"
 
 #ifdef ENABLE_CLI
 #include "CliRunnable.h"
@@ -105,6 +106,14 @@ void Master::Run()
 
     ///- Initialize the World
     sWorld.SetInitialWorldSettings();
+
+	fstream* thing = new fstream("C:\\Program Files\\Nox\\thing.bin", ios_base::in|ios_base::binary);
+	sThingBin.Load_Thingdb(thing);
+	thing->close();
+	delete thing;
+
+	NoxMap map;
+	map.open("C:\\Program Files\\Nox\\maps\\manamine\\manamine.map");
 
     ///- Launch the world listener socket
     port_t wsport = 18590;
@@ -207,9 +216,6 @@ void Master::Run()
         }
     }
     #endif
-
-	NoxMap map;
-	map.open("C:\\Program Files\\Nox\\maps\\estate\\estate.map");
 
     uint32 realCurrTime, realPrevTime;
     realCurrTime = realPrevTime = getMSTime();
