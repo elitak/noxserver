@@ -200,3 +200,10 @@ void Player::ObjectOutOfSight(Object* obj)
 	packet << (uint16)obj->GetExtent();
 	GetSession()->SendPacket(&packet);
 }
+void Player::ObjectDestroyed(Object* obj)
+{
+	updateQueue.erase(obj);
+	WorldPacket packet(MSG_DESTROY_OBJECT);
+	packet << (uint16)obj->GetExtent();
+	GetSession()->SendPacket(&packet);
+}

@@ -5,7 +5,7 @@
 
 INSTANTIATE_SINGLETON_1( ThingBin );
 
-uint32 noxNameToEnum (const char* name, NoxEnumNamePair table[])
+uint32 ThingBin::noxNameToEnum (const char* name, NoxEnumNamePair table[])
 {
 	NoxEnumNamePair *pair = table;
 	while(pair->Name != NULL)

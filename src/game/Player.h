@@ -128,6 +128,7 @@ class MANGOS_DLL_SPEC Player : public Unit
 		bool Dequip(Object* obj);
 		bool Pickup(Object* obj, uint32 max_dist = 0);
 		void ObjectOutOfSight(Object* obj);
+		void ObjectDestroyed(Object* obj);
 
     protected:
 		PlayerInfo plrInfo;

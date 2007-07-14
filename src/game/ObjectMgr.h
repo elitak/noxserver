@@ -49,7 +49,7 @@ struct OpcodeHandler
 };
 
 #define INVALID_EXTENT	0x0000
-#define MAX_EXTENT		0xFFFF
+#define MAX_EXTENT		0x7FFF //extents are actually signed, lol
 
 typedef HM_NAMESPACE::hash_map< uint16 , OpcodeHandler > OpcodeTableMap;
 typedef HM_NAMESPACE::hash_map< uint16 , Object* > ObjectTableMap;
@@ -80,13 +80,16 @@ class ObjectMgr
 				obj->m_extent = RequestExtent();
 			objectTable[obj->GetExtent()] = obj;
 		}
-        bool RemoveObject(Object *obj)
+        bool RemoveObject(Object *obj, bool recycleExtent = true)
 		{
 			ObjectTableMap::iterator i = objectTable.find(obj->GetExtent());
 			if(i == objectTable.end())
 				return false;
-			ReturnExtent(obj->GetExtent());
-			obj->m_extent = 0;
+			if(recycleExtent)
+			{
+				ReturnExtent(obj->GetExtent());
+				obj->m_extent = 0;
+			}
 			objectTable.erase(i);
 			return true;
 		}
@@ -131,6 +134,11 @@ class ObjectMgr
 			if(extent == 0 || objectTable.find(extent) != objectTable.end())
 				return false;
 			return true;
+		}
+
+		bool ContainsObject(Object* obj)
+		{
+			return objectTable.find(obj->GetExtent()) != objectTable.end();
 		}
 
 		std::vector<Object*> GetObjectsInRect(GridPair rightCorner, GridPair leftCorner);

@@ -19,7 +19,9 @@
 
 #include "Common.h"
 #include "Log.h"
+#include "ObjectAccessor.h"
 #include "Opcodes.h"
+#include "NoxThinglib.h"
 #include "WorldPacket.h"
 #include "WorldSession.h"
 #include "World.h"
@@ -28,7 +30,6 @@
 #include "Player.h"
 
 #include <math.h>
-
 
 Unit::Unit( WorldObject *instantiator ) : WorldObject( instantiator )
 {
@@ -109,9 +110,23 @@ bool Unit::Equip(Object *obj)
 		return false;
 
 	uint32 slot = obj->GetObjectInfo()->subclass;
-	if(slot > SUBCLASS_SLOT_LAST && (slot & SUBCLASS_WEAPON)) //this can only be true for weapons
-		slot = SLOT_WEP_PRIMARY;
+	if(slot & SUBCLASS_WEAPON) //this can only be true for weapons
+	{
+		if(slot == SUBCLASS_QUIVER)
+			slot = SLOT_QUIVER;
+		else if(slot == SUBCLASS_FLAG)
+			slot = SLOT_FLAG;
+		else
+			slot = SLOT_WEP_PRIMARY;
+	}
 	Dequip(m_equipment[slot]); //Dequip will check for NULL object
+
+	WorldPacket packet;
+	if(obj->GetObjectInfo()->subclass & SUBCLASS_WEAPON)
+		_BuildEquipPacket(packet, false, 1 >> (obj->GetObjectInfo()->subclass & 0x1F), 0xFFFFFFFF);
+	else
+		_BuildEquipPacket(packet, true, Unit::ObjectToUnitArmor(obj), 0xFFFFFFFF);
+	objacc.SendPacketToAll(&packet);
 
 	m_equipment[slot] = obj;
 	return true;
@@ -130,4 +145,59 @@ bool Unit::Dequip(Object *obj)
 		}
 	}
 	return false;
+}
+
+void Unit::_BuildEquipPacket(WorldPacket& packet, bool armor, uint32 slot, uint32 modifier)
+{
+	uint8 opcode = 0;
+	if(armor && modifier)
+		opcode = MSG_REPORT_MODIFIABLE_ARMOR_EQUIP;
+	else if(armor)
+		opcode = MSG_REPORT_MUNDANE_ARMOR_EQUIP;
+	else if(modifier)
+		opcode = MSG_REPORT_MODIFIABLE_WEAPON_EQUIP;
+	else
+		opcode = MSG_REPORT_MUNDANE_WEAPON_EQUIP;
+
+	packet.Initialize(opcode);
+	packet << (uint16) (GetExtent() | 0x8000); //some reason you need to add this bit
+	packet << slot;
+	if(modifier)
+		packet << modifier;
+}
+
+NoxEnumNamePair g_noxUnitArmorNames[] =
+{
+	STREET_SNEAKERS, "StreetSneakers",
+	MEDIEVAL_CLOAK, "MedievalCloak",
+	STREET_PANTS, "StreetPants",
+	MEDIEVAL_PANTS, "MedievalPants",
+	LEATHER_LEGGINGS, "LeatherLeggings",
+	CHAIN_LEGGINGS, "ChainLeggings",
+	LEATHER_BOOTS, "LeatherBoots",
+	LEATHER_ARMORED_BOOTS, "LeatherArmoredBoots",
+	PLATE_BOOTS, "PlateBoots",
+	PLATE_LEGGINGS, "PlateLeggings",
+	STREET_SHIRT, "StreetShirt",
+	MEDIEVAL_SHIRT, "MedievalShirt",
+	LEATHER_ARMBANDS, "LeatherArmbands",
+	PLATE_ARMS, "PlateArms",
+	WIZARD_ROBE, "WizardRobe",
+	LEATHER_TUNIC, "LeatherTunic",
+	CHAIN_TUNIC, "ChainTunic",
+	PLATE_BREAST, "Breastplate",
+	CHAIN_COIF, "ChainCoif",
+	WIZARD_HELM, "WizardHelm",
+	CONJURER_HELM, "ConjurerHelm",
+	LEATHER_HELM, "LeatherHelm",
+	PLATE_HELM, "SteelHelm",
+	ORNATE_HELM, "OrnateHelm",
+	ROUND_SHIELD, "RoundShield",
+	KITE_SHIELD, "SteelShield",
+	0, NULL
+};
+
+uint32 Unit::ObjectToUnitArmor(Object* obj)
+{
+	return ThingBin::noxNameToEnum(obj->GetObjectInfo()->Name, g_noxUnitArmorNames);
 }

@@ -636,6 +636,27 @@ void Object::_BuildUpdatePacket(WorldPacket& packet)
 	packet << (uint16)GetPosition().x_coord;
 	packet << (uint16)GetPosition().y_coord;
 }
+bool Object::InAnInventory()
+{
+	return m_position == GridPair(5880, 5880);
+	//return !objmgr.ContainsObject(this);
+}
+void Object::RemoveFromInventory(Object* obj, GridPair newPos)
+{
+	obj->SetPosition(newPos);
+	//objmgr.AddObject(obj);
+	m_inventory.erase(obj);
+}
+
+bool Object::AddToInventory(Object* obj) 
+{
+	if(!obj || obj->InAnInventory())
+		return false;
+	obj->SetPosition(GridPair(5880, 5880));
+	//objmgr.RemoveObject(obj, false);
+	m_inventory.insert(obj);
+	return true;
+}
 
 WorldObject::WorldObject( WorldObject *instantiator )
 {

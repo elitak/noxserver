@@ -213,27 +213,13 @@ class MANGOS_DLL_SPEC Object
 		}
 
 		bool IsImmobile() { return (GetObjectInfo()->classes)&CLASS_IMMOBILE; }
-		bool AddToInventory(Object* obj) 
-		{
-			if(!obj || obj->InAnInventory())
-				return false;
-			obj->SetPosition(GridPair(5880, 5880));
-			m_inventory.insert(obj);
-			return true;
-		}
+		bool AddToInventory(Object* obj);
 		bool InMyInventory(Object* obj)
 		{
-			return m_inventory.find(obj) == m_inventory.end();
+			return m_inventory.find(obj) != m_inventory.end();
 		}
-		bool InAnInventory()
-		{
-			return m_position == GridPair(5880, 5880);
-		}
-		void RemoveFromInventory(Object* obj, GridPair newPos)
-		{
-			obj->SetPosition(newPos);
-			m_inventory.erase(obj);
-		}
+		bool InAnInventory();
+		void RemoveFromInventory(Object* obj, GridPair newPos);
 		virtual bool Pickup(Object* obj, uint32 max_dist = 0);
 		Object* NewPickup(uint16 type, uint16 extent = 0, uint32 modifier = 0xFFFFFFFF);
 
