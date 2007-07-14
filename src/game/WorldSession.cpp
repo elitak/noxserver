@@ -780,6 +780,8 @@ void WorldSession::HandleNeedTimestampOpcode(WorldPacket &recvPacket)
 }
 void WorldSession::HandleServerCmdOpcode(WorldPacket &recvPacket)
 {
+	sLog.outDebug("Server CMD:");
+    recvPacket.hexlike();
 	try
     {
 		switch(recvPacket.read<uint8>())
@@ -1091,9 +1093,8 @@ void WorldSession::HandleRequestTimerStatusOpcode(WorldPacket& recv_data)
 }
 void WorldSession::HandleReportSecondaryWeaponOpcode(WorldPacket& recv_data)
 {
-    sLog.outDebug("New Unknown Opcode %u", recv_data.GetOpcode());
-    recv_data.hexlike();
-	recv_data.read<uint16>();
+	Object* obj = objmgr.GetObj(recv_data.read<uint16>());
+	_player->EquipSecondary(obj);
 }
 void WorldSession::HandleInfoBookDataOpcode(WorldPacket& recv_data)
 {

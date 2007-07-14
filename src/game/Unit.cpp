@@ -106,9 +106,8 @@ void Unit::Move(int16 deltax, int16 deltay)
 
 bool Unit::Equip(Object *obj)
 {
-	if(!obj || !InMyInventory(obj))
+	if(!obj)
 		return false;
-
 	uint32 slot = obj->GetObjectInfo()->subclass;
 	if(slot & SUBCLASS_WEAPON) //this can only be true for weapons
 	{
@@ -119,15 +118,24 @@ bool Unit::Equip(Object *obj)
 		else
 			slot = SLOT_WEP_PRIMARY;
 	}
-	Dequip(m_equipment[slot]); //Dequip will check for NULL object
+	if(!Equip(obj, slot))
+		return false;
 
 	WorldPacket packet;
 	if(obj->GetObjectInfo()->subclass & SUBCLASS_WEAPON)
-		_BuildEquipPacket(packet, false, 1 >> (obj->GetObjectInfo()->subclass & 0x1F), 0xFFFFFFFF);
+		_BuildEquipPacket(packet, false, 1 << (obj->GetObjectInfo()->subclass & 0x1F), 0xFFFFFFFF);
 	else
 		_BuildEquipPacket(packet, true, Unit::ObjectToUnitArmor(obj), 0xFFFFFFFF);
-	objacc.SendPacketToAll(&packet);
+	objacc.SendPacketToAll(&packet);	
+	return true;
+}
 
+bool Unit::Equip(Object *obj, uint32 slot)
+{
+	if(!obj || !InMyInventory(obj) || slot >= SLOT_SIZE)
+		return false;
+	
+	Dequip(m_equipment[slot]); //Dequip will check for NULL object
 	m_equipment[slot] = obj;
 	return true;
 }
@@ -140,6 +148,13 @@ bool Unit::Dequip(Object *obj)
 	{
 		if(m_equipment[i] == obj)
 		{
+			WorldPacket packet;
+			if(obj->GetObjectInfo()->subclass & SUBCLASS_WEAPON)
+				_BuildDequipPacket(packet, false, 1 << (obj->GetObjectInfo()->subclass & 0x1F));
+			else
+				_BuildDequipPacket(packet, true, Unit::ObjectToUnitArmor(obj));
+			objacc.SendPacketToAll(&packet);
+
 			m_equipment[i] = 0;
 			return true;
 		}
@@ -164,6 +179,19 @@ void Unit::_BuildEquipPacket(WorldPacket& packet, bool armor, uint32 slot, uint3
 	packet << slot;
 	if(modifier)
 		packet << modifier;
+}
+
+void Unit::_BuildDequipPacket(WorldPacket& packet, bool armor, uint32 slot)
+{
+	uint8 opcode = 0;
+	if(armor)
+		opcode = MSG_REPORT_ARMOR_DEQUIP;
+	else
+		opcode = MSG_REPORT_WEAPON_DEQUIP;
+
+	packet.Initialize(opcode);
+	packet << (uint16) GetExtent();
+	packet << slot;
 }
 
 NoxEnumNamePair g_noxUnitArmorNames[] =

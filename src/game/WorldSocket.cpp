@@ -188,8 +188,8 @@ void WorldSocket::OnRawData(const char * data,size_t datalen,struct sockaddr * s
             ///- Else, put it in the world session queue for this user (need to be already authenticated)
             if (session)
                 session->QueuePacket(packet);
-            else
-                sLog.outDetail("Received out of place packet with cmdid 0x%.4X", _cmd);
+            //else
+            //    sLog.outDetail("Received out of place packet with cmdid 0x%.4X", _cmd);
             break;
         }
     }

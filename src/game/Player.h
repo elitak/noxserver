@@ -125,6 +125,7 @@ class MANGOS_DLL_SPEC Player : public Unit
 		void SetPosition(GridPair position);
 		void ForceUpdateAll() { updateAll = true; };
 		bool Equip(Object* obj);
+		void EquipSecondary(Object* obj);
 		bool Dequip(Object* obj);
 		bool Pickup(Object* obj, uint32 max_dist = 0);
 		void ObjectOutOfSight(Object* obj);

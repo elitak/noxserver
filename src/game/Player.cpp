@@ -207,3 +207,20 @@ void Player::ObjectDestroyed(Object* obj)
 	packet << (uint16)obj->GetExtent();
 	GetSession()->SendPacket(&packet);
 }
+void Player::EquipSecondary(Object* obj)
+{
+	if(!obj && !InMyInventory(obj))
+		return;
+	Object* newSecondary = obj ? obj : m_equipment[SLOT_WEP_PRIMARY];
+	Object* oldSecondary = m_equipment[SLOT_WEP_SECONDARY];
+	m_equipment[SLOT_WEP_SECONDARY] = newSecondary;
+
+	Dequip(newSecondary);
+
+	WorldPacket packet(MSG_REPORT_SECONDARY_WEAPON);
+	packet << (uint16)(newSecondary ? newSecondary->GetExtent() : 0);
+	m_session->SendPacket(&packet);
+
+	if(!obj) // NULL object (0 extent) means swap weps.
+		Equip(oldSecondary);
+}
