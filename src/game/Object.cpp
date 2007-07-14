@@ -83,6 +83,15 @@ bool Object::Pickup(Object* obj, uint32 max_dist)
 		return false;
 	return AddToInventory(obj);
 }
+
+//strange behavior
+bool Object::Drop(Object* obj, uint32 max_dist, GridPair* newPos)
+{
+     //if(!obj || obj->InAnInventory())
+     //     return false;
+     RemoveFromInventory(obj, *newPos);//why doesn't this return a bool?
+     return true;
+}
 Object* Object::NewPickup(uint16 type, uint16 extent, uint32 modifier)
 {
 	Object* obj = new Object(type, extent);
@@ -645,7 +654,9 @@ void Object::RemoveFromInventory(Object* obj, GridPair newPos)
 {
 	obj->SetPosition(newPos);
 	//objmgr.AddObject(obj);
+     //DOES NOT ERASE FROM INVENTORY
 	m_inventory.erase(obj);
+     //DOES NOT ERASE FROM INVENTORY
 }
 
 bool Object::AddToInventory(Object* obj) 

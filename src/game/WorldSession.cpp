@@ -947,11 +947,12 @@ void WorldSession::HandlePlayerSetWaypointOpcode(WorldPacket& recv_data)
 }
 void WorldSession::HandleTryDropOpcode(WorldPacket& recv_data)
 {
-    sLog.outDebug("New Unknown Opcode %u", recv_data.GetOpcode());
-    recv_data.hexlike();
-	recv_data.read<uint16>();
-	recv_data.read<uint16>();
-	recv_data.read<uint16>();
+    //sLog.outDebug("New Unknown Opcode %u", recv_data.GetOpcode());
+    //recv_data.hexlike();
+    Object* obj = objmgr.GetObj(recv_data.read<uint16>());
+    if(!(_player->Drop(obj, 75, new GridPair(recv_data.read<uint16>(),recv_data.read<uint16>()))))
+             sLog.outDebug("Couldn't drop it.");
+
 }
 void WorldSession::HandleTryGetOpcode(WorldPacket& recv_data)
 {
