@@ -500,6 +500,10 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
 		virtual void MoveToward( uint16 x, uint16 y );
 		virtual void Move( int16 deltax, int16 deltay );
 
+          virtual void Laugh();
+          virtual void Point();
+          virtual void Taunt();
+
 		virtual bool Equip( Object* obj );
 		virtual bool Equip( Object* obj, uint32 slot );
 		virtual bool Dequip( Object* obj );

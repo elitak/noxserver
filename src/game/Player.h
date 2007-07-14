@@ -121,6 +121,10 @@ class MANGOS_DLL_SPEC Player : public Unit
 		void AddUpdateObject(Object* obj) { updateQueue.insert(obj); }
 		void RemoveUpdateObject(Object* obj) { }
 
+          /*void Laugh();
+          void Point();
+          void Taunt();*/
+
 		void Move(int16 deltax, int16 deltay);
 		void SetPosition(GridPair position);
 		void ForceUpdateAll() { updateAll = true; };
@@ -128,6 +132,7 @@ class MANGOS_DLL_SPEC Player : public Unit
 		void EquipSecondary(Object* obj);
 		bool Dequip(Object* obj);
 		bool Pickup(Object* obj, uint32 max_dist = 0);
+          bool RemoveFromInventory(Object* obj, GridPair newPos);
 		void ObjectOutOfSight(Object* obj);
 		void ObjectDestroyed(Object* obj);
 

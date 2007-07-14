@@ -127,6 +127,30 @@ void Player::SendUpdatePacket()
 	GetSession()->SendPacket(&packet);
 }
 
+/*void Player::Laugh()
+{
+     Unit::Laugh();
+     WorldPacket packet(MSG_SOCIAL);
+     //packet << (uint16)30;
+     m_session->SendPacket(&packet);
+}
+
+void Player::Point()
+{
+     Unit::Point();
+     WorldPacket packet(MSG_SOCIAL);
+     //packet << (uint16)30;
+     m_session->SendPacket(&packet);
+}
+
+void Player::Taunt()
+{
+     Unit::Taunt();
+     WorldPacket packet(MSG_SOCIAL);
+     //packet << (uint16)30;
+     m_session->SendPacket(&packet);
+}*/
+
 void Player::Move(int16 deltax, int16 deltay)
 {
 	Unit::Move(deltax, deltay);
@@ -191,6 +215,22 @@ bool Player::Pickup(Object* obj, uint32 max_dist)
 	}
 	else
 		return false;
+}
+bool Player::RemoveFromInventory(Object* obj, GridPair newPos)
+{
+     if(InMyInventory(obj))
+     {
+          Dequip(obj);
+          Unit::RemoveFromInventory(obj,newPos);
+
+          WorldPacket packet(MSG_REPORT_DROP);
+          packet << (uint16)obj->GetExtent();
+          packet << (uint16) 0;
+
+          m_session->SendPacket(&packet);
+          return true;
+     }
+     return false;
 }
 void Player::ObjectOutOfSight(Object* obj)
 {

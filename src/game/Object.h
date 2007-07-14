@@ -219,9 +219,9 @@ class MANGOS_DLL_SPEC Object
 			return m_inventory.find(obj) != m_inventory.end();
 		}
 		bool InAnInventory();
-		void RemoveFromInventory(Object* obj, GridPair newPos);
+		virtual bool RemoveFromInventory(Object* obj, GridPair newPos);
 		virtual bool Pickup(Object* obj, uint32 max_dist = 0);
-          virtual bool Drop(Object* obj, uint32 max_dist = 0, GridPair* newPos = new GridPair(0,0));
+          virtual bool Drop(Object* obj, uint32 max_dist, GridPair newPos);
 		Object* NewPickup(uint16 type, uint16 extent = 0, uint32 modifier = 0xFFFFFFFF);
 
 		virtual void _BuildUpdatePacket(WorldPacket& packet);

@@ -685,6 +685,19 @@ void WorldSession::HandlePlayerInputOpcode(WorldPacket &recvPacket)
 				//jumped
 				sLog.outDebug("Player jumped.");
 				break;
+                    
+                    case 0x30:
+                         sLog.outDebug("Player laughed.");
+                         _player->Laugh();
+                         break;
+                    case 0x31:
+                         sLog.outDebug("Player pointed");
+                         _player->Point();
+                         break;
+                    case 0x2F:
+                         sLog.outDebug("Player taunted");
+                         _player->Taunt();
+                         break;
 			default:
 				recvPacket.rpos(recvPacket.rpos()-1);
 				sLog.outDebug("Player input: 0x0E 0x%2X", recvPacket.read<uint8>());
@@ -701,7 +714,12 @@ void WorldSession::HandlePlayerInputOpcode(WorldPacket &recvPacket)
 			break;
 		case 0x13: //running jump: 13 07 00 00 00 02 01 00 00 01
 				   //13 06 00 00 00 02 01 00 00 01
-			sLog.outDebug("Player input: 0x13 0x%2X", recvPacket.read<uint32>());
+               switch(recvPacket.read<uint32>())
+               {
+                    case 0x07:
+                         sLog.outDebug("Player did a running job.");
+                         break;
+               }
 			recvPacket.read<uint8>();
 			recvPacket.read<uint8>();
 			recvPacket.read<uint16>();
@@ -950,8 +968,10 @@ void WorldSession::HandleTryDropOpcode(WorldPacket& recv_data)
     //sLog.outDebug("New Unknown Opcode %u", recv_data.GetOpcode());
     //recv_data.hexlike();
     Object* obj = objmgr.GetObj(recv_data.read<uint16>());
-    if(!(_player->Drop(obj, 75, new GridPair(recv_data.read<uint16>(),recv_data.read<uint16>()))))
-             sLog.outDebug("Couldn't drop it.");
+    uint16 x = recv_data.read<uint16>();
+    uint16 y = recv_data.read<uint16>();
+    if(!(_player->Drop(obj,75, GridPair(x,y))))
+             sLog.outDebug("Couldn't drop object.");
 
 }
 void WorldSession::HandleTryGetOpcode(WorldPacket& recv_data)
@@ -1106,6 +1126,7 @@ void WorldSession::HandleInfoBookDataOpcode(WorldPacket& recv_data)
 }
 void WorldSession::HandleSocialOpcode(WorldPacket& recv_data)
 {
+     //30 = laugh 31 = point
     sLog.outDebug("New Unknown Opcode %u", recv_data.GetOpcode());
     recv_data.hexlike();
 	recv_data.read<uint8>();

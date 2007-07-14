@@ -104,6 +104,23 @@ void Unit::Move(int16 deltax, int16 deltay)
 	Object::SetPosition(GridPair(m_position.x_coord+deltax, m_position.y_coord+deltay));
 }
 
+void Unit::Laugh()
+{
+     m_action = ACTION_LAUGH;
+     m_action_time = 1000;
+}
+void Unit::Point()
+{
+     m_action = ACTION_POINT;
+     m_action_time = 1000;
+}
+
+void Unit::Taunt()
+{
+     m_action = ACTION_TAUNT;
+     m_action_time = 1000;
+}
+
 bool Unit::Equip(Object *obj)
 {
 	if(!obj)
