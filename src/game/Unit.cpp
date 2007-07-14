@@ -211,7 +211,7 @@ NoxEnumNamePair g_noxUnitArmorNames[] =
 	LEATHER_ARMBANDS, "LeatherArmbands",
 	PLATE_ARMS, "PlateArms",
 	WIZARD_ROBE, "WizardRobe",
-	LEATHER_TUNIC, "LeatherTunic",
+	LEATHER_TUNIC, "LeatherArmor",
 	CHAIN_TUNIC, "ChainTunic",
 	PLATE_BREAST, "Breastplate",
 	CHAIN_COIF, "ChainCoif",
