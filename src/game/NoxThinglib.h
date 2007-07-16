@@ -6,15 +6,19 @@
 #include "Policies/Singleton.h"
 using namespace std;
 
+
+//
+// Properties store object strings and information 
+//
   struct Property
    {
-	   unsigned int ValueLen;
-	   char Value[512];
+	   unsigned char ValueLen;
+	   char Value[255]; // Changed to 255 to save memory
    };
 
-///////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////
+//
+// DUA: Alias AUD, stores sound properties.
+//
 struct DUA
 {
   // DUA ID
@@ -56,8 +60,6 @@ struct GAMI
   BYTE nameLen;
   unsigned int ImageCode;//[70];
   LIST2<unsigned int> Images;
-  //int numImages;
-  //Image_List List;
 
    GAMI()
    {
@@ -219,7 +221,6 @@ struct GNHT // Object Class
 
    char Name[50];
    BYTE nameLen;
-   //char HeaderNames[5][20];
    int Num_Headers;
    int Header_Nums[5];
    unsigned int ImageCode;
@@ -228,10 +229,6 @@ struct GNHT // Object Class
    uint32 subclass;
    //Image_List List;
    //LIST2<unsigned int> Images;
- 
-   //int numStrings;
-   //char propStrings[25][255];
-
    LIST2<Property> Properties;
 
  
@@ -242,16 +239,9 @@ struct GNHT // Object Class
    char aniName[255];
 
    //PLAYER/MONSTER DRAW FUNCS
-   
-   //TATS Stat[70];
-   //int numStats;
    LIST2<TATS> Stats;
    LIST2<TATS> PlayerStats;
-   //TATS *PlayerStat;
-   //int numPlayerStats;
    LIST2<Property> Subcats;
-   //CString *SubCats;
-   //int numSubCats;
    ///////////////////////////   
    GNHT()
    {   
@@ -276,7 +266,6 @@ struct LLAW
        BYTE nameLen;
        BYTE Name[25];
        BYTE Unknowns[14];//14 of them; may not be BYTES
-       //long numObjects;
 	   LIST2<Property> Objects;
 
        BYTE Sound_Open_Len;
@@ -285,7 +274,7 @@ struct LLAW
        BYTE SoundClose[25]; 
        BYTE Sound_Destroy_Len;
        BYTE SoundDestroy[25]; 
-       //int numImages;
+
        unsigned int ImageCode;
 	   LIST2<unsigned int> Images;
 
@@ -458,6 +447,27 @@ struct GNHTSTRUCT
 			return 0;
 		}
 
+		GNHT * GetObject(const char* name, int max = 50)
+		{
+			GNHT* obj;
+			int maxlen = 50 > max ? 50 : max;
+			while(obj = Objects.Get())
+			{
+				if(!strncmp(obj->Name, name, maxlen))
+				{
+					Objects.ClearGet();
+					return obj;
+				}
+			}
+			Objects.ClearGet();
+			return NULL;
+		}
+
+		GNHT * GetObject( unsigned short i )
+		{
+			return(Objects.Get(i));
+		}
+
 //~LLAWSTRUCT()
 //{delete [] Walls;} //ERROR PRONE?
 		~GNHTSTRUCT()
@@ -516,15 +526,6 @@ public:
 
 		 static uint32 noxNameToEnum (const char* name, NoxEnumNamePair table[]);
 
-/*int Get_Object_Loc(char ObName[100])
-{
-  for(int i=0; i<Thing.Object.numObjects; i++)
-  {
-    if(!_stricmp(ObName,Thing.Object.Objects[i].Name))
-	{return(i+1);}
-  }
-  return(0);
-}*/
    ThingBin();
    ~ThingBin()
    {

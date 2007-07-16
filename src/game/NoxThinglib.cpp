@@ -224,8 +224,6 @@ NoxCrypt::decrypt(buff, len, NC_THING_BIN);
 
 memset(Type,0x00,5);
 memcpy((void*)&*(Type),(const void*)&*(buff+count),sizeof(int));
-//count+=4;
-
 
 Load_Tiles(buff,count);
 Load_Walls(buff,count, Thing.Wall);
@@ -233,8 +231,6 @@ Load_Sounds(buff,count);
 
 while(strcmp(Type,"GAMI") && count<len)
 	  {
-         //  Walls.Walls[Walls.numWalls]=Load_Wall(count,buff);
-           //Walls.numWalls++;
 	        memset(Type,0x00,5);
             memcpy((void*)&*(Type),(const void*)&*(buff+count),sizeof(int));
             count++;
@@ -244,16 +240,12 @@ Load_Images(buff,count,Thing.Image);
 
 while(strcmp(Type,"GNHT"))
 	  {
-         //  Walls.Walls[Walls.numWalls]=Load_Wall(count,buff);
-           //Walls.numWalls++;
  	        memset(Type,0x00,5);          
 	        memcpy((void*)&*(Type),(const void*)&*(buff+count),sizeof(int));
             count++;
 		  }
-//count+=3;
-Load_Objects(buff,count,len, Thing.Object);
 
-//out.Close();
+Load_Objects(buff,count,len, Thing.Object);
 
 delete [] buff;
 Is_Loaded=true;
@@ -297,9 +289,6 @@ return(true);
 //////////////////////////////////////////////////////////////////////////
 bool ThingBin::Load_Walls(unsigned char *buff,long &count, LLAWSTRUCT & Walls)
 {
-
-//LLAWSTRUCT Walls;
-//Walls.Load();
 LLAW Wall;
       while(!strcmp(Type,"LLAW"))
 	  {
@@ -322,9 +311,6 @@ return(true);
 //////////////////////////////////////////////////////////////////////////
 bool ThingBin::Load_Tiles(unsigned char *buff,long &count)
 {
-
-
-
    ROLF Tile;
    EGDE Edge;
    memset(Type,0x00,5);
@@ -334,15 +320,15 @@ bool ThingBin::Load_Tiles(unsigned char *buff,long &count)
 	  {
 		   if(!strcmp(Type,"ROLF"))
 		   {
-           Load_Tile(count,buff,Tile);
-		   Thing.Tile.Tiles.Add(Tile);
-	       memset((void*)&Tile, 0x00,sizeof(ROLF));
+			Load_Tile(count,buff,Tile);
+			Thing.Tile.Tiles.Add(Tile);
+			memset((void*)&Tile, 0x00,sizeof(ROLF));
 		   }
 		   else
 		   {
-           Load_Edge(count,buff,Edge);
-		   Thing.Edge.Edges.Add(Edge);
-	       memset((void*)&Edge, 0x00,sizeof(EGDE));
+			Load_Edge(count,buff,Edge);
+			Thing.Edge.Edges.Add(Edge);
+			memset((void*)&Edge, 0x00,sizeof(EGDE));
 		   }
              memcpy((void*)&*(Type),(const void*)&*(buff+count),sizeof(int));
              count+=4;
@@ -358,9 +344,6 @@ return(true);
 //////////////////////////////////////////////////////////////////////////
 bool ThingBin::Load_Sounds(unsigned char *buff,long &count)
 {
-
-
-
    DUA Aud;
    memset(Type,0x00,5);
    memcpy((void*)&*(Type),(const void*)&*(buff+count),sizeof(int));
@@ -373,8 +356,6 @@ bool ThingBin::Load_Sounds(unsigned char *buff,long &count)
              memcpy((void*)&*(Type),(const void*)&*(buff+count),sizeof(int));
              count+=4;
 	  }
-
-
 return(true);
 }
 //////////////////////////////////////////////////////////////////////////
@@ -399,8 +380,6 @@ bool ThingBin::Load_Objects(unsigned char *buff,long &count,long filelen,GNHTSTR
              count++;
 		  }
 	   }
-
-
 return(true);
 }
 //////////////////////////////////////////////////////////////////////////
@@ -412,13 +391,12 @@ uint32 g_noxObjectCtr = 0;
 bool ThingBin::Load_Object(long &count,unsigned char *buff,long filelen, GNHT & Object)
 {
 
-  int aniType=0;
-  int strLen=0;
+  int aniType		=0;
+  int strLen		=0;
   char str[255];
-  int Length32=0;
-  long Length64=0;
-  long finishPos=0;
-  //CString str2;
+  int Length32		=0;
+  long Length64		=0;
+  long finishPos	=0;
   int k=0,j=0;
   int subcount=0;
   TATS Stat;
@@ -449,7 +427,6 @@ while(strcmp(Type,"GNHT") && count<filelen)
 		memset(str,0x00,255);
         memcpy((void*)&str,(const void*)&*(buff+count),strLen);
         count+=strLen;
-
 
         aniType=Parse_String(str,strLen);
 		Property propString;
@@ -490,11 +467,9 @@ while(strcmp(Type,"GNHT") && count<filelen)
 //ALL FINISH POS OPERATIONS CAN HAVE *ANI = new [section size/4];
 //WILL OVER BUFFER, but should be within decent results.
 
-
         switch(aniType)
 		{
             case 0:break;
-
 
             case 1: //return(Object);
 				count+=((8 - count % 8) % 8);
@@ -502,15 +477,6 @@ while(strcmp(Type,"GNHT") && count<filelen)
                 count+=(8);
 				//count+=Length64;
                 finishPos=count+Length64;
-			
-                
-                //if(!strcmp(str,"ArmorDraw"))
-			//	{Object.obType=ARMOR;}
-               // else if(!strcmp(str,"WeaponDraw"))
-			//	{Object.obType=WEAPON;}
-
-				//Object.numStats=1;
-
 
 				if(!strcmp(str,"SlaveDraw"))
 				{
@@ -588,14 +554,8 @@ while(strcmp(Type,"GNHT") && count<filelen)
 							Stat.Images.Add(Object.ImageCode);
 							//Object.Stat[0].Loop.List.Add(Object.ImageCode);
 					////////////////////////////////////////////////////////////							
-
-
-							count+=sizeof(int);
-							
-							
-							//Object.Stat[0].Loop.numImages++;
-							
-							
+							count+=sizeof(int);				
+							//Object.Stat[0].Loop.numImages++;		
 							}
 						}
 			    count=finishPos;
@@ -613,12 +573,7 @@ while(strcmp(Type,"GNHT") && count<filelen)
                 count+=8;
 				finishPos=count+Length64;
 			//	count=finishPos;
-
-                //Object.PlayerStat = new TATS [2000];
-				//Object.SubCats = new CString [500];
-
-
-// Images not important for server, only that it works
+				// Images not important for server, only that it works
 
                 while(count<finishPos)
 				{
@@ -668,8 +623,7 @@ while(strcmp(Type,"GNHT") && count<filelen)
 						count+=Length32;
 						strcpy((char*)Stat.loopName,Object.aniName);
                         //Object.PlayerStat[Object.numPlayerStats].loopName=Object.aniName;						
-                        
-						
+                        			
 						memcpy((void*)&Type,(const void*)&*(buff+count),sizeof(int));
 						if(!strcmp(Type,"UQES"))
 						{
@@ -688,8 +642,6 @@ while(strcmp(Type,"GNHT") && count<filelen)
 						//Object.numSubCats++;
 							}
 
-
- 
                         memcpy((void*)&Type,(const void*)&*(buff+count),sizeof(int));
 						subcount=0;
 						while(strcmp(Type," DNE") && strcmp(Type,"TATS") && strcmp(Type,"UQES"))
@@ -704,8 +656,6 @@ while(strcmp(Type,"GNHT") && count<filelen)
 						  //Object.PlayerStat[Object.numPlayerStats].Loop.List.Add(Object.ImageCode);
 						  //Object.PlayerStat[Object.numPlayerStats].SubCat=Object.numSubCats;
 						  memcpy((void*)&Type,(const void*)&*(buff+count),sizeof(int));
-					
-							
 							}
 						
 						//Object.numPlayerStats++;
@@ -731,13 +681,9 @@ while(strcmp(Type,"GNHT") && count<filelen)
 
 
             case 3:// return(Object);
-				
-
-		//
+				//
 				// THIS IS THE JACK DRAWING!!!.....BE CAREFULL!
 				//
-                
-
 			    Length64=0;
 				count+=((8 - count % 8) % 8);//SkipToNextBoundary
 				memcpy((void*)&Length64,(const void*)&*(buff+count),sizeof(Length64));
@@ -747,8 +693,8 @@ while(strcmp(Type,"GNHT") && count<filelen)
 				if(/*!strcmp(str,"PlayerDraw") && */strcmp(str,"MonsterDraw") && strcmp(str,"MaidenDraw") && strcmp(str,"AnimateDraw"))
 				{
 					count=finishPos;
-				break;						
-					}
+					break;						
+				}
 
                 while(count<finishPos)
 				{
@@ -768,7 +714,6 @@ while(strcmp(Type,"GNHT") && count<filelen)
 						strcpy((char*)Stat.nullString,Object.aniName);
                         //Object.Stat[Object.numStats].nullString=Object.aniName;
                          count+=4;
-						 
 
 						memset(Object.aniName,0x00,20);
 						Length32=0;
@@ -779,9 +724,6 @@ while(strcmp(Type,"GNHT") && count<filelen)
 						strcpy((char*)Stat.loopName,Object.aniName);
 						//Object.Stat[Object.numStats].loopName=Object.aniName;						
 
-
-                    
- 
                         memcpy((void*)&Type,(const void*)&*(buff+count),sizeof(int));
 						subcount=0;
 						while(strcmp(Type," DNE") && strcmp(Type,"TATS"))
@@ -793,9 +735,7 @@ while(strcmp(Type,"GNHT") && count<filelen)
 						  //Object.Stat[Object.numStats].Loop.numImages++;
 						  Stat.Images.Add(Object.ImageCode);
 						  //Object.Stat[Object.numStats].Loop.List.Add(Object.ImageCode);
-						  memcpy((void*)&Type,(const void*)&*(buff+count),sizeof(int));
-					
-							
+						  memcpy((void*)&Type,(const void*)&*(buff+count),sizeof(int));					
 							}
 						Object.Stats.Add(Stat);
                         memset((void*)&Stat,0x00,sizeof(TATS));
@@ -803,19 +743,16 @@ while(strcmp(Type,"GNHT") && count<filelen)
 							}
 					}
 	
-
 				memcpy((void*)&Object.aniName,(const void*)&str,50);
-
 				memcpy((void*)&Type,(const void*)&*(buff+count),sizeof(int));
 				while(strcmp(Type," DNE"))
 				{
 					memcpy((void*)&Type,(const void*)&*(buff+count),sizeof(int));
 					count++;
-					}
+				}
 				count+=3;
 				count=finishPos;
 				break;
-
 
             case 4: //return(Object);
 				count+=((8 - count % 8) % 8);//SkipToNextBoundary
@@ -828,13 +765,11 @@ while(strcmp(Type,"GNHT") && count<filelen)
 				memcpy((void*)&numFrames,(const void*)&*(buff+count),sizeof(BYTE));
                 count+=sizeof(BYTE);
 				
-              //  Object.numStats=1;
-
+				//Object.numStats=1;
 				while (numFrames-- > 0)
 				{//rdr.ReadInt32();
 				
-				   memcpy((void*)&Object.ImageCode,(const void*)&*(buff+count),sizeof(int));
-				   
+				   memcpy((void*)&Object.ImageCode,(const void*)&*(buff+count),sizeof(int));		   
 				  // Object.Stat[0].Loop.Images[Object.Stat[0].Loop.numImages]=Object.ImageCode;
 				  // Object.Stat[0].Loop.numImages++;					
 					////////////////////////////////////////////////////////////
@@ -872,7 +807,7 @@ while(strcmp(Type,"GNHT") && count<filelen)
 						//HACK: right now we just read until we reach the given length, tacking on the frames to the existing ones
 						while (count < finishPos)
 						{
-							
+
 						if(count+4>finishPos)
 						{count=finishPos;} //DO NOT READ THIS ANIMATION!
 						else
@@ -945,9 +880,7 @@ while(strcmp(Type,"GNHT") && count<filelen)
 					}
 					Object.Stats.Add(Stat);
                     memset((void*)&Stat,0x00,sizeof(TATS));
-				}
-
-						
+				}		
 						count=finishPos;
 					
 				 memcpy((void*)&Object.aniName,(const void*)&str,50);
@@ -960,8 +893,7 @@ while(strcmp(Type,"GNHT") && count<filelen)
 
             case 8: //return(Object);
 				memcpy((void*)&Object.PrettyImage,(const void*)&*(buff+count),sizeof(int));
-                count+=sizeof(int);				
-				
+                count+=sizeof(int);					
 				break;
 
             case 9: //return(Object);
@@ -975,7 +907,7 @@ while(strcmp(Type,"GNHT") && count<filelen)
 
 	   if(*(buff+count)==0x00)
 				{
-				count++;
+					count++;
 				}
 	   memcpy((void*)&*(Type),(const void*)&*(buff+count),sizeof(int));
        }
@@ -1018,7 +950,6 @@ count+=((8 - count % 8) % 8);
 numObjects = (long)*(buff+count);
 count+=sizeof(long);
 count+=((8 - count % 8) % 8);
-
 
 for(int i=0; i<numObjects; i++)
 {
@@ -1237,9 +1168,6 @@ bool ThingBin::Load_Image(long &count,unsigned char *buff, GAMI & Image)
   int numLoop=0,temp=0;
   unsigned int ImageCode = 0;
   BYTE numImages = 0;
-
-
-
 
 memcpy((void*)&Image.nameLen,(const void*)&*(buff+count),sizeof(BYTE));
 count++;
