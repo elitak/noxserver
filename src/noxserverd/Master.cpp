@@ -101,8 +101,8 @@ void Master::Run()
     sLog.outTitle( "        MMMMMM\n\n");
 
     ///- Start the databases
-    if (!_StartDB())
-        return;
+   // if (!_StartDB())
+   //     return;
 
     ///- Initialize the World
     sWorld.SetInitialWorldSettings();
