@@ -7,9 +7,9 @@
 using namespace std;
 
 
-////
+//////
 // Properties store object strings and information 
-////
+//////
   struct Property
    {
 	   unsigned char ValueLen;
