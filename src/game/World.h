@@ -25,6 +25,7 @@
 #define __WORLD_H
 
 #include "Common.h"
+#include "NoxMap.h"
 #include "Timer.h"
 #include "Policies/Singleton.h"
 using namespace std;
@@ -193,6 +194,7 @@ class World
 
 		uint8 RequestFreeId();
 		void ReturnFreeId(uint8 id);
+		NoxMap* GetMap() { return m_map; }
 
     protected:
 
@@ -219,6 +221,8 @@ class World
 
         uint32 m_ShutdownIdleMode;
         uint32 m_ShutdownTimer;
+
+		NoxMap* m_map;
 };
 
 

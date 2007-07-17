@@ -26,6 +26,9 @@
 #include "Unit.h"
 #include "WorldSession.h"
 
+///Collision
+#include "flatland/flatland.hpp"
+
 class DynamicObject;
 class UpdateMask;
 
@@ -102,7 +105,7 @@ enum PlayerStateType
     PLAYER_STATE_FLAG_ALL          = 0xFF000000,
 };
 
-typedef std::set<Object*> UpdateQueueType;
+typedef std::set<WorldObject*> UpdateQueueType;
 
 class MANGOS_DLL_SPEC Player : public Unit
 {
@@ -118,29 +121,32 @@ class MANGOS_DLL_SPEC Player : public Unit
 
 		void Update(time_t time);
 
-		void AddUpdateObject(Object* obj) { updateQueue.insert(obj); }
-		void RemoveUpdateObject(Object* obj) { }
+		void AddUpdateObject(WorldObject* obj) { updateQueue.insert(obj); }
+		void RemoveUpdateObject(WorldObject* obj) { }
 
-          /*void Laugh();
-          void Point();
-          void Taunt();*/
+		void Laugh();
+		void Point();
+		void Taunt();
 
-		void Move(int16 deltax, int16 deltay);
 		void SetPosition(GridPair position);
 		void ForceUpdateAll() { updateAll = true; };
-		bool Equip(Object* obj);
-		void EquipSecondary(Object* obj);
-		bool Dequip(Object* obj);
-		bool Pickup(Object* obj, uint32 max_dist = 0);
-          bool RemoveFromInventory(Object* obj, GridPair newPos);
-		void ObjectOutOfSight(Object* obj);
-		void ObjectDestroyed(Object* obj);
+		void UpdateView();
 
+		bool Equip(WorldObject* obj);
+		void EquipSecondary(WorldObject* obj);
+		bool Dequip(WorldObject* obj);
+		bool Pickup(WorldObject* obj, uint32 max_dist = 0);
+		bool RemoveFromInventory(WorldObject* obj, GridPair newPos);
+		void ObjectOutOfSight(WorldObject* obj);
+		void ObjectDestroyed(WorldObject* obj);
+
+		static void PlayerCollideCallback(Flatland::ContactList &contacts);
     protected:
 		PlayerInfo plrInfo;
 		WorldSession* m_session;
 		
 		bool updateAll;
+		GridPair m_oldposition;
 		
 		UpdateQueueType updateQueue;
 

@@ -101,19 +101,11 @@ void Master::Run()
     sLog.outTitle( "        MMMMMM\n\n");
 
     ///- Start the databases
-   // if (!_StartDB())
-   //     return;
+    //if (!_StartDB())
+    //    return;
 
     ///- Initialize the World
     sWorld.SetInitialWorldSettings();
-
-	fstream* thing = new fstream("C:\\Program Files\\Nox\\thing.bin", ios_base::in|ios_base::binary);
-	sThingBin.Load_Thingdb(thing);
-	thing->close();
-	delete thing;
-
-	NoxMap map;
-	map.open("C:\\Program Files\\Nox\\maps\\manamine\\manamine.map");
 
     ///- Launch the world listener socket
     port_t wsport = 18590;

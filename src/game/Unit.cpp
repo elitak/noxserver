@@ -31,6 +31,12 @@
 
 #include <math.h>
 
+#include "ode/ode.h"
+
+Unit::Unit( uint16 type, GridPair pos, uint16 extent) : WorldObject(type, pos, extent)
+{
+	memset(m_equipment, 0, SLOT_SIZE * sizeof(Object*));
+}
 Unit::Unit( WorldObject *instantiator ) : WorldObject( instantiator )
 {
  //   m_objectType |= TYPE_UNIT;
@@ -67,6 +73,8 @@ void Unit::Update( uint32 p_time )
 	{
 		if((m_action_time - p_time) <= 0)
 		{
+			if(m_action == ACTION_RUN || m_action == ACTION_IDLE)
+				dBodySetLinearVel(body->GetBody(), 0.0f, 0.0f, 0.0f);
 			m_action = ACTION_IDLE;
 		}
 		else
@@ -85,24 +93,21 @@ void Unit::MoveToward(uint16 _x, uint16 _y)
 	float SPEED;
 	if(len > 30.0)
 	{
-		SPEED = 10.0;
+		SPEED = 0.2;
 		m_action = ACTION_RUN;
 		m_action_time = 50;
 	}
 	else
 	{
-		SPEED = 5.0;
+		SPEED = 0.05;
 		m_action = ACTION_WALK;
 		m_action_time = 50;
 	}
 
-	Move(unit_x*SPEED, unit_y*SPEED);
+	dBodySetLinearVel(body->GetBody(), unit_x*SPEED, unit_y*SPEED, 0.0f);	
 }
 
-void Unit::Move(int16 deltax, int16 deltay)
-{
-	Object::SetPosition(GridPair(m_position.x_coord+deltax, m_position.y_coord+deltay));
-}
+
 
 void Unit::Laugh()
 {
@@ -121,7 +126,7 @@ void Unit::Taunt()
      m_action_time = 1000;
 }
 
-bool Unit::Equip(Object *obj)
+bool Unit::Equip(WorldObject *obj)
 {
 	if(!obj)
 		return false;
@@ -147,7 +152,7 @@ bool Unit::Equip(Object *obj)
 	return true;
 }
 
-bool Unit::Equip(Object *obj, uint32 slot)
+bool Unit::Equip(WorldObject *obj, uint32 slot)
 {
 	if(!obj || !InMyInventory(obj) || slot >= SLOT_SIZE)
 		return false;
@@ -157,7 +162,7 @@ bool Unit::Equip(Object *obj, uint32 slot)
 	return true;
 }
 
-bool Unit::Dequip(Object *obj)
+bool Unit::Dequip(WorldObject *obj)
 {
 	if(!obj)
 		return false;

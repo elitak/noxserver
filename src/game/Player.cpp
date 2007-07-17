@@ -29,12 +29,12 @@
 #include "UpdateMask.h"
 #include "Player.h"
 
-Player::Player (WorldSession *session): Unit( 0 )
+#include "flatland/flatland.hpp"
+
+Player::Player (WorldSession *session): Unit(0x2C9, GridPair(2285, 2500), 0)
 {
-	//m_extent = 100;
-	m_objectType = 0x2C9;
-	m_position.x_coord = 3000;
-	m_position.y_coord = 3000;
+	//body->setCollisionFlags(body->getCollisionFlags()  | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
+
 	m_session = session;
 
 	memset(&plrInfo, 0, sizeof(plrInfo));
@@ -55,12 +55,14 @@ void Player::Update(time_t time)
 {
 	if(updateAll)
 	{
-		std::vector<Object*> v = objmgr.GetObjectsInRect(GridPair(GetPositionX() - 300, GetPositionY() - 300), GridPair(GetPositionX() + 300, GetPositionY() + 300));
+		std::vector<WorldObject*> v = objmgr.GetObjectsInRect(GridPair(GetPositionX() - 300, GetPositionY() - 300), GridPair(GetPositionX() + 300, GetPositionY() + 300));
 		updateQueue.insert(v.begin(), v.end());
 
 		updateAll = false;
 	}
-	
+	else
+		UpdateView();
+
 	// TODO: health/mana regen, death stuff, etc.
 	SendUpdatePacket();
 
@@ -77,8 +79,8 @@ void Player::_BuildUpdatePacket(WorldPacket& packet)
 	packet << (uint8)0xFF;
 	packet << (uint16)GetExtent();
 	packet << (uint16)GetType();
-	packet << (uint16)GetPosition().x_coord;
-	packet << (uint16)GetPosition().y_coord;
+	packet << (uint16)GetPositionX();
+	packet << (uint16)GetPositionY();
 	packet << (uint8)( rot_data[(uint8)floor((double)GetAngle() / 0x20 + 0.5) & 0x7] );
 	packet << (uint8)m_action;
 }
@@ -127,7 +129,7 @@ void Player::SendUpdatePacket()
 	GetSession()->SendPacket(&packet);
 }
 
-/*void Player::Laugh()
+void Player::Laugh()
 {
      Unit::Laugh();
      WorldPacket packet(MSG_SOCIAL);
@@ -149,33 +151,9 @@ void Player::Taunt()
      WorldPacket packet(MSG_SOCIAL);
      //packet << (uint16)30;
      m_session->SendPacket(&packet);
-}*/
-
-void Player::Move(int16 deltax, int16 deltay)
-{
-	Unit::Move(deltax, deltay);
-	m_session->MoveMouse(deltax, deltay);
-	if(deltax)
-	{
-		GridPair leftTop(deltax < 0 ? GetPositionX() - 300 : GetPositionX() - deltax + 300, GetPositionY() - 300);
-		GridPair rightBottom(leftTop.x_coord + abs(deltax), GetPositionY() + 300);
-		std::vector<Object*> v = objmgr.GetObjectsInRect(leftTop, rightBottom);
-		updateQueue.insert(v.begin(), v.end());
-	}
-	if(deltay)
-	{
-		GridPair leftTop(GetPositionX() - 300, deltay < 0 ? GetPositionY() - 300 : GetPositionY() - deltay + 300);
-		GridPair rightBottom(GetPositionX() + 300, leftTop.y_coord + abs(deltay));
-		std::vector<Object*> v = objmgr.GetObjectsInRect(leftTop, rightBottom);
-		updateQueue.insert(v.begin(), v.end());
-	}
 }
-void Player::SetPosition(GridPair position)
-{
-	Unit::SetPosition(position);
 
-}
-bool Player::Equip(Object* obj)
+bool Player::Equip(WorldObject* obj)
 {
 	if(Unit::Equip(obj))
 	{
@@ -188,7 +166,7 @@ bool Player::Equip(Object* obj)
 	else
 		return false;
 }
-bool Player::Dequip(Object* obj)
+bool Player::Dequip(WorldObject* obj)
 {
 	if(Unit::Dequip(obj))
 	{
@@ -201,7 +179,7 @@ bool Player::Dequip(Object* obj)
 	else
 		return false;
 }
-bool Player::Pickup(Object* obj, uint32 max_dist)
+bool Player::Pickup(WorldObject* obj, uint32 max_dist)
 {
 	if(Unit::Pickup(obj, max_dist))
 	{
@@ -216,7 +194,7 @@ bool Player::Pickup(Object* obj, uint32 max_dist)
 	else
 		return false;
 }
-bool Player::RemoveFromInventory(Object* obj, GridPair newPos)
+bool Player::RemoveFromInventory(WorldObject* obj, GridPair newPos)
 {
      if(InMyInventory(obj))
      {
@@ -232,7 +210,7 @@ bool Player::RemoveFromInventory(Object* obj, GridPair newPos)
      }
      return false;
 }
-void Player::ObjectOutOfSight(Object* obj)
+void Player::ObjectOutOfSight(WorldObject* obj)
 {
 	updateQueue.erase(obj);
 
@@ -240,19 +218,19 @@ void Player::ObjectOutOfSight(Object* obj)
 	packet << (uint16)obj->GetExtent();
 	GetSession()->SendPacket(&packet);
 }
-void Player::ObjectDestroyed(Object* obj)
+void Player::ObjectDestroyed(WorldObject* obj)
 {
 	updateQueue.erase(obj);
 	WorldPacket packet(MSG_DESTROY_OBJECT);
 	packet << (uint16)obj->GetExtent();
 	GetSession()->SendPacket(&packet);
 }
-void Player::EquipSecondary(Object* obj)
+void Player::EquipSecondary(WorldObject* obj)
 {
 	if(!obj && !InMyInventory(obj))
 		return;
-	Object* newSecondary = obj ? obj : m_equipment[SLOT_WEP_PRIMARY];
-	Object* oldSecondary = m_equipment[SLOT_WEP_SECONDARY];
+	WorldObject* newSecondary = obj ? obj : m_equipment[SLOT_WEP_PRIMARY];
+	WorldObject* oldSecondary = m_equipment[SLOT_WEP_SECONDARY];
 	m_equipment[SLOT_WEP_SECONDARY] = newSecondary;
 
 	Dequip(newSecondary);
@@ -263,4 +241,33 @@ void Player::EquipSecondary(Object* obj)
 
 	if(!obj) // NULL object (0 extent) means swap weps.
 		Equip(oldSecondary);
+}
+void Player::PlayerCollideCallback(Flatland::ContactList &contacts)
+{
+
+}
+void Player::UpdateView()
+{
+	GridPair pos = GetPosition();
+	if(m_oldposition.x_coord && m_oldposition.y_coord)
+	{
+		int16 deltax = m_oldposition.x_coord - pos.x_coord;
+		int16 deltay = m_oldposition.y_coord - pos.y_coord;
+		if(deltax)
+		{
+			GridPair leftTop(deltax < 0 ? GetPositionX() - 300 : GetPositionX() - deltax + 300, GetPositionY() - 300);
+			GridPair rightBottom(leftTop.x_coord + abs(deltax), GetPositionY() + 300);
+			std::vector<WorldObject*> v = objmgr.GetObjectsInRect(leftTop, rightBottom);
+			updateQueue.insert(v.begin(), v.end());
+		}
+		if(deltay)
+		{
+			GridPair leftTop(GetPositionX() - 300, deltay < 0 ? GetPositionY() - 300 : GetPositionY() - deltay + 300);
+			GridPair rightBottom(GetPositionX() + 300, leftTop.y_coord + abs(deltay));
+			std::vector<WorldObject*> v = objmgr.GetObjectsInRect(leftTop, rightBottom);
+			updateQueue.insert(v.begin(), v.end());
+		}
+	}
+
+	m_oldposition = pos;
 }

@@ -28,6 +28,10 @@
 #include "Policies/Singleton.h"
 #include "Database/SQLStorage.h"
 
+/// Collision Library
+#include "flatland/flatland.hpp"
+
+class ObjectMgr;
 class WorldSession;
 class WorldPacket;
 
@@ -52,10 +56,32 @@ struct OpcodeHandler
 #define MAX_EXTENT		0x7FFF //extents are actually signed, lol
 
 typedef HM_NAMESPACE::hash_map< uint16 , OpcodeHandler > OpcodeTableMap;
-typedef HM_NAMESPACE::hash_map< uint16 , Object* > ObjectTableMap;
+typedef std::set< Object* > ObjectTableMap;
+
+class NoxWallLine : public Flatland::Line
+{
+public:
+	NoxWallLine(Flatland::vec2 a, Flatland::vec2 b);
+};
+
+// This is here in order to add walls to the object list
+class NoxWallObject : Object
+{
+	friend ObjectMgr;
+public:
+	void AddWall(CoordPair<0xFF> pos, uint8 facing);
+protected:
+	NoxWallObject();
+	~NoxWallObject();
+
+	Flatland::Composite* CreateWall(CoordPair<0xFF> pos, uint8 flags);
+
+	Flatland::Composite* shape;
+};
 
 class ObjectMgr
 {
+	friend NoxWallMap;
     public:
         ObjectMgr();
         ~ObjectMgr();
@@ -64,36 +90,23 @@ class ObjectMgr
         Begin() { return objectTable.begin(); }
         ObjectTableMap::iterator
         End() { return objectTable.end(); }
-        Object* GetObj(const uint16 extent)
+        WorldObject* GetObj(const uint16 extent)
 		{
-			ObjectTableMap::const_iterator itr =
-				objectTable.find(extent);
-			if(itr == objectTable.end() || itr->second->GetExtent() != extent)
-				return NULL;
+			Object* obj = GetImmobileObj(extent);
+			if(obj && !obj->IsImmobile())
+				return (WorldObject*)obj;
 			else
-				return itr->second;
+				return NULL;
 		}
-        void AddObject(Object *obj)
+		Object* GetImmobileObj(const uint16 extent)
 		{
-			ASSERT(obj);
-			if(!obj->GetExtent() || !RequestExtent(obj->GetExtent()))
-				obj->m_extent = RequestExtent();
-			objectTable[obj->GetExtent()] = obj;
+			if(extent > MAX_EXTENT)
+				return NULL;
+			return objectExtents[extent];
 		}
-        bool RemoveObject(Object *obj, bool recycleExtent = true)
-		{
-			ObjectTableMap::iterator i = objectTable.find(obj->GetExtent());
-			if(i == objectTable.end())
-				return false;
-			if(recycleExtent)
-			{
-				ReturnExtent(obj->GetExtent());
-				obj->m_extent = 0;
-			}
-			objectTable.erase(i);
-			return true;
-		}
-		bool ChangeObjectExtent(Object *obj, uint16 newExtent)
+        void AddObject(Object *obj);
+        bool RemoveObject(Object *obj);
+		bool ChangeObjectExtent(WorldObject *obj, uint16 newExtent)
 		{
 			if(!IsExtentAvailable(newExtent))
 				return false;
@@ -104,54 +117,52 @@ class ObjectMgr
 		}
 		uint16 RequestExtent()
 		{
-			uint8* ptr = (uint8*)memchr(freeExtents, 0, 0xFFFF);
+			uint32* ptr;
+			do {
+			ptr = (uint32*)memchr(objectExtents+1, 0, MAX_EXTENT);
+			} while(ptr != NULL && *ptr != 0);
 			if(ptr == NULL)
 				return INVALID_EXTENT;
 			
-			uint16 extent = (uint16)((ptr - freeExtents + 1));
-			if(RequestExtent(extent))
-				return extent;
-			else
-				return INVALID_EXTENT;
-		}
+			uint16 extent = (uint16)((ptr - (uint32*)objectExtents));
 
-		bool RequestExtent(uint16 extent)
-		{
-			if(extent > MAX_EXTENT || !IsExtentAvailable(extent))
-				return false;
-			freeExtents[extent-1] = 1;
-			return true;
-		}
-
-		void ReturnExtent(uint16 extent)
-		{
-			if(extent > 0 && extent <= MAX_EXTENT)
-				freeExtents[extent-1] = 0;
+			return extent;
 		}
 
 		bool IsExtentAvailable(uint16 extent)
 		{
-			if(extent == 0 || objectTable.find(extent) != objectTable.end())
+			if(extent == 0 || extent > MAX_EXTENT || objectExtents[extent])
 				return false;
 			return true;
 		}
 
 		bool ContainsObject(Object* obj)
 		{
-			return objectTable.find(obj->GetExtent()) != objectTable.end();
+			return objectExtents[obj->GetExtent()] != NULL;
 		}
 
-		std::vector<Object*> GetObjectsInRect(GridPair rightCorner, GridPair leftCorner);
+		std::vector<WorldObject*> GetObjectsInRect(GridPair rightCorner, GridPair leftCorner);
+		void Update(float diff);
 
 		Object* CreateObjectFromFile(NoxBuffer* rdr, NoxObjectTOC* toc);
+		Flatland::Body createBody() { return World.BodyCreate(); }
 
-        OpcodeTableMap opcodeTable;
+		void AddCollisionWalls() 
+		{ 
+			collisionWalls.shape->UpdateBounds();
+			objectTable.insert(&collisionWalls);
+		}
+
+		NoxWallObject collisionWalls;
+		OpcodeTableMap opcodeTable;
     protected:
         //template<class T> HM_NAMESPACE::hash_map<uint32,T*>& _GetContainer();
         //template<class T> TYPEID _GetTypeId() const;
 
 		ObjectTableMap	objectTable;
-		uint8			freeExtents[MAX_EXTENT];
+		Object*			objectExtents[MAX_EXTENT+1];
+
+		Flatland::World World;
     private:
 };
 

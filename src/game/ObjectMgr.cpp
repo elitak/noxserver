@@ -23,6 +23,7 @@
 
 #include "Log.h"
 #include "WorldLog.h"
+#include "ObjectAccessor.h"
 #include "ObjectMgr.h"
 #include "NoxMap.h"
 #include "NoxThinglib.h"
@@ -32,16 +33,18 @@
 #include "ProgressBar.h"
 #include "Policies/SingletonImp.h"
 
+/// Collisions
+#include "flatland/flatland.hpp"
+
 INSTANTIATE_SINGLETON_1(ObjectMgr);
 
 ObjectMgr::ObjectMgr()
 {
-	memset(freeExtents, 0, MAX_EXTENT);
+	memset(objectExtents, 0, MAX_EXTENT);
 }
 
 ObjectMgr::~ObjectMgr()
 {
-
 }
 
 Object* ObjectMgr::CreateObjectFromFile(NoxBuffer* rdr, NoxObjectTOC* toc)
@@ -54,16 +57,14 @@ Object* ObjectMgr::CreateObjectFromFile(NoxBuffer* rdr, NoxObjectTOC* toc)
 		return NULL;
 	rdr->skip();
 	
-	type2 = sThingBin.Thing.Object.GetIndex((*toc)[type].c_str(), (*toc)[type].size());
-	sWorldLog.Log("Object: %s %s (0x%.4X)",(*toc)[type].c_str(), sThingBin.Thing.Object.Objects.Get(type2-1)->Name, type2); // get string object name
-	ASSERT(type2 != 0);
+	type = sThingBin.Thing.Object.GetIndex((*toc)[type].c_str(), (*toc)[type].size());
+	ASSERT(type != 0);
 
-	Object* obj = new Object(type2);
 	size_t finish = rdr->read<int64>() + rdr->rpos();
 
 	rdr->read<uint16>(); // properties
 	type2 = rdr->read<uint16>(); // type2
-	ChangeObjectExtent(obj, rdr->read<uint16>()); // extent
+	uint16 extent = rdr->read<uint16>(); // extent
 	rdr->read<uint16>();
 	rdr->read<uint32>();
 
@@ -72,7 +73,6 @@ Object* ObjectMgr::CreateObjectFromFile(NoxBuffer* rdr, NoxObjectTOC* toc)
 	
 	sWorldLog.Log("\tX: %f Y: %f\n", x, y);
 
-	obj->SetPosition(GridPair(x, y)); // x, y are floats
 	if(rdr->read<uint8>() == 0xFF)
 	{
 		rdr->read<uint8>();
@@ -92,6 +92,12 @@ Object* ObjectMgr::CreateObjectFromFile(NoxBuffer* rdr, NoxObjectTOC* toc)
 		rdr->read<uint64>();
 	}
 
+	Object* obj = NULL;
+	if(sThingBin.Thing.Object.Objects.Get(type)->classes & CLASS_IMMOBILE)
+		obj = new Object(type, GridPair(x, y), extent);
+	else
+		obj = new WorldObject(type, GridPair(x, y), extent);
+
 	if(rdr->rpos() < finish)
 		rdr->rpos(finish); // ignore modifiers for now
 	else
@@ -99,7 +105,7 @@ Object* ObjectMgr::CreateObjectFromFile(NoxBuffer* rdr, NoxObjectTOC* toc)
 	
 	for(;inventory > 0; inventory--)
 	{
-		Object* child = CreateObjectFromFile(rdr, toc);
+		WorldObject* child = (WorldObject*)CreateObjectFromFile(rdr, toc);
 		if(child != NULL)
 			obj->m_inventory.insert(child);
 		else
@@ -109,13 +115,129 @@ Object* ObjectMgr::CreateObjectFromFile(NoxBuffer* rdr, NoxObjectTOC* toc)
 	return obj;
 }
 
-std::vector<Object*> ObjectMgr::GetObjectsInRect(GridPair leftTop, GridPair rightBottom)
+std::vector<WorldObject*> ObjectMgr::GetObjectsInRect(GridPair leftTop, GridPair rightBottom)
 {
-	std::vector<Object*> v;
+	std::vector<WorldObject*> v;
 	for(ObjectTableMap::iterator iter = objectTable.begin(); iter != objectTable.end(); ++iter)
 	{
-		if(iter->second->GetPosition().in(leftTop, rightBottom))
-			v.push_back(iter->second);
+		if(!(*iter)->IsImmobile() && (*iter)->GetPosition().in(leftTop, rightBottom))
+			v.push_back((WorldObject*)*iter);
 	}
 	return v;
+}
+
+void ObjectMgr::AddObject(Object *obj)
+{
+	ASSERT(obj);
+	if(GetObj(obj->GetExtent()) == obj)
+		return;
+	if(!obj->GetExtent() || !IsExtentAvailable(obj->GetExtent()))
+		obj->m_extent = RequestExtent();
+	objectExtents[obj->GetExtent()] = obj;
+	objectTable.insert(obj);
+}
+bool ObjectMgr::RemoveObject(Object *obj)
+{
+	ObjectTableMap::iterator i = objectTable.find(obj);
+	if(i == objectTable.end())
+		return false;
+	objectTable.erase(i);
+	objectExtents[obj->GetExtent()] = 0;
+	return true;
+}
+
+void ObjectMgr::Update(float diff)
+{
+	if(!objectTable.size())
+		return;
+	World.GenerateContacts(objectTable);
+	World.QuickStep(diff);
+	//ASSERT(!World.IsCorrupt(objectTable));
+}
+
+NoxWallObject::NoxWallObject() : Object()
+{
+	shape = new Flatland::Composite(Flatland::vec2(0.0f,0.0f));
+	body = new Flatland::Static<Flatland::Composite>(shape);
+
+	body->Property().bounceVelocity = 0.0f;
+}
+NoxWallObject::~NoxWallObject()
+{
+	delete body;
+	delete shape;
+}
+void NoxWallObject::AddWall(CoordPair<255> pos, uint8 facing)
+{
+	switch(facing)
+	{
+		case WALL_NORTH:
+			shape->push_back(CreateWall(pos, WALL_NORTH_FLAG | WALL_SOUTH_FLAG));
+		break;
+		case WALL_WEST:
+			shape->push_back(CreateWall(pos, WALL_EAST_FLAG | WALL_WEST_FLAG));
+		break;
+		case WALL_SW_CORNER:
+			shape->push_back(CreateWall(pos, WALL_WEST_FLAG | WALL_NORTH_FLAG));
+		break;
+		case WALL_NW_CORNER:
+			shape->push_back(CreateWall(pos, WALL_NORTH_FLAG | WALL_EAST_FLAG));
+		break;
+		case WALL_NE_CORNER:
+			shape->push_back(CreateWall(pos, WALL_SOUTH_FLAG | WALL_EAST_FLAG));
+		break;
+		case WALL_SE_CORNER:
+			shape->push_back(CreateWall(pos, WALL_WEST_FLAG | WALL_SOUTH_FLAG));
+		break;
+		case WALL_SOUTH_T:
+			shape->push_back(CreateWall(pos, WALL_WEST_FLAG | WALL_NORTH_FLAG | WALL_SOUTH_FLAG));
+			break;
+		case WALL_EAST_T:
+			shape->push_back(CreateWall(pos, WALL_NORTH_FLAG | WALL_EAST_FLAG | WALL_WEST_FLAG));
+			break;
+		case WALL_NORTH_T:
+			shape->push_back(CreateWall(pos, WALL_SOUTH_FLAG | WALL_EAST_FLAG | WALL_NORTH_FLAG));
+			break;
+		case WALL_WEST_T:
+			shape->push_back(CreateWall(pos, WALL_WEST_FLAG | WALL_EAST_FLAG | WALL_SOUTH_FLAG));
+			break;
+		default:
+			shape->push_back(CreateWall(pos, WALL_NORTH_FLAG | WALL_SOUTH_FLAG));
+			break;
+	}
+}
+Flatland::Composite* NoxWallObject::CreateWall(CoordPair<255> pos, uint8 flags)
+{
+	const float wallSize = 23.0;
+	const float halfSize = 11.5;
+	Flatland::vec2 center(pos.x_coord * wallSize + halfSize, pos.y_coord * wallSize + halfSize);
+	Flatland::Composite* comp = new Flatland::Composite(center);
+	NoxWallLine* line;
+	if(flags & WALL_NORTH_FLAG)
+	{
+		line = new NoxWallLine(center, Flatland::vec2(center.x + halfSize, center.y - halfSize));
+		comp->push_back(line);
+	}
+	if(flags & WALL_SOUTH_FLAG)
+	{
+		line = new NoxWallLine(center, Flatland::vec2(center.x - halfSize, center.y + halfSize));
+		comp->push_back(line);
+	}
+	if(flags & WALL_EAST_FLAG)
+	{
+		line = new NoxWallLine(center, Flatland::vec2(center.x + halfSize, center.y + halfSize));
+		comp->push_back(line);
+	}
+	if(flags & WALL_WEST_FLAG)
+	{
+		line = new NoxWallLine(center, Flatland::vec2(center.x - halfSize, center.y - halfSize));
+		comp->push_back(line);
+	}
+
+	return comp;
+}
+
+NoxWallLine::NoxWallLine(Flatland::vec2 a, Flatland::vec2 b) : Flatland::Line(a, b)
+{
+	extent[1] = 5;
 }

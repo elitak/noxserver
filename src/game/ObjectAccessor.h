@@ -57,8 +57,8 @@ class MANGOS_DLL_DECL ObjectAccessor : public MaNGOS::Singleton<ObjectAccessor, 
         void InsertPlayer(Player *);
         void RemovePlayer(Player *);
 
-        void AddUpdateObject(Object *obj);
-        void RemoveUpdateObject(Object *obj);
+        void AddUpdateObject(WorldObject *obj);
+        void RemoveUpdateObject(WorldObject *obj);
 
         void AddObjectToRemoveList(WorldObject   *obj);
 
@@ -96,7 +96,7 @@ class MANGOS_DLL_DECL ObjectAccessor : public MaNGOS::Singleton<ObjectAccessor, 
         static void _buildChangeObjectForPlayer(WorldObject *, UpdateDataMapType &);
         static void _buildPacket(Player *, Object *, UpdateDataMapType &);
         void _update(void);
-        std::set<Object *> i_objects;
+        std::set<WorldObject *> i_objects;
         std::set<WorldObject *> i_objectsToRemove;
         LockType i_playerGuard;
         LockType i_updateGuard;

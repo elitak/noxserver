@@ -174,18 +174,19 @@ enum UnitWeaponType
 class MANGOS_DLL_SPEC Unit : public WorldObject
 {
     public:
+		Unit(uint16 type, GridPair pos, uint16 extent);
         virtual ~Unit ( );
         virtual void Update( uint32 time );
 		virtual void MoveToward( uint16 x, uint16 y );
-		virtual void Move( int16 deltax, int16 deltay );
 
-          virtual void Laugh();
-          virtual void Point();
-          virtual void Taunt();
+		virtual void Laugh();
+        virtual void Point();
+        virtual void Taunt();
 
-		virtual bool Equip( Object* obj );
-		virtual bool Equip( Object* obj, uint32 slot );
-		virtual bool Dequip( Object* obj );
+		virtual bool Equip( WorldObject* obj );
+		virtual bool Equip( WorldObject* obj, uint32 slot );
+		virtual bool Dequip( WorldObject* obj );
+
 		void _BuildEquipPacket(WorldPacket& packet, bool armor, uint32 slot, uint32 modifier = 0);
 		void _BuildDequipPacket(WorldPacket& packet, bool armor, uint32 slot);
 		static uint32 ObjectToUnitArmor(Object* obj);
@@ -198,7 +199,7 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
 		time_t m_action_time;
 
 		uint8 m_angle;
-		Object* m_equipment[SLOT_SIZE];
+		WorldObject* m_equipment[SLOT_SIZE];
    
     private:
 

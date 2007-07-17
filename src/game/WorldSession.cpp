@@ -967,7 +967,7 @@ void WorldSession::HandleTryDropOpcode(WorldPacket& recv_data)
 {
     //sLog.outDebug("New Unknown Opcode %u", recv_data.GetOpcode());
     //recv_data.hexlike();
-    Object* obj = objmgr.GetObj(recv_data.read<uint16>());
+    WorldObject* obj = objmgr.GetObj(recv_data.read<uint16>());
     uint16 x = recv_data.read<uint16>();
     uint16 y = recv_data.read<uint16>();
     if(!(_player->Drop(obj,75, GridPair(x,y))))
@@ -978,7 +978,7 @@ void WorldSession::HandleTryGetOpcode(WorldPacket& recv_data)
 {
     //sLog.outDebug("New Unknown Opcode %u", recv_data.GetOpcode());
     //recv_data.hexlike();
-	Object* obj = objmgr.GetObj(recv_data.read<uint16>());
+	WorldObject* obj = objmgr.GetObj(recv_data.read<uint16>());
 	_player->Pickup(obj, 75);
 }
 void WorldSession::HandleTryUseOpcode(WorldPacket& recv_data)
@@ -991,14 +991,14 @@ void WorldSession::HandleTryEquipOpcode(WorldPacket& recv_data)
 {
     //sLog.outDebug("New Unknown Opcode %u", recv_data.GetOpcode());
     //recv_data.hexlike();
-	Object* obj = objmgr.GetObj(recv_data.read<uint16>());
+	WorldObject* obj = objmgr.GetObj(recv_data.read<uint16>());
 	_player->Equip(obj);
 }
 void WorldSession::HandleTryDequipOpcode(WorldPacket& recv_data)
 {
     //sLog.outDebug("New Unknown Opcode %u", recv_data.GetOpcode());
     //recv_data.hexlike();
-	Object* obj = objmgr.GetObj(recv_data.read<uint16>());
+	WorldObject* obj = objmgr.GetObj(recv_data.read<uint16>());
 	_player->Dequip(obj);
 }
 void WorldSession::HandleTryCreatureCommandOpcode(WorldPacket& recv_data)
@@ -1114,7 +1114,7 @@ void WorldSession::HandleRequestTimerStatusOpcode(WorldPacket& recv_data)
 }
 void WorldSession::HandleReportSecondaryWeaponOpcode(WorldPacket& recv_data)
 {
-	Object* obj = objmgr.GetObj(recv_data.read<uint16>());
+	WorldObject* obj = objmgr.GetObj(recv_data.read<uint16>());
 	_player->EquipSecondary(obj);
 }
 void WorldSession::HandleInfoBookDataOpcode(WorldPacket& recv_data)

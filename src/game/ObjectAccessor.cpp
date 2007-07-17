@@ -91,7 +91,7 @@ ObjectAccessor::FindPlayerByName(const wchar_t *name)
 void
 ObjectAccessor::InsertPlayer(Player *pl)
 {
-	objmgr.AddObject(pl);
+	//objmgr.AddObject(pl); This should be added by the constructor
 
     i_players[pl->GetExtent()] = pl;
     _update();
@@ -105,7 +105,7 @@ ObjectAccessor::RemovePlayer(Player *pl)
     if( iter != i_players.end() )
         i_players.erase(iter);
 
-    std::set<Object *>::iterator iter2 = std::find(i_objects.begin(), i_objects.end(), (Object *)pl);
+    std::set<WorldObject *>::iterator iter2 = std::find(i_objects.begin(), i_objects.end(), (Object *)pl);
     if( iter2 != i_objects.end() )
         i_objects.erase(iter2);
 
@@ -129,7 +129,7 @@ ObjectAccessor::_update()
 			}
 		}
 
-        for(std::set<Object *>::iterator iter=i_objects.begin(); iter != i_objects.end(); ++iter)
+        for(std::set<WorldObject *>::iterator iter=i_objects.begin(); iter != i_objects.end(); ++iter)
         {
             // check for valid pointer
             if (!*iter)
@@ -174,17 +174,17 @@ ObjectAccessor::UpdateObject(Object* obj, Player* exceptPlayer)
 }
 
 void
-ObjectAccessor::AddUpdateObject(Object *obj)
+ObjectAccessor::AddUpdateObject(WorldObject *obj)
 {
     Guard guard(i_updateGuard);
     i_objects.insert(obj);
 }
 
 void
-ObjectAccessor::RemoveUpdateObject(Object *obj)
+ObjectAccessor::RemoveUpdateObject(WorldObject *obj)
 {
     Guard guard(i_updateGuard);
-    std::set<Object *>::iterator iter = i_objects.find(obj);
+    std::set<WorldObject *>::iterator iter = i_objects.find(obj);
     if( iter != i_objects.end() )
         i_objects.erase( iter );
 }

@@ -99,6 +99,8 @@ World::World()
 	m_freeids.insert(29);
 	m_freeids.insert(30);
 	m_freeids.insert(31);
+
+	m_map = new NoxMap();
 }
 
 /// World desctructor
@@ -151,6 +153,14 @@ void World::SetInitialWorldSettings()
 {
     ///- Initialize the random number generator
     srand((unsigned int)time(NULL));
+
+	// Must load thing.bin before the map
+	fstream* thing = new fstream("C:\\Program Files\\Nox\\thing.bin", ios_base::in|ios_base::binary);
+	sThingBin.Load_Thingdb(thing);
+	thing->close();
+	delete thing;
+
+	m_map->open("C:\\Program Files\\Nox\\maps\\manamine\\manamine.map");
 
     ///- Read the version of the configuration file and warn the user in case of emptiness or mismatch
     /*uint32 confVersion = sConfig.GetIntDefault("ConfVersion", 0);
@@ -462,8 +472,8 @@ void World::SetInitialWorldSettings()
 	m_gameTime = time(NULL);
     m_startTime=m_gameTime;
 
-    m_timers[WUPDATE_OBJECTS].SetInterval(0);
-    m_timers[WUPDATE_SESSIONS].SetInterval(1);				
+    m_timers[WUPDATE_OBJECTS].SetInterval(5);
+    m_timers[WUPDATE_SESSIONS].SetInterval(15);				
     m_timers[WUPDATE_WEATHERS].SetInterval(1000);
     m_timers[WUPDATE_AUCTIONS].SetInterval(60000);          //set auction update interval to 1 minute
 }
@@ -514,6 +524,7 @@ void World::Update(time_t diff)
 	{
 		m_timers[WUPDATE_OBJECTS].Reset();
 		
+		objmgr.Update(diff);
 		ObjectAccessor::Instance().Update(diff);
 	}
 }
