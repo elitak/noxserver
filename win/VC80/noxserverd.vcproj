@@ -244,16 +244,24 @@
 				>
 			</File>
 		</Filter>
+		<Filter
+			Name="Config"
+			>
+			<File
+				RelativePath=".\ConfigINI.h"
+				>
+			</File>
+			<File
+				RelativePath=".\NXsrv.ini"
+				>
+			</File>
+		</Filter>
 		<File
 			RelativePath="..\..\src\noxserverd\CliRunnable.cpp"
 			>
 		</File>
 		<File
 			RelativePath="..\..\src\noxserverd\CliRunnable.h"
-			>
-		</File>
-		<File
-			RelativePath=".\ConfigINI.h"
 			>
 		</File>
 		<File
@@ -266,10 +274,6 @@
 		</File>
 		<File
 			RelativePath="..\..\src\noxserverd\Master.h"
-			>
-		</File>
-		<File
-			RelativePath=".\NXsrv.ini"
 			>
 		</File>
 		<File
