@@ -519,8 +519,12 @@ while(strcmp(Type,"GNHT") && count<filelen)
 		  else if(!strcmp(string, "COLLIDE"))
 		  {
 			  strtok(NULL, " +"); // =
-			  while( (string = strtok(NULL, " +")) != NULL)
+			  if( (string = strtok(NULL, " +")) != NULL)
+			  {
 				  Object.collide = noxNameToEnum(string, g_noxCollideNames);
+				  for(int i = 0; (string = strtok(NULL, " +")) != NULL; i++)
+				       strncpy(Object.collide_args[i], string, 20);
+			  }
 		  }
 		  else if(!strcmp(string, "EXTENT"))
 		  {

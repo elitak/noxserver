@@ -54,6 +54,7 @@ void Player::SetName(const wchar_t* name)
 
 void Player::Update(time_t time)
 {
+	uint32 mstime = getMSTime();
 	if(updateAll)
 	{
 		std::vector<WorldObject*> v = objmgr.GetObjectsInRect(GridPair(GetPositionX() - 300, GetPositionY() - 300), GridPair(GetPositionX() + 300, GetPositionY() + 300));
@@ -64,8 +65,11 @@ void Player::Update(time_t time)
 	else
 		UpdateView();
 
+	sLog.outDebug("UpdateViewTime: %u", getMSTime() - mstime);
 	// TODO: health/mana regen, death stuff, etc.
+	mstime = getMSTime();
 	SendUpdatePacket();
+	sLog.outDebug("PlayerSendTime: %u", getMSTime() - mstime);
 
 	Unit::Update(time);
 }
@@ -254,21 +258,25 @@ void Player::UpdateView()
 	{
 		int16 deltax = pos.x_coord - m_oldposition.x_coord;
 		int16 deltay = pos.y_coord - m_oldposition.y_coord;
-		if(deltax)
+		if(deltax > 10 || deltay > 10)
 		{
-			GridPair leftTop(deltax < 0 ? GetPositionX() - 300 : GetPositionX() - deltax + 300, GetPositionY() - 300);
-			GridPair rightBottom(leftTop.x_coord + abs(deltax), GetPositionY() + 300);
-			std::vector<WorldObject*> v = objmgr.GetObjectsInRect(leftTop, rightBottom);
-			updateQueue.insert(v.begin(), v.end());
-		}
-		if(deltay)
-		{
-			GridPair leftTop(GetPositionX() - 300, deltay < 0 ? GetPositionY() - 300 : GetPositionY() - deltay + 300);
-			GridPair rightBottom(GetPositionX() + 300, leftTop.y_coord + abs(deltay));
-			std::vector<WorldObject*> v = objmgr.GetObjectsInRect(leftTop, rightBottom);
-			updateQueue.insert(v.begin(), v.end());
+			if(deltax)
+			{
+				GridPair leftTop(deltax < 0 ? pos.x_coord - 300 : pos.x_coord - deltax + 300, pos.y_coord - 300);
+				GridPair rightBottom(leftTop.x_coord + abs(deltax), pos.y_coord + 300);
+				std::vector<WorldObject*> v = objmgr.GetObjectsInRect(leftTop, rightBottom);
+				updateQueue.insert(v.begin(), v.end());
+			}
+			if(deltay)
+			{
+				GridPair leftTop(pos.x_coord - 300, deltay < 0 ? pos.y_coord - 300 : pos.y_coord - deltay + 300);
+				GridPair rightBottom(pos.x_coord + 300, leftTop.y_coord + abs(deltay));
+				std::vector<WorldObject*> v = objmgr.GetObjectsInRect(leftTop, rightBottom);
+				updateQueue.insert(v.begin(), v.end());
+			}
+			m_oldposition = pos;
 		}
 	}
-
-	m_oldposition = pos;
+	else
+		m_oldposition = pos;	
 }

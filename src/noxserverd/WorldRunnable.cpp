@@ -52,7 +52,7 @@ void WorldRunnable::run()
         realPrevTime = realCurrTime;
 
         #ifdef WIN32
-        ZThread::Thread::sleep(1);
+        ZThread::Thread::sleep(30);
         #else
         ZThread::Thread::sleep(100);
         #endif

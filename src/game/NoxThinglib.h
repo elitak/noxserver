@@ -303,6 +303,7 @@ struct GNHT // Object Class
    uint32 classes;
    uint32 subclass;
    uint32 collide;
+   char collide_args[5][30];
    NoxExtentType extent;
    //Image_List List;
    //LIST2<unsigned int> Images;

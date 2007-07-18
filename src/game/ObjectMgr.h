@@ -21,6 +21,7 @@
 #define _OBJECTMGR_H
 
 #include "Log.h"
+#include "CollisionResponse.h"
 #include "Database/DatabaseEnv.h"
 #include "Object.h"
 #include "ObjectDefines.h"
@@ -51,11 +52,20 @@ struct OpcodeHandler
     SessionStatus status;
     void (WorldSession::*handler)(WorldPacket& recvPacket);
 };
+struct CollideHandler
+{
+	CollideHandler() : mask(0xFFFFFFFF), handler(NULL) {};
+	CollideHandler( Flatland::Callback _handler, uint32 _mask = 0xFFFFFFFF ) : mask(_mask), handler(_handler) {};
+
+	uint32 mask;
+	Flatland::Callback handler;
+};
 
 #define INVALID_EXTENT	0x0000
 #define MAX_EXTENT		0x7FFF //extents are actually signed, lol
 
 typedef HM_NAMESPACE::hash_map< uint16 , OpcodeHandler > OpcodeTableMap;
+typedef HM_NAMESPACE::hash_map< uint16 , CollideHandler > CollideTableMap;
 typedef std::set< Object* > ObjectTableMap;
 
 class NoxWallLine : public Flatland::Line
@@ -156,6 +166,7 @@ class ObjectMgr
 
 		NoxWallObject collisionWalls;
 		OpcodeTableMap opcodeTable;
+		CollideTableMap collideTable;
     protected:
         //template<class T> HM_NAMESPACE::hash_map<uint32,T*>& _GetContainer();
         //template<class T> TYPEID _GetTypeId() const;

@@ -205,6 +205,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\game\CollisionResponse.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\game\CollisionResponse.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\game\Object.cpp"
 				>
 			</File>

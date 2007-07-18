@@ -64,6 +64,13 @@ Object::Object(uint16 type, GridPair pos, uint16 extent) : m_objectType(type), m
 	{
 		body = new Flatland::Dynamic<Flatland::Geometry>(g, objmgr.createBody());
 	}
+	body->SetUserPointer(this);
+	CollideTableMap::const_iterator iter = objmgr.collideTable.find(GetObjectInfo()->collide);
+	if(iter != objmgr.collideTable.end())
+	{
+		body->Property().collisionMask = iter->second.mask;
+		body->Property().callback = iter->second.handler;
+	}
 	if(GetObjectInfo()->flags & (FLAG_ALLOW_OVERLAP | FLAG_NO_COLLIDE | FLAG_BELOW))
 	{
 		body->Property().collisionMask = 0x00000000;

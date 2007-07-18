@@ -42,6 +42,8 @@ ObjectMgr::ObjectMgr()
 {
 	memset(objectExtents, 0, MAX_EXTENT);
 	World.SetContactMaxCorrectingVel(0.0f);
+
+	collideTable[ COLLIDE_DAMAGE ]	= CollideHandler( &CollisionResponse::DamageCollideCallback );
 }
 
 ObjectMgr::~ObjectMgr()

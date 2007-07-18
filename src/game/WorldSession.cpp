@@ -798,8 +798,6 @@ void WorldSession::HandleNeedTimestampOpcode(WorldPacket &recvPacket)
 }
 void WorldSession::HandleServerCmdOpcode(WorldPacket &recvPacket)
 {
-	sLog.outDebug("Server CMD:");
-    recvPacket.hexlike();
 	try
     {
 		switch(recvPacket.read<uint8>())
