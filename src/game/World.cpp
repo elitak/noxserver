@@ -472,8 +472,8 @@ void World::SetInitialWorldSettings()
 	m_gameTime = time(NULL);
     m_startTime=m_gameTime;
 
-    m_timers[WUPDATE_OBJECTS].SetInterval(5);
-    m_timers[WUPDATE_SESSIONS].SetInterval(15);				
+    m_timers[WUPDATE_OBJECTS].SetInterval(30);
+    m_timers[WUPDATE_SESSIONS].SetInterval(30);				
     m_timers[WUPDATE_WEATHERS].SetInterval(1000);
     m_timers[WUPDATE_AUCTIONS].SetInterval(60000);          //set auction update interval to 1 minute
 }

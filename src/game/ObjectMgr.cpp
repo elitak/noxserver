@@ -41,6 +41,7 @@ INSTANTIATE_SINGLETON_1(ObjectMgr);
 ObjectMgr::ObjectMgr()
 {
 	memset(objectExtents, 0, MAX_EXTENT);
+	World.SetContactMaxCorrectingVel(0.0f);
 }
 
 ObjectMgr::~ObjectMgr()
@@ -135,6 +136,9 @@ void ObjectMgr::AddObject(Object *obj)
 		obj->m_extent = RequestExtent();
 	objectExtents[obj->GetExtent()] = obj;
 	objectTable.insert(obj);
+
+	if(obj->GetType() == 0x2C9)
+		playerList.insert(obj);
 }
 bool ObjectMgr::RemoveObject(Object *obj)
 {
@@ -142,6 +146,8 @@ bool ObjectMgr::RemoveObject(Object *obj)
 	if(i == objectTable.end())
 		return false;
 	objectTable.erase(i);
+	if(obj->GetType() == 0x2C9)
+		playerList.erase(obj);
 	objectExtents[obj->GetExtent()] = 0;
 	return true;
 }
@@ -150,7 +156,11 @@ void ObjectMgr::Update(float diff)
 {
 	if(!objectTable.size())
 		return;
-	World.GenerateContacts(objectTable);
+	uint32 mstime = getMSTime();
+
+	//Having our own list of dynamic players cuts time by ALOT
+	World.GenerateContacts(objectTable, playerList);
+	sLog.outDebug("ContactTime: %u", getMSTime() - mstime);
 	World.QuickStep(diff);
 	//ASSERT(!World.IsCorrupt(objectTable));
 }
@@ -161,6 +171,9 @@ NoxWallObject::NoxWallObject() : Object()
 	body = new Flatland::Static<Flatland::Composite>(shape);
 
 	body->Property().bounceVelocity = 0.0f;
+	body->Property().collisionMask = 0x00000001;
+
+
 }
 NoxWallObject::~NoxWallObject()
 {

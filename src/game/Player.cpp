@@ -34,7 +34,8 @@
 Player::Player (WorldSession *session): Unit(0x2C9, GridPair(2285, 2500), 0)
 {
 	//body->setCollisionFlags(body->getCollisionFlags()  | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
-
+	body->Property().collisionMask = 0xFFFFFFFF; //collide with everything
+	body->Property().callback = PlayerCollideCallback;
 	m_session = session;
 
 	memset(&plrInfo, 0, sizeof(plrInfo));
@@ -251,8 +252,8 @@ void Player::UpdateView()
 	GridPair pos = GetPosition();
 	if(m_oldposition.x_coord && m_oldposition.y_coord)
 	{
-		int16 deltax = m_oldposition.x_coord - pos.x_coord;
-		int16 deltay = m_oldposition.y_coord - pos.y_coord;
+		int16 deltax = pos.x_coord - m_oldposition.x_coord;
+		int16 deltay = pos.y_coord - m_oldposition.y_coord;
 		if(deltax)
 		{
 			GridPair leftTop(deltax < 0 ? GetPositionX() - 300 : GetPositionX() - deltax + 300, GetPositionY() - 300);

@@ -110,7 +110,7 @@ class MANGOS_DLL_SPEC Object
 			return sThingBin.Thing.Object.Objects.Get(GetType()-1); 
 		}
 
-		bool IsImmobile() { return (GetObjectInfo()->classes)&CLASS_IMMOBILE; }
+		virtual bool IsImmobile() { return (GetObjectInfo()->classes)&CLASS_IMMOBILE; }
 		bool AddToInventory(WorldObject* obj);
 		bool InMyInventory(WorldObject* obj)
 		{

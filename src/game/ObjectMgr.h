@@ -70,6 +70,7 @@ class NoxWallObject : Object
 	friend ObjectMgr;
 public:
 	void AddWall(CoordPair<0xFF> pos, uint8 facing);
+	bool IsImmobile() { return true; }
 protected:
 	NoxWallObject();
 	~NoxWallObject();
@@ -161,6 +162,7 @@ class ObjectMgr
 
 		ObjectTableMap	objectTable;
 		Object*			objectExtents[MAX_EXTENT+1];
+		std::set<Object*> playerList;
 
 		Flatland::World World;
     private:

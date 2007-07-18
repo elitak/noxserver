@@ -317,13 +317,18 @@ ObjectAccessor::_buildChangeObjectForPlayer(WorldObject *obj, UpdateDataMapType 
 void
 ObjectAccessor::Update(const uint32  &diff)
 {
+	uint32 mstime = getMSTime();
 	_update();
+	sLog.outDebug("UpdateTime: %u", getMSTime() - mstime);
     {
+		mstime = getMSTime();
+	
         Guard guard(i_playerGuard);
         for(PlayersMapType::iterator iter=i_players.begin(); iter != i_players.end(); ++iter)
         {
             iter->second->Update(diff);
         }
+		sLog.outDebug("PlayerTime: %u", getMSTime() - mstime);
     }
 }
 

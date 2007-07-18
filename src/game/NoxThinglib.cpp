@@ -132,6 +132,65 @@ NoxEnumNamePair g_noxFlagNames[] =
 	0, NULL
 };
 
+NoxEnumNamePair g_noxCollideNames[] =
+{
+	COLLIDE_NONE, "NoCollide",
+	COLLIDE_DEFAULT, "DefaultCollide",
+	COLLIDE_MONSTER, "MonsterCollide",
+	COLLIDE_PLAYER, "PlayerCollide",
+	COLLIDE_PROJECTILE, "ProjectileCollide",
+	COLLIDE_PROJECTILESPARK, "ProjectileSparkCollide",
+	COLLIDE_DOOR, "DoorCollide",
+	COLLIDE_PICKUP, "PickupCollide",
+	COLLIDE_EXIT, "ExitCollide",
+	COLLIDE_DAMAGE, "DamageCollide",
+	COLLIDE_MANADRAIN, "ManaDrainCollide",
+	COLLIDE_BOMB, "BombCollide",
+	COLLIDE_SPARKEXPLOSION, "SparkExplosionCollide",
+	COLLIDE_CHEST, "ChestCollide",
+	COLLIDE_WALLREFLECT, "WallReflectCollide",
+	COLLIDE_WALLREFLECTSPARK, "WallReflectSparkCollide",
+	COLLIDE_PIXIE, "PixieCollide",
+	COLLIDE_OWN, "OwnCollide",
+	COLLIDE_SPARK, "SparkCollide",
+	COLLIDE_BARREL, "BarrelCollide",
+	COLLIDE_AUDIOEVENT, "AudioEventCollide",
+	COLLIDE_TRIGGER, "TriggerCollide",
+	COLLIDE_TELEPORT, "TeleportCollide",
+	COLLIDE_ELEVATOR, "ElevatorCollide",
+	COLLIDE_AWARDSPELL, "AwardSpellCollide",
+	COLLIDE_DIE, "DieCollide",
+	COLLIDE_GLYPH, "GlyphCollide",
+	COLLIDE_SPELLPROJECTILE, "SpellProjectileCollide",
+	COLLIDE_BOOM, "BoomCollide",
+	COLLIDE_SIGN, "SignCollide",
+	COLLIDE_PENTAGRAM, "PentagramCollide",
+	COLLIDE_SPIDERSPIT, "SpiderSpitCollide",
+	COLLIDE_DEATHBALL, "DeathBallCollide",
+	COLLIDE_DEATHBALLFRAGMENT, "DeathBallFragmentCollide",
+	COLLIDE_TELEKINESIS, "TelekinesisCollide",
+	COLLIDE_FIST, "FistCollide",
+	COLLIDE_TELEPORTWAKE, "TeleportWakeCollide",
+	COLLIDE_FLAG, "FlagCollide",
+	COLLIDE_CHAKRAMINMOTION, "ChakramInMotionCollide",
+	COLLIDE_ARROW, "ArrowCollide",
+	COLLIDE_MONSTERARROW, "MonsterArrowCollide",
+	COLLIDE_BEARTRAP, "BearTrapCollide",
+	COLLIDE_POISONGASTRAP, "PoisonGasTrapCollide",
+	COLLIDE_TRAPDOOR, "TrapDoorCollide",
+	COLLIDE_BALL, "BallCollide",
+	COLLIDE_HOMEBASE, "HomeBaseCollide",
+	COLLIDE_CROWN, "CrownCollide",
+	COLLIDE_UNDEADKILLER, "UndeadKillerCollide",
+	COLLIDE_YELLOWSTARSHOT, "YellowStarShotCollide",
+	COLLIDE_MIMIC, "MimicCollide",
+	COLLIDE_HARPOON, "HarpoonCollide",
+	COLLIDE_MONSTERGENERATOR, "MonsterGeneratorCollide",
+	COLLIDE_SOULGATE, "SoulGateCollide",
+	COLLIDE_ANKH, "AnkhCollide",
+	0, NULL
+};
+
 //////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
@@ -456,6 +515,38 @@ while(strcmp(Type,"GNHT") && count<filelen)
 			  strtok(NULL, " +"); // =
 			  while( (string = strtok(NULL, " +")) != NULL)
 				  Object.subclass |= noxNameToEnum(string, g_noxSubclassNames);
+		  }
+		  else if(!strcmp(string, "COLLIDE"))
+		  {
+			  strtok(NULL, " +"); // =
+			  while( (string = strtok(NULL, " +")) != NULL)
+				  Object.collide = noxNameToEnum(string, g_noxCollideNames);
+		  }
+		  else if(!strcmp(string, "EXTENT"))
+		  {
+			  strtok(NULL, " +"); // =
+			  string = strtok(NULL, " +");
+			  if(!strcmp(string, "BOX"))
+			  {
+				  Object.extent.shape = EXTENT_BOX;
+				  string = strtok(NULL, " +");
+				  if(string)
+				  {
+					Object.extent.x = atoi(string);
+					string = strtok(NULL, " +");
+					if(string)
+						Object.extent.y = atoi(string);
+				  }
+			  }
+			  else if(!strcmp(string, "CIRCLE"))
+			  {
+				  Object.extent.shape = EXTENT_CIRCLE;
+				  string = strtok(NULL, " +");
+				  if(string)
+				  {
+					Object.extent.radius = atoi(string);
+				  }
+			  }
 		  }
 
 		  Object.Properties.Add(propString);

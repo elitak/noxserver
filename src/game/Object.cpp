@@ -39,25 +39,37 @@ using namespace std;
 
 Object::Object(uint16 type, GridPair pos, uint16 extent) : m_objectType(type), m_extent(extent)
 {
-	//switch(GetObjectInfo()->extent)
-	//{
-	//default:
-	//}
+	Flatland::Geometry* g;
+	switch(GetObjectInfo()->extent.shape)
+	{
+	case EXTENT_BOX:
+		g = new Flatland::Block(Flatland::vec2(pos.x_coord, pos.y_coord), GetObjectInfo()->extent.x, GetObjectInfo()->extent.y);
+		g->Rotate(45);
+		break;
+	case EXTENT_CIRCLE:
+		g = new Flatland::Circle(Flatland::vec2(pos.x_coord, pos.y_coord), GetObjectInfo()->extent.radius);
+		break;
+	case EXTENT_CENTER:
+	default:
+		g = new Flatland::Circle(Flatland::vec2(pos.x_coord, pos.y_coord), 1);
+		break;
+	}
 	
 
 	if(GetType() != 0x2C9)
 	{
-		body = new Flatland::Static<Flatland::Circle>(new Flatland::Circle(Flatland::vec2(pos.x_coord, pos.y_coord), 5));
+		body = new Flatland::Static<Flatland::Geometry>(g);
 	}
 	else
 	{
-		body = new Flatland::Dynamic<Flatland::Circle>(new Flatland::Circle(Flatland::vec2(pos.x_coord, pos.y_coord), 5), objmgr.createBody());
+		body = new Flatland::Dynamic<Flatland::Geometry>(g, objmgr.createBody());
 	}
-	if(GetObjectInfo()->flags & FLAG_ALLOW_OVERLAP)
+	if(GetObjectInfo()->flags & (FLAG_ALLOW_OVERLAP | FLAG_NO_COLLIDE | FLAG_BELOW))
 	{
+		body->Property().collisionMask = 0x00000000;
 	}
-	body->Property().bounceVelocity = 0.0f;
 
+	body->Property().bounceVelocity = 0.0f;
 	objmgr.AddObject(this);
 }
 
@@ -140,11 +152,11 @@ void Object::_BuildUpdatePacket(WorldPacket& packet)
 	packet << (uint16)GetPosition().x_coord;
 	packet << (uint16)GetPosition().y_coord;
 }
-void Object::RemoveFromInventory(WorldObject* obj, GridPair newPos)
+bool Object::RemoveFromInventory(WorldObject* obj, GridPair newPos)
 {
 	obj->SetPosition(newPos);
 	//objmgr.AddObject(obj);
-	m_inventory.erase(obj);
+	return m_inventory.erase(obj);
 }
 
 bool Object::AddToInventory(WorldObject* obj) 
