@@ -212,8 +212,9 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
 {
     public:
 		Unit(uint16 type, GridPair pos, uint16 extent);
-        virtual ~Unit ( );
-        virtual void Update( uint32 time );
+		virtual ~Unit ( );
+		virtual void Update( uint32 time );
+          virtual void Poison( byte poisoned );
 		virtual void MoveToward( uint16 x, uint16 y, float speed );
 		virtual bool SetActionAnim( UnitActionType anim, uint32 frames );
 		virtual void ResetActionAnim()
@@ -225,8 +226,8 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
 		}
 
 		virtual void Laugh();
-        virtual void Point();
-        virtual void Taunt();
+		virtual void Point();
+		virtual void Taunt();
 
 		virtual void SetEnchant( UnitEnchantType enchant, int16 frames = 0 );
 		virtual void UnsetEnchant( UnitEnchantType enchant );
@@ -250,18 +251,19 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
 		}
 		uint8 GetAngle () { return m_angle; }
     protected:
-        Unit ( WorldObject *instantiator );
+		Unit ( WorldObject *instantiator );
 		void InitRespawn();
 		UnitActionType m_action;
 		time_t m_action_time;
 
+          byte m_poison;
 		uint8 m_angle;
 		uint32 m_auras; // UnitEnchantType
 		int16 m_aura_times[32];
 		WorldObject* m_equipment[SLOT_SIZE];
    
     private:
-        uint32 m_state;                                     // Even derived shouldn't modify
-        uint32 m_CombatTimer;
+		uint32 m_state;                                     // Even derived shouldn't modify
+		uint32 m_CombatTimer;
 };
 #endif

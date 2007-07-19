@@ -143,6 +143,7 @@ class MANGOS_DLL_SPEC Player : public Unit
 		void ObjectOutOfSight(WorldObject* obj);
 		void ObjectDestroyed(WorldObject* obj);
 
+          virtual void Poison( byte poisoned );
 		virtual void _BuildHealthPacket(WorldPacket& packet);
 
 		static void PlayerCollideCallback(Flatland::ContactList &contacts);

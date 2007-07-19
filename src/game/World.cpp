@@ -155,12 +155,12 @@ void World::SetInitialWorldSettings()
     srand((unsigned int)time(NULL));
 
 	// Must load thing.bin before the map
-	fstream* thing = new fstream("C:\\Program Files\\Nox\\thing.bin", ios_base::in|ios_base::binary);
+	fstream* thing = new fstream("D:\\WestWood\\Nox\\thing.bin", ios_base::in|ios_base::binary);
 	sThingBin.Load_Thingdb(thing);
 	thing->close();
 	delete thing;
 
-	m_map->open("C:\\Program Files\\Nox\\maps\\manamine\\manamine.map");
+	m_map->open("D:\\WestWood\\Nox\\maps\\manamine\\manamine.map");
 
     ///- Read the version of the configuration file and warn the user in case of emptiness or mismatch
     /*uint32 confVersion = sConfig.GetIntDefault("ConfVersion", 0);

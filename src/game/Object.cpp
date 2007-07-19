@@ -112,7 +112,6 @@ bool Object::Pickup(WorldObject* obj, uint32 max_dist)
 	return AddToInventory(obj);
 }
 
-//strange behavior
 bool Object::Drop(WorldObject* obj, uint32 max_dist, GridPair newPos)
 {
      if(!obj || !InMyInventory(obj))
@@ -275,6 +274,28 @@ void WorldObject::PotionUse(Player *plr)
 	plr->Heal( amt );
 	plr->RemoveFromInventory(this, GridPair(5880, 5880));
 	objacc.AddObjectToRemoveList(this);
+}
+void WorldObject::ConsumeUse(Player *plr)
+{
+     int amt = atoi(GetObjectInfo()->use_args[0]);
+     plr->Heal( amt );
+     plr->RemoveFromInventory(this, GridPair(5880, 5880));
+     objacc.AddObjectToRemoveList(this);
+}
+void WorldObject::ConsumeConfuseUse(Player *plr)
+{
+     int amt = atoi(GetObjectInfo()->use_args[0]);
+     plr->SetEnchant(ENCHANT_CONFUSED,90);
+     plr->Heal( amt );
+     plr->RemoveFromInventory(this, GridPair(5880, 5880));
+     objacc.AddObjectToRemoveList(this);
+}
+void WorldObject::MushroomUse(Player *plr)
+{
+     plr->Poison( 0 );
+     plr->SetEnchant(ENCHANT_CONFUSED,90);
+     plr->RemoveFromInventory(this, GridPair(5880, 5880));
+     objacc.AddObjectToRemoveList(this);
 }
 /// Update Handlers
 void Object::OneSecondDieUpdate(time_t diff)

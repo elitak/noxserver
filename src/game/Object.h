@@ -189,6 +189,9 @@ class MANGOS_DLL_SPEC WorldObject : public Object
 		bool InAnInventory();
 
 		void PotionUse(Player* plr);
+		void ConsumeUse(Player* plr);
+		void ConsumeConfuseUse(Player* plr);
+		void MushroomUse(Player* plr);
     protected:
         WorldObject( WorldObject *instantiator );
 		WorldObject( ) {};

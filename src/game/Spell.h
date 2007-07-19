@@ -207,6 +207,7 @@ public:
 	void HandleSpellUnknown(Player* plr, bool invert) {};
 	void HandleAbilityUnknown(Player* plr) {};
 	void HandleBerserkerChargeAbility(Player* plr);
+     void HandleEyeOfWolfAbility(Player* plr);
 
 	SpellTableMap spellTable;
 	AbilityTableMap abilityTable;

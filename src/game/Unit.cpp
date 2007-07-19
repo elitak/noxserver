@@ -47,6 +47,7 @@ void Unit::InitRespawn()
 	m_action = ACTION_IDLE;
 	m_action_time = 0;
 	m_angle = 0;
+     m_poison = 0;
 	
 	memset(m_equipment, 0, SLOT_SIZE * sizeof(Object*));
 	ResetEnchants();
@@ -92,6 +93,11 @@ void Unit::Update( uint32 p_time )
 			m_action_time -= p_time;
 	}
 
+     if(m_poison==1)
+     {
+          Damage(.03);
+     }
+
 	//Update Enchants
 	for(int i = 0; i < ENCHANT_SIZE; i++)
 	{
@@ -110,6 +116,10 @@ void Unit::Update( uint32 p_time )
 
 }
 
+void Unit::Poison( byte poisoned )
+{
+     m_poison = poisoned;
+}
 void Unit::MoveToward(uint16 _x, uint16 _y, float speed)
 {
 	if(IsDead())
@@ -130,12 +140,12 @@ void Unit::Laugh()
 }
 void Unit::Point()
 {
-     SetActionAnim(ACTION_POINT, 1);
+     SetActionAnim(ACTION_POINT, 10);
 }
 
 void Unit::Taunt()
 {
-     SetActionAnim(ACTION_TAUNT, 1);
+     SetActionAnim(ACTION_TAUNT, 20);
 }
 
 bool Unit::Equip(WorldObject *obj)

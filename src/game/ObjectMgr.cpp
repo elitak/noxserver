@@ -85,6 +85,9 @@ ObjectMgr::ObjectMgr()
 
 	// Build Use Table
 	useTable[ USE_POTION ] = UseHandler( &WorldObject::PotionUse );
+     useTable[ USE_CONSUME ] = UseHandler( &WorldObject::ConsumeUse );
+     useTable[ USE_CONSUMECONFUSE ] = UseHandler( &WorldObject::ConsumeConfuseUse );
+     useTable[ USE_MUSHROOM ] = UseHandler( &WorldObject::MushroomUse );
 }
 
 ObjectMgr::~ObjectMgr()

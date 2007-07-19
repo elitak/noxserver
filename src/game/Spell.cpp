@@ -218,14 +218,20 @@ void SpellMgr::FillAbilityHandlerHashTable()
 	abilityTable[ ABILITY_WARCRY ]				= AbilityHandler( &SpellMgr::HandleAbilityUnknown );
 	abilityTable[ ABILITY_HARPOON ]			= AbilityHandler( &SpellMgr::HandleAbilityUnknown );
 	abilityTable[ ABILITY_TREAD_LIGHTLY ]		= AbilityHandler( &SpellMgr::HandleAbilityUnknown );
-	abilityTable[ ABILITY_EYE_OF_THE_WOLF ]	= AbilityHandler( &SpellMgr::HandleAbilityUnknown );
+	abilityTable[ ABILITY_EYE_OF_THE_WOLF ]	= AbilityHandler( &SpellMgr::HandleEyeOfWolfAbility );
 }
 void SpellMgr::HandleBerserkerChargeAbility(Player *plr)
 {
 	GridPair cursor = plr->GetSession()->GetCursor();
 	plr->SetActionAnim(ACTION_BERSERKER_CHARGE, 90); //frames is from gamedata.bin
 	plr->MoveToward(cursor.x_coord, cursor.y_coord, 0.42);
+     //delay 300
 	
+}
+void SpellMgr::HandleEyeOfWolfAbility(Player *plr)
+{
+     plr->SetEnchant(ENCHANT_INFRAVISION,300);
+     //delay 600
 }
 
 const char *g_spellNames[] =

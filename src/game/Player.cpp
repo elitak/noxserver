@@ -328,6 +328,16 @@ void Player::UpdateView()
 		m_oldposition = pos;	
 }
 
+void Player::Poison( byte poisoned )
+{
+     Unit::Poison(poisoned);
+     WorldPacket packet;
+     packet.Initialize(MSG_REPORT_OBJECT_POISON);
+     packet << GetExtent();
+     packet << m_poison;
+     m_session->SendPacket(&packet);
+}
+
 void Player::_BuildHealthPacket(WorldPacket &packet)
 {
 	packet.Initialize(MSG_REPORT_HEALTH);
