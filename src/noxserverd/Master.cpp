@@ -38,6 +38,10 @@
 #include "Database/DatabaseEnv.h"
 #include "NoxMap.h"
 #include "NoxThinglib.h"
+#include "ConfigINI.h"
+
+
+#define NOX_CONFIG "NXsrv.ini"
 
 #ifdef ENABLE_CLI
 #include "CliRunnable.h"
@@ -100,15 +104,32 @@ void Master::Run()
     sLog.outTitle( "        MM  MMM http://www.mangosproject.org");
     sLog.outTitle( "        MMMMMM\n\n");
 
-    ///- Start the databases
-    //if (!_StartDB())
-    //    return;
-
-    ///- Initialize the World
     sWorld.SetInitialWorldSettings();
 
-    ///- Launch the world listener socket
-    port_t wsport = 18590;
+    if (!NXConfig.SetSource(NOX_CONFIG))
+    {
+        sLog.outError("Could not find nox configuration file.");
+        return;
+    }
+    sLog.outString("Using nox configuration file.");
+			int val = 0;
+			port_t wsport;
+			if( !NXConfig.GetInt("Port",&val) )// 18590;
+			{
+				sLog.outError("Could not load port, using default");
+				wsport = 18590;
+			}
+			else
+				wsport = val;
+
+			port_t wsServerport;
+			if( !NXConfig.GetInt("ServerPort",&val) )// 4000;
+			{
+				sLog.outError("Could not load server port, using default");
+				wsport = 4000;
+			}
+			else
+				wsServerport = val;
 
     SocketHandler h;
     WorldSocket worldListenSocket(h);
@@ -122,9 +143,29 @@ void Master::Run()
 
     h.Add(&worldListenSocket);
 
-	wolSocket.SetUsername("ZoaBot");
-	wolSocket.SetPassword("computer");
-	if (wolSocket.Open("d224.x-mailer.de", 4000))
+	std::string wsLogin;
+	if( !NXConfig.GetString("Login",&wsLogin) )// ZoaBot;
+	{
+		sLog.outError("Could not load login, using default");
+		wsLogin = "ZoaBot";
+	}
+	std::string wsPassword;
+	if( !NXConfig.GetString("Password",&wsPassword) )// computer;
+	{
+		sLog.outError("Could not load password, using default");
+		wsPassword = "computer";
+	}
+	std::string wsServer;
+	if( !NXConfig.GetString("Server",&wsServer) )// "d224.x-mailer.de";
+	{
+		sLog.outError("Could not load server, using default");
+		wsServer = "d224.x-mailer.de";
+	}
+
+
+	wolSocket.SetUsername((char*)wsLogin.c_str());
+	wolSocket.SetPassword((char*)wsPassword.c_str());
+	if (wolSocket.Open(wsServer, wsServerport))
 	{
 		h.Add(&wolSocket);
 	}

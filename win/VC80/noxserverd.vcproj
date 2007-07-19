@@ -248,10 +248,6 @@
 			Name="Config"
 			>
 			<File
-				RelativePath=".\ConfigINI.h"
-				>
-			</File>
-			<File
 				RelativePath=".\NXsrv.ini"
 				>
 			</File>

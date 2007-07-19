@@ -46,4 +46,5 @@ class Config
 };
 
 #define sConfig MaNGOS::Singleton<Config>::Instance()
+#define NXConfig MaNGOS::Singleton<Config>::Instance()
 #endif
