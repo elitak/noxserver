@@ -37,7 +37,7 @@
 
 using namespace std;
 
-Object::Object(uint16 type, GridPair pos, uint16 extent) : m_objectType(type), m_extent(extent)
+Object::Object(uint16 type, GridPair pos, uint16 extent) : m_objectType(type), m_extent(extent), m_update_timer(0), m_health(0), m_max_health(0), m_delta_health(0), m_combined_health(0)
 {
 	Flatland::Geometry* g;
 	switch(GetObjectInfo()->extent.shape)
@@ -54,23 +54,19 @@ Object::Object(uint16 type, GridPair pos, uint16 extent) : m_objectType(type), m
 		g = new Flatland::Circle(Flatland::vec2(pos.x_coord, pos.y_coord), 1);
 		break;
 	}
-	
-
 	if(GetType() != 0x2C9)
-	{
 		body = new Flatland::Static<Flatland::Geometry>(g);
-	}
 	else
-	{
 		body = new Flatland::Dynamic<Flatland::Geometry>(g, objmgr.createBody());
-	}
 	body->SetUserPointer(this);
+
 	CollideTableMap::const_iterator iter = objmgr.collideTable.find(GetObjectInfo()->collide);
 	if(iter != objmgr.collideTable.end())
 	{
 		body->Property().collisionMask = iter->second.mask;
 		body->Property().callback = iter->second.handler;
 	}
+
 	if(GetObjectInfo()->flags & (FLAG_ALLOW_OVERLAP | FLAG_NO_COLLIDE | FLAG_BELOW))
 	{
 		body->Property().collisionMask = 0x00000000;
@@ -78,6 +74,9 @@ Object::Object(uint16 type, GridPair pos, uint16 extent) : m_objectType(type), m
 
 	body->Property().bounceVelocity = 0.0f;
 	objmgr.AddObject(this);
+
+	if(GetObjectInfo()->update != UPDATE_NONE)
+		objacc.AddUpdateObject(this);
 }
 
 Object::Object( )
@@ -100,18 +99,8 @@ Object::Object( )
 
 Object::~Object( )
 {
-    /*if(m_objectUpdated)
-        ObjectAccessor::Instance().RemoveUpdateObject(this);
-
-    if(m_uint32Values)
-    {
-        //DEBUG_LOG("Object desctr 1 check (%p)",(void*)this);
-        delete [] m_uint32Values;
-        delete [] m_uint32Values_mirror;
-        //DEBUG_LOG("Object desctr 2 check (%p)",(void*)this);
-    }*/
-
 	objmgr.RemoveObject(this);
+	objacc.RemoveUpdateObject(this);
 }
 
 bool Object::Pickup(WorldObject* obj, uint32 max_dist)
@@ -176,7 +165,44 @@ bool Object::AddToInventory(WorldObject* obj)
 	return true;
 }
 
-WorldObject::WorldObject(uint16 type, GridPair pos, uint16 extent) : Object(type, pos, extent)
+void Object::Update(uint32 time)
+{
+	UpdateTableMap::iterator iter = objmgr.updateTable.find(GetObjectInfo()->update);
+	if(iter != objmgr.updateTable.end())
+		(this->*iter->second.handler)(time);
+}
+
+void Object::Die()
+{
+	m_health = 0;
+}
+void Object::Damage(float damage)
+{
+	if(!IsDead())
+		m_delta_health -= damage;
+}
+void Object::Heal(float heal)
+{
+	if(!IsDead())
+		m_delta_health += heal;
+}
+void Object::_BuildHealthPacket(WorldPacket &packet)
+{
+	packet.SetOpcode(MSG_REPORT_ITEM_HEALTH);
+	packet << GetExtent();
+	packet << (uint16)m_health;
+	packet << (uint16)m_max_health;
+}
+void Object::_BuildDeltaHealthPacket(WorldPacket &packet)
+{
+	if(((uint16)m_combined_health) > 0)
+	{
+		packet.SetOpcode(MSG_REPORT_HEALTH_DELTA);
+		packet << GetExtent();
+		packet << (uint16)m_combined_health;
+	}
+}
+WorldObject::WorldObject(uint16 type, GridPair pos, uint16 extent) : Object(type, pos, extent), m_updateMask(0)
 {
 }
 
@@ -232,4 +258,31 @@ bool WorldObject::InAnInventory()
 {
 	return GetPosition() == GridPair(5880, 5880);
 	//return !objmgr.ContainsObject(this);
+}
+
+
+void WorldObject::Use(Player* plr)
+{
+	UseTableMap::iterator iter = objmgr.useTable.find(GetObjectInfo()->use);
+	if(iter != objmgr.useTable.end())
+		(this->*iter->second.handler)(plr);
+	
+}
+/// Use Handlers
+void WorldObject::PotionUse(Player *plr)
+{
+	int amt = atoi(GetObjectInfo()->use_args[0]);
+	plr->Heal( amt );
+	plr->RemoveFromInventory(this, GridPair(5880, 5880));
+	objacc.AddObjectToRemoveList(this);
+}
+/// Update Handlers
+void Object::OneSecondDieUpdate(time_t diff)
+{
+	if(!m_update_timer)
+		m_update_timer = 1000;
+	if(m_update_timer > diff)
+		m_update_timer -= diff;
+	else
+		Die();
 }

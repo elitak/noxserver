@@ -60,12 +60,37 @@ struct CollideHandler
 	uint32 mask;
 	Flatland::Callback handler;
 };
+struct UpdateHandler
+{
+	UpdateHandler() : handler(NULL) {};
+	UpdateHandler( void (Object::*_handler)(time_t diff) ) : handler(_handler) {};
+
+	void (Object::*handler)(time_t diff);
+};
+struct UseHandler
+{
+	UseHandler() : handler(NULL) {};
+	UseHandler( void (WorldObject::*_handler)(Player* plr) ) : handler(_handler) {};
+
+	void (WorldObject::*handler)(Player* plr);
+};
+struct EnchantEntry
+{
+	EnchantEntry() : name(NULL), frames(0) {};
+	EnchantEntry( char* _name, int16 _frames = 0 ) : name(_name), frames(_frames) {};
+
+	char* name;
+	int16 frames;
+};
 
 #define INVALID_EXTENT	0x0000
 #define MAX_EXTENT		0x7FFF //extents are actually signed, lol
 
 typedef HM_NAMESPACE::hash_map< uint16 , OpcodeHandler > OpcodeTableMap;
 typedef HM_NAMESPACE::hash_map< uint16 , CollideHandler > CollideTableMap;
+typedef HM_NAMESPACE::hash_map< uint16 , UpdateHandler > UpdateTableMap;
+typedef HM_NAMESPACE::hash_map< uint16 , UseHandler > UseTableMap;
+typedef HM_NAMESPACE::hash_map< uint32 , EnchantEntry > EnchantTableMap;
 typedef std::set< Object* > ObjectTableMap;
 
 class NoxWallLine : public Flatland::Line
@@ -167,6 +192,9 @@ class ObjectMgr
 		NoxWallObject collisionWalls;
 		OpcodeTableMap opcodeTable;
 		CollideTableMap collideTable;
+		UpdateTableMap updateTable;
+		EnchantTableMap enchantTable;
+		UseTableMap useTable;
     protected:
         //template<class T> HM_NAMESPACE::hash_map<uint32,T*>& _GetContainer();
         //template<class T> TYPEID _GetTypeId() const;

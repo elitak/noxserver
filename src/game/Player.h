@@ -119,11 +119,14 @@ class MANGOS_DLL_SPEC Player : public Unit
 		void SetName( const wchar_t* name );
 		WorldSession* GetSession() { return m_session; }
 
-		void Update(time_t time);
+		virtual void Update(uint32 time);
 
 		void AddUpdateObject(WorldObject* obj) { updateQueue.insert(obj); }
 		void RemoveUpdateObject(WorldObject* obj) { }
 
+		void RunTowards( uint16 x, uint16 y);
+		void WalkTowards( uint16 x, uint16 y);
+		void MoveTowards( uint16 x, uint16 y);
 		void Laugh();
 		void Point();
 		void Taunt();
@@ -140,6 +143,8 @@ class MANGOS_DLL_SPEC Player : public Unit
 		void ObjectOutOfSight(WorldObject* obj);
 		void ObjectDestroyed(WorldObject* obj);
 
+		virtual void _BuildHealthPacket(WorldPacket& packet);
+
 		static void PlayerCollideCallback(Flatland::ContactList &contacts);
     protected:
 		PlayerInfo plrInfo;
@@ -154,5 +159,8 @@ class MANGOS_DLL_SPEC Player : public Unit
 		virtual void _BuildUpdatePacket(WorldPacket& packet);
 		virtual void _BuildNewPlayerPacket(WorldPacket& packet);
 		virtual void _BuildClientStatusPacket(WorldPacket& packet);
+		virtual void _BuildMyHealthPacket(WorldPacket& packet);
+		virtual void _BuildTotalHealthPacket(WorldPacket& packet);
+		virtual void _BuildStatsPacket(WorldPacket& packet);
 };
 #endif

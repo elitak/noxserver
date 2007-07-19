@@ -35,17 +35,21 @@
 
 Unit::Unit( uint16 type, GridPair pos, uint16 extent) : WorldObject(type, pos, extent)
 {
-	memset(m_equipment, 0, SLOT_SIZE * sizeof(Object*));
+	InitRespawn();
 }
 Unit::Unit( WorldObject *instantiator ) : WorldObject( instantiator )
 {
- //   m_objectType |= TYPE_UNIT;
- //   m_objectTypeId = TYPEID_UNIT;
- //   m_updateFlag = (UPDATEFLAG_HIGHGUID | UPDATEFLAG_ALL | UPDATEFLAG_LIVING | UPDATEFLAG_HASPOSITION);
-	m_action = ACTION_IDLE;
-	m_angle = 0;
+	InitRespawn();
+}
 
+void Unit::InitRespawn()
+{
+	m_action = ACTION_IDLE;
+	m_action_time = 0;
+	m_angle = 0;
+	
 	memset(m_equipment, 0, SLOT_SIZE * sizeof(Object*));
+	ResetEnchants();
 }
 
 Unit::~Unit()
@@ -69,61 +73,69 @@ void Unit::Update( uint32 p_time )
     _UpdateAura();
     }else
     m_AurasCheck -= p_time;*/
-	if(m_action)
+	WorldPacket packet;
+
+	if(IsDead())
 	{
-		if((m_action_time - p_time) <= 0)
+		m_action = ACTION_DEAD;
+		m_health = 0;
+	}
+	else if(m_action)
+	{
+		if(p_time > m_action_time)
 		{
-			if(m_action == ACTION_RUN || m_action == ACTION_IDLE)
-				dBodySetLinearVel(body->GetBody(), 0.0f, 0.0f, 0.0f);
+			dBodySetLinearVel(body->GetBody(), 0.0f, 0.0f, 0.0f);
 			m_action = ACTION_IDLE;
+			m_action_time = 0;
 		}
 		else
 			m_action_time -= p_time;
 	}
+
+	//Update Enchants
+	for(int i = 0; i < ENCHANT_SIZE; i++)
+	{
+		if(m_aura_times[i] > 0)
+			m_aura_times[i]--;
+		else if(!m_aura_times[i] && (m_auras & (1 << i)))
+			UnsetEnchant((UnitEnchantType)i);
+	}
+
+	if(m_updateMask & MASK_ENCHANTMENTS)
+	{
+		m_updateMask &= ~MASK_ENCHANTMENTS;
+		_BuildEnchantsPacket(packet);
+		objacc.SendPacketToAll(&packet);
+	}
+
 }
 
-void Unit::MoveToward(uint16 _x, uint16 _y)
+void Unit::MoveToward(uint16 _x, uint16 _y, float speed)
 {
+	if(IsDead())
+		return;
+
 	float x = (int32)_x - (int32)GetPositionX();
 	float y = (int32)_y - (int32)GetPositionY();
 	double len = sqrt(x*x+y*y);
 	double unit_x = x/len;
 	double unit_y = y/len;
 
-	float SPEED;
-	if(len > 30.0)
-	{
-		SPEED = 0.2;
-		m_action = ACTION_RUN;
-		m_action_time = 50;
-	}
-	else
-	{
-		SPEED = 0.05;
-		m_action = ACTION_WALK;
-		m_action_time = 50;
-	}
-
-	dBodySetLinearVel(body->GetBody(), unit_x*SPEED, unit_y*SPEED, 0.0f);	
+	dBodySetLinearVel(body->GetBody(), unit_x*speed, unit_y*speed, 0.0f);	
 }
-
-
 
 void Unit::Laugh()
 {
-     m_action = ACTION_LAUGH;
-     m_action_time = 1000;
+     SetActionAnim(ACTION_LAUGH, 30);
 }
 void Unit::Point()
 {
-     m_action = ACTION_POINT;
-     m_action_time = 1000;
+     SetActionAnim(ACTION_POINT, 1);
 }
 
 void Unit::Taunt()
 {
-     m_action = ACTION_TAUNT;
-     m_action_time = 1000;
+     SetActionAnim(ACTION_TAUNT, 1);
 }
 
 bool Unit::Equip(WorldObject *obj)
@@ -216,6 +228,12 @@ void Unit::_BuildDequipPacket(WorldPacket& packet, bool armor, uint32 slot)
 	packet << slot;
 }
 
+void Unit::_BuildEnchantsPacket(WorldPacket& packet)
+{
+	packet.Initialize(MSG_REPORT_ENCHANTMENT);
+	packet << (uint16)GetExtent();
+	packet << (uint32)m_auras;
+}
 NoxEnumNamePair g_noxUnitArmorNames[] =
 {
 	STREET_SNEAKERS, "StreetSneakers",
@@ -250,4 +268,45 @@ NoxEnumNamePair g_noxUnitArmorNames[] =
 uint32 Unit::ObjectToUnitArmor(Object* obj)
 {
 	return ThingBin::noxNameToEnum(obj->GetObjectInfo()->Name, g_noxUnitArmorNames);
+}
+bool Unit::SetActionAnim(UnitActionType anim, uint32 frames)
+{
+	if(m_action_time && m_action != anim && m_action != ACTION_WALK && m_action != ACTION_RUN)
+		return false;
+
+	if(m_action != anim)
+		ResetActionAnim();
+
+	m_action = anim;
+	m_action_time = frames*30;
+
+	return true;
+}
+void Unit::UnsetEnchant( UnitEnchantType enchant )
+{
+	m_auras &= ~(1 << (uint8)enchant);
+	m_aura_times[enchant] = 0;
+
+	m_updateMask |= MASK_ENCHANTMENTS;
+}
+void Unit::SetEnchant( UnitEnchantType enchant, int16 frames )
+{
+	m_auras |= (1 << (uint8)enchant);
+	if(frames)
+		m_aura_times[enchant] = frames;
+	else
+	{
+		EnchantTableMap::iterator iter = objmgr.enchantTable.find(enchant);
+		if(iter != objmgr.enchantTable.end())
+			m_aura_times[enchant] = iter->second.frames;
+		else
+			m_aura_times[enchant] = 300;
+	}
+	m_updateMask |= MASK_ENCHANTMENTS;
+}
+void Unit::ResetEnchants()
+{
+	m_auras = 0;
+	memset(m_aura_times, 0, sizeof(int16)*ENCHANT_SIZE);
+	m_updateMask |= MASK_ENCHANTMENTS;
 }

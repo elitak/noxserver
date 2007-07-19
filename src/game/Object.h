@@ -75,6 +75,14 @@ struct POSITION
 	uint16 y_cor;
 };
 
+enum ObjectUpdateMask
+{
+	MASK_ENCHANTMENTS = 0x00000001,
+	MASK_HEALTH = 0x00000002,
+	MASK_MANA = 0x00000004,
+	MASK_TEAM = 0x00000008
+};
+
 class WorldObject;
 class WorldPacket;
 class UpdateData;
@@ -94,7 +102,7 @@ class MANGOS_DLL_SPEC Object
 		Object (uint16 type, GridPair pos, uint16 extent = 0);
         virtual ~Object ( );
 
-        virtual void Update ( float time ) { }
+        virtual void Update ( uint32 time );
 
 		uint16 GetExtent() { return m_extent; }
 		uint16 GetType() { return m_objectType; }
@@ -122,7 +130,14 @@ class MANGOS_DLL_SPEC Object
 		virtual bool Drop(WorldObject* obj, uint32 max_dist, GridPair newPos);
 		WorldObject* NewPickup(uint16 type, uint16 extent = 0, uint32 modifier = 0xFFFFFFFF);
 
+		virtual void _BuildHealthPacket(WorldPacket& packet);
+		virtual void _BuildDeltaHealthPacket(WorldPacket& packet);
 		virtual void _BuildUpdatePacket(WorldPacket& packet);
+
+		virtual void Damage( float damage );
+		virtual void Heal( float heal );
+		virtual bool IsDead() { return m_health <= 0; }
+		virtual int16 GetHealth() { return m_health; }
 
 		/// Collisions
 		int joint;
@@ -136,8 +151,17 @@ class MANGOS_DLL_SPEC Object
 		//GridPair m_position; /// this can only be initialized for static objects
 
 		bool CanSeePoint(uint16 x, uint16 y, uint32 size);
-
 		Flatland::Object* body;
+
+		virtual void Die();
+		float m_max_health;
+		float m_health;
+		float m_delta_health;
+		float m_combined_health;
+
+		/// Update Handlers
+		uint32 m_update_timer;
+		void OneSecondDieUpdate(time_t diff);
 
     private:
         /*ByteBuffer m_PackGUID;
@@ -159,11 +183,12 @@ class MANGOS_DLL_SPEC WorldObject : public Object
         virtual ~WorldObject ( ) {}
 
 		void SetPosition(GridPair position);
-
 		uint8 GetTeam() { return m_teamId; }
 		void SetTeam(uint8 team) { m_teamId = team; }
-
+		void Use(Player* plr);
 		bool InAnInventory();
+
+		void PotionUse(Player* plr);
     protected:
         WorldObject( WorldObject *instantiator );
 		WorldObject( ) {};
@@ -171,7 +196,7 @@ class MANGOS_DLL_SPEC WorldObject : public Object
 		virtual void SendUpdatePacket(WorldSession* session);
 
         /*std::string m_name;*/
-
+		uint32 m_updateMask;
     private:
         /*uint32 m_mapId;
 

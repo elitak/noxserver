@@ -31,7 +31,7 @@
 
 #include "flatland/flatland.hpp"
 
-Player::Player (WorldSession *session): Unit(0x2C9, GridPair(2285, 2500), 0)
+Player::Player (WorldSession *session): Unit(0x2C9, GridPair(2285, 2600), 0)
 {
 	//body->setCollisionFlags(body->getCollisionFlags()  | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
 	body->Property().collisionMask = 0xFFFFFFFF; //collide with everything
@@ -41,6 +41,9 @@ Player::Player (WorldSession *session): Unit(0x2C9, GridPair(2285, 2500), 0)
 	memset(&plrInfo, 0, sizeof(plrInfo));
 	plrInfo.flag = 0x20;
 	updateAll = false;
+
+	m_health = 100; //this should come from thing.bin
+	m_max_health = 150;
 }
 
 Player::~Player ()
@@ -52,9 +55,8 @@ void Player::SetName(const wchar_t* name)
 	//memcpy(m_plrname, name, 0x30*sizeof(wchar_t));
 }
 
-void Player::Update(time_t time)
+void Player::Update(uint32 time)
 {
-	uint32 mstime = getMSTime();
 	if(updateAll)
 	{
 		std::vector<WorldObject*> v = objmgr.GetObjectsInRect(GridPair(GetPositionX() - 300, GetPositionY() - 300), GridPair(GetPositionX() + 300, GetPositionY() + 300));
@@ -65,16 +67,33 @@ void Player::Update(time_t time)
 	else
 		UpdateView();
 
-	sLog.outDebug("UpdateViewTime: %u", getMSTime() - mstime);
+	WorldPacket packet;
+	if(m_delta_health)
+	{
+		m_health += m_delta_health;
+		if(m_health > m_max_health)
+			m_health = m_max_health;
+		if(m_health <= 0)
+			Die();
+
+		m_combined_health += m_delta_health;
+		m_delta_health = 0;
+
+		_BuildMyHealthPacket(packet);
+		GetSession()->SendPacket(&packet);
+	}
+	else if(m_combined_health)
+	{
+		_BuildDeltaHealthPacket(packet);
+		objacc.SendPacketToAll(&packet);
+		m_combined_health = 0;
+	}
+
 	// TODO: health/mana regen, death stuff, etc.
-	mstime = getMSTime();
 	SendUpdatePacket();
-	sLog.outDebug("PlayerSendTime: %u", getMSTime() - mstime);
 
 	Unit::Update(time);
 }
-
-const uint8 rot_data[] = { 0x40, 0x70, 0x60, 0x50, 0x30, 0x00, 0x10, 0x20 }; 
 
 void Player::_BuildUpdatePacket(WorldPacket& packet)
 {
@@ -86,7 +105,7 @@ void Player::_BuildUpdatePacket(WorldPacket& packet)
 	packet << (uint16)GetType();
 	packet << (uint16)GetPositionX();
 	packet << (uint16)GetPositionY();
-	packet << (uint8)( rot_data[(uint8)floor((double)GetAngle() / 0x20 + 0.5) & 0x7] );
+	packet << (uint8)GetAngle(); // we need to OR this with 0x80 depending on the m_action
 	packet << (uint8)m_action;
 }
 
@@ -131,6 +150,11 @@ void Player::SendUpdatePacket()
 	packet << (uint8)0x00;
 	packet << (uint8)0x00;
 
+	GetSession()->SendPacket(&packet);
+
+	packet.Initialize(MSG_DRAW_FRAME);
+	packet << (uint16)33113;
+	packet << (uint8)0;
 	GetSession()->SendPacket(&packet);
 }
 
@@ -249,7 +273,30 @@ void Player::EquipSecondary(WorldObject* obj)
 }
 void Player::PlayerCollideCallback(Flatland::ContactList &contacts)
 {
+	Player* plr = (Player*)contacts.Self()->GetUserPointer();
+	Object* obj = (Object*)contacts.Other()->GetUserPointer();
 
+	if(!plr)
+		return;
+	if(!obj || obj->GetFlatlandObject()->Property().collisionMask & 0x00000001) // Hit an obstacle
+	{
+		if(plr->m_action == ACTION_BERSERKER_CHARGE)
+		{
+			plr->ResetActionAnim();
+			//plr->SetActionAnim(ACTION_RECOIL, 60);
+			plr->Damage(plr->GetHealth() * 0.2);
+			plr->SetEnchant( ENCHANT_HELD, 45 );
+		}
+	}
+	else if(obj->GetType() == 0x2C9)
+	{
+		if(plr->m_action == ACTION_BERSERKER_CHARGE)
+		{
+			plr->ResetActionAnim();
+			//plr->SetActionAnim(ACTION_RECOIL, 60);
+			((Player*)obj)->Damage(100);
+		}
+	}
 }
 void Player::UpdateView()
 {
@@ -279,4 +326,60 @@ void Player::UpdateView()
 	}
 	else
 		m_oldposition = pos;	
+}
+
+void Player::_BuildHealthPacket(WorldPacket &packet)
+{
+	packet.Initialize(MSG_REPORT_HEALTH);
+	packet << GetExtent();
+	packet << (uint8)(m_health);
+}
+void Player::_BuildMyHealthPacket(WorldPacket &packet)
+{
+	packet.Initialize(MSG_REPORT_PLAYER_HEALTH);
+	packet << (uint16)m_health;
+}
+void Player::_BuildTotalHealthPacket(WorldPacket &packet)
+{
+	packet.Initialize(MSG_REPORT_TOTAL_HEALTH);
+	packet << GetExtent();
+	packet << (uint16)m_health;
+	packet << (uint16)m_max_health;
+}
+void Player::_BuildStatsPacket(WorldPacket &packet)
+{
+	packet.Initialize(MSG_REPORT_STATS);
+	packet << GetExtent();
+	packet << (uint16)m_health;
+	packet << (uint16)0; //mana
+	packet << (uint16)3000; //weight
+	packet << (uint16)4200; //speed
+	packet << (uint16)125; //strength
+	packet << (uint8)10; //level
+}
+void Player::RunTowards(uint16 x, uint16 y)
+{
+	if(SetActionAnim(ACTION_RUN, 3))
+		MoveToward(x, y, 0.21);
+}
+void Player::WalkTowards(uint16 x, uint16 y)
+{
+	if(SetActionAnim(ACTION_WALK, 3))
+		MoveToward(x, y, 0.105);
+}
+void Player::MoveTowards(uint16 x, uint16 y)
+{
+	if(IsDead() || HasEnchant(ENCHANT_HELD))
+		return;
+
+	GridPair pos = GetPosition();
+	int _x = pos.x_coord - x;
+	int _y = pos.y_coord - y;
+	int sqlength = (_x*_x) + (_y*_y);
+	if(sqlength < 1600)
+		WalkTowards(x, y);
+	else if(sqlength < 2500 && m_action == ACTION_WALK)
+		WalkTowards(x, y);
+	else
+		RunTowards(x, y);
 }

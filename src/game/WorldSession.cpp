@@ -46,8 +46,6 @@ _security(sec), _accountId(id), _logoutTime(0), m_playerLoading(false), m_player
 m_status(STATUS_AUTHED), xorKey(0), m_timestamp(1000), m_unk(0), m_playerObserving(true)
 {
     FillOpcodeHandlerHashTable();
-	FillSpellHandlerHashTable();
-	FillAbilityHandlerHashTable();
 }
 
 /// WorldSession destructor
@@ -279,158 +277,6 @@ void WorldSession::FillOpcodeHandlerHashTable()
 	objmgr.opcodeTable[ MSG_INVENTORY_FAIL ]			 = OpcodeHandler( STATUS_LOGGEDIN, &WorldSession::HandleInventoryFailOpcode	);
 }
 
-void WorldSession::FillSpellHandlerHashTable()
-{
-	if(!spellmgr.spellTable.empty())
-		return;
-
-	spellmgr.spellTable[ SPELL_ANCHOR ]					= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_ARACHNAPHOBIA ]			= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_BLIND ]					= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_BLINK ]					= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_BURN ]					= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_CANCEL ]					= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_CHAIN_LIGHTNING_BOLT ]	= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_CHANNEL_LIFE ]			= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_CHARM ]					= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_CLEANSING_FLAME ]		= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_CLEANSING_MANA_FLAME ]	= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_CONFUSE ]				= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_COUNTERSPELL ]			= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_CURE_POISON ]			= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_DEATH ]					= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_DEATH_RAY ]				= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_DETECT_MAGIC ]			= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_DETONATE ]				= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_DETONATE_GLYPHS ]		= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_DISENCHANT_ALL ]			= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_TURN_UNDEAD ]			= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_DRAIN_MANA ]				= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_EARTHQUAKE ]				= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_LIGHTNING ]				= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_EXPLOSION ]				= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_FEAR ]					= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_FIREBALL ]				= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_FIREWALK ]				= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_FIST ]					= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_FORCE_FIELD ]			= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_FORCE_OF_NATURE ]		= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_FREEZE ]					= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_FUMBLE ]					= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_GLYPH ]					= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_GREATER_HEAL ]			= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_HASTE ]					= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_INFRAVISION ]			= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_INVERSION ]				= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_INVISIBILITY ]			= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_INVULNERABILITY ]		= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_LESSER_HEAL ]			= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_LIGHT ]					= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_CHAIN_LIGHTNING ]		= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_LOCK ]					= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_MARK ]					= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_MARK_1 ]					= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_MARK_2 ]					= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_MARK_3 ]					= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_MARK_4 ]					= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_MAGIC_MISSILE ]			= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_SHIELD ]					= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_METEOR ]					= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_METEOR_SHOWER ]			= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_MOONGLOW ]				= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_NULLIFY ]				= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_MANA_BOMB ]				= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_PHANTOM ]				= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_PIXIE_SWARM ]			= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_PLASMA ]					= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_POISON ]					= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_PROTECTION_FROM_ELECTRICITY ]	= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_PROTECTION_FROM_FIRE ]	= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_PROTECTION_FROM_MAGIC ]	= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_PROTECTION_FROM_POISON ]	= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_PULL ]					= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_PUSH ]					= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_OVAL_SHIELD ]			= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_RESTORE_HEALTH ]			= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_RESTORE_MANA ]			= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_RUN ]					= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_SHOCK ]					= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_SLOW ]					= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_SMALL_ZAP ]				= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_STUN ]					= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_SUMMON_BAT ]				= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_SUMMON_BLACK_BEAR ]		= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_SUMMON_BEAR ]			= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_SUMMON_BEHOLDER ]		= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_SUMMON_BOMBER ]			= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_SUMMON_CARNIVOROUS_PLANT ]		= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_SUMMON_ALBINO_SPIDER ]	= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_SUMMON_SMALL_ALBINO_SPIDER ]		= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_SUMMON_EVIL_CHERUB ]		= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_SUMMON_EMBER_DEMON ]		= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_SUMMON_GHOST ]			= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_SUMMON_GIANT_LEECH ]		= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_SUMMON_IMP ]				= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_SUMMON_MECHANICAL_FLYER ]		= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_SUMMON_MECHANICAL_GOLEM ]		= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_SUMMON_MIMIC ]			= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_SUMMON_OGRE ]			= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_SUMMON_OGRE_BRUTE ]		= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_SUMMON_OGRE_WARLORD ]	= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_SUMMON_SCORPION ]		= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_SUMMON_SHADE ]			= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_SUMMON_SKELETON ]		= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_SUMMON_SKELETON_LORD ]	= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_SUMMON_SPIDER ]			= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_SUMMON_SMALL_SPIDER ]	= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_SUMMON_SPITTING_SPIDER ]	= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_SUMMON_STONE_GOLEM ]		= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_SUMMON_TROLL ]			= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_SUMMON_URCHIN ]			= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_SUMMON_WASP ]			= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_SUMMON_WILLOWISP ]		= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_SUMMON_WOLF ]			= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_SUMMON_BLACK_WOLF ]		= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_SUMMON_WHITE_WOLF ]		= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_SUMMON_ZOMBIE ]			= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_SUMMON_VILE_ZOMBIE ]		= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_SUMMON_DEMON ]			= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_SUMMON_LICH ]			= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_SUMMON_DRYAD ]			= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_SUMMON_URCHIN_SHAMAN ]	= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_SWAP ]					= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_TAG ]					= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_TELEPORT_OTHER_TO_MARK_1 ]		= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_TELEPORT_OTHER_TO_MARK_2 ]		= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_TELEPORT_OTHER_TO_MARK_3 ]		= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_TELEPORT_OTHER_TO_MARK_4 ]		= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_TELEPORT_POP ]			= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_TELEPORT_TO_MARK_1 ]		= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_TELEPORT_TO_MARK_2 ]		= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_TELEPORT_TO_MARK_3 ]		= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_TELEPORT_TO_MARK_4 ]		= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_TELEPORT_TO_TARGET ]		= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_TELEKINESIS ]			= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_TOXIC_CLOUD ]			= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_TRIGGER_GLYPH ]			= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_VAMPIRISM ]				= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_VILLAIN ]				= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_WALL ]					= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_WINK ]					= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_SUMMON_CREATURE ]		= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_MARK_LOCATION ]			= SpellHandler( 0, &WorldSession::HandleSpellUnknown );
-	spellmgr.spellTable[ SPELL_TELEPORT_TO_MARKER ]		= SpellHandler( 0, &WorldSession::HandleSpellUnknown );}
-void WorldSession::FillAbilityHandlerHashTable()
-{
-	if(!spellmgr.abilityTable.empty())
-		return;
-
-	spellmgr.abilityTable[ ABILITY_BERSERKER_CHARGE ]	= AbilityHandler( &WorldSession::HandleAbilityUnknown );
-	spellmgr.abilityTable[ ABILITY_WARCRY ]				= AbilityHandler( &WorldSession::HandleAbilityUnknown );
-	spellmgr.abilityTable[ ABILITY_HARPOON ]			= AbilityHandler( &WorldSession::HandleAbilityUnknown );
-	spellmgr.abilityTable[ ABILITY_TREAD_LIGHTLY ]		= AbilityHandler( &WorldSession::HandleAbilityUnknown );
-	spellmgr.abilityTable[ ABILITY_EYE_OF_THE_WOLF ]	= AbilityHandler( &WorldSession::HandleAbilityUnknown );
-}
 void WorldSession::SizeError(WorldPacket const& packet, uint32 size) const
 {
     sLog.outError("Client (account %u) send packet %s (%u) with size %u but expected %u (attempt crash server?), skipped",
@@ -685,19 +531,18 @@ void WorldSession::HandlePlayerInputOpcode(WorldPacket &recvPacket)
 				//jumped
 				sLog.outDebug("Player jumped.");
 				break;
-                    
-                    case 0x30:
-                         sLog.outDebug("Player laughed.");
-                         _player->Laugh();
-                         break;
-                    case 0x31:
-                         sLog.outDebug("Player pointed");
-                         _player->Point();
-                         break;
-                    case 0x2F:
-                         sLog.outDebug("Player taunted");
-                         _player->Taunt();
-                         break;
+            case 0x30:
+                 sLog.outDebug("Player laughed.");
+                 _player->Laugh();
+                 break;
+            case 0x31:
+                 sLog.outDebug("Player pointed");
+                 _player->Point();
+                 break;
+            case 0x2F:
+                 sLog.outDebug("Player taunted");
+                 _player->Taunt();
+                 break;
 			default:
 				recvPacket.rpos(recvPacket.rpos()-1);
 				sLog.outDebug("Player input: 0x0E 0x%2X", recvPacket.read<uint8>());
@@ -708,7 +553,7 @@ void WorldSession::HandlePlayerInputOpcode(WorldPacket &recvPacket)
 			recvPacket.read<uint8>();
 			break;
 		case 0x0F: //move: 0F 02 00 00 00 01
-			_player->MoveToward(_mouse.x_coord, _mouse.y_coord);
+			_player->MoveTowards(_mouse.x_coord, _mouse.y_coord);
 			recvPacket.read<uint32>();
 			recvPacket.read<uint8>();
 			break;
@@ -850,9 +695,15 @@ void WorldSession::HandleClientReadyOpcode(WorldPacket &recvPacket)
 		_SendPlayerRespawnOpcode();	
 		ObjectAccessor::Instance().SendPlayerInfo(this);
 
+		WorldPacket packet;
+		_player->_BuildTotalHealthPacket(packet);
+		ObjectAccessor::Instance().SendPacketToAll(&packet);
+		_player->_BuildStatsPacket(packet);
+		ObjectAccessor::Instance().SendPacketToAll(&packet);
+
 		_player->ForceUpdateAll();
 
-		uint16 type = sThingBin.Thing.Object.GetIndex("Sword");
+		uint16 type = sThingBin.Thing.Object.GetIndex("LongSword");
 		if(type)
 		{
 			_player->Equip(_player->NewPickup(type));
@@ -983,7 +834,9 @@ void WorldSession::HandleTryUseOpcode(WorldPacket& recv_data)
 {
     sLog.outDebug("New Unknown Opcode %u", recv_data.GetOpcode());
     recv_data.hexlike();
-	recv_data.read<uint16>();
+	WorldObject* obj = objmgr.GetObj(recv_data.read<uint16>());
+	if(obj)
+		obj->Use(GetPlayer());
 }
 void WorldSession::HandleTryEquipOpcode(WorldPacket& recv_data)
 {

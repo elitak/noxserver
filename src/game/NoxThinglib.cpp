@@ -191,6 +191,90 @@ NoxEnumNamePair g_noxCollideNames[] =
 	0, NULL
 };
 
+NoxEnumNamePair g_noxUpdateNames[] = 
+{
+	UPDATE_NONE, "NoUpdate",
+	UPDATE_PLAYER, "PlayerUpdate",
+	UPDATE_PROJECTILE, "ProjectileUpdate",
+	UPDATE_HOMINGPROJECTILE, "HomingProjectileUpdate",
+	UPDATE_SPELLPROJECTILE, "SpellProjectileUpdate",
+	UPDATE_ANTISPELLPROJECTILE, "AntiSpellProjectilUpdate",
+	UPDATE_DOOR, "DoorUpdate",
+	UPDATE_SPARK, "SparkUpdate",
+	UPDATE_PROJECTILETRAIL, "ProjectileTrailUpdate",
+	UPDATE_PUSH, "PushUpdate",
+	UPDATE_TRIGGER, "TriggerUpdate",
+	UPDATE_TOGGLE, "ToggleUpdate",
+	UPDATE_MONSTER, "MonsterUpdate",
+	UPDATE_LOOPANDDAMAGE, "LoopAndDamageUpdate",
+	UPDATE_ELEVATOR, "ElevatorUpdate",
+	UPDATE_ELEVATORSHAFT, "ElevatorShaftUpdate",
+	UPDATE_PHANTOMPLAYER, "PhantomPlayerUpdate",
+	UPDATE_OBELISK, "ObeliskUpdate",
+	UPDATE_LIFETIME, "LifetimeUpdate",
+	UPDATE_MAGICMISSILE, "MagicMissileUpdate",
+	UPDATE_PIXIE, "PixieUpdate",
+	UPDATE_SPIKEBLOCK, "SpikeBlockUpdate",
+	UPDATE_TOWER, "TowerUpdate",
+	UPDATE_SKULL, "SkullUpdate",
+	UPDATE_PENTAGRAM, "PentagramUpdate",
+	UPDATE_INVISIBLEPENTAGRAM, "InvisiblePentagramUpdate",
+	UPDATE_SWITCH, "SwitchUpdate",
+	UPDATE_BLOW, "BlowUpdate",
+	UPDATE_MOVER, "MoverUpdate",
+	UPDATE_BLACKPOWDERBARREL, "BlackPowderBarrelUpdate",
+	UPDATE_ONESECONDDIE, "OneSecondDieUpdate",
+	UPDATE_WATERBARREL, "WaterBarrelUpdate",
+	UPDATE_SELFDESTRUCT, "SelfDestructUpdate",
+	UPDATE_BLACKPOWDERBURN, "BlackPowderBurnUpdate",
+	UPDATE_DEATHBALL, "DeathBallUpdate",
+	UPDATE_DEATHBALLFRAGMENT, "DeathBallFragmentUpdate",
+	UPDATE_MOONGLOW, "MoonglowUpdate",
+	UPDATE_SENTRYGLOBE, "SentryGlobeUpdate",
+	UPDATE_TELEKINESIS, "TelekinesisUpdate",
+	UPDATE_FIST, "FistUpdate",
+	UPDATE_METEORSHOWER, "MeteorShowerUpdate",
+	UPDATE_METEOR, "MeteorUpdate",
+	UPDATE_TOXICCLOUD, "ToxicCloudUpdate",
+	UPDATE_SMALLTOXICCLOUD, "SmallToxicCloudUpdate",
+	UPDATE_ARACHNAPHOBIA, "ArachnaphobiaUpdate",
+	UPDATE_EXPIRE, "ExpireUpdate",
+	UPDATE_BREAK, "BreakUpdate",
+	UPDATE_OPEN, "OpenUpdate",
+	UPDATE_BREAKANDREMOVE, "BreakAndRemoveUpdate",
+	UPDATE_CHAKRAMINMOTION, "ChakramInMotionUpdate",
+	UPDATE_FLAG, "FlagUpdate",
+	UPDATE_TRAPDOOR, "TrapDoorUpdate",
+	UPDATE_BALL, "BallUpdate",
+	UPDATE_CROWN, "CrownUpdate",
+	UPDATE_UNDEADKILLER, "UndeadKillerUpdate",
+	UPDATE_HARPOON, "HarpoonUpdate",
+	UPDATE_WEAPONARMOR, "WeaponArmorUpdate",
+	UPDATE_MONSTERGENERATOR, "MonsterGeneratorUpdate",
+	0, NULL
+};
+
+NoxEnumNamePair g_noxUseNames[] = 
+{
+	USE_CONSUME, "ConsumeUse",
+	USE_CONSUMECONFUSE, "ConsumeConfuseUse",
+	USE_FIREWAND, "FireWandUse",
+	USE_CAST, "CaseUse",
+	USE_ENCHANT, "EnchantUse",
+	USE_MUSHROOM, "MushroomUse",
+	USE_READ, "ReadUse",
+	USE_WARPREAD, "WarpReadUse",
+	USE_WAND, "WandUse",
+	USE_WANDCAST, "WandCastUse",
+	USE_SPELLREWARD, "SpellRewardUse",
+	USE_ABILITYREWARD, "AbilityRewardUse",
+	USE_FIELDGUIDE, "FieldGuideUse",
+	USE_POTION, "PotionUse",
+	USE_AMMO, "AmmoUse",
+	USE_BOW, "BowUse",
+	0, NULL
+};
+
 //////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
@@ -523,7 +607,27 @@ while(strcmp(Type,"GNHT") && count<filelen)
 			  {
 				  Object.collide = noxNameToEnum(string, g_noxCollideNames);
 				  for(int i = 0; (string = strtok(NULL, " +")) != NULL; i++)
-				       strncpy(Object.collide_args[i], string, 20);
+				       strncpy(Object.collide_args[i], string, 30);
+			  }
+		  }
+		  else if(!strcmp(string, "UPDATE"))
+		  {
+			  strtok(NULL, " +"); // =
+			  if( (string = strtok(NULL, " +")) != NULL)
+			  {
+				  Object.update = noxNameToEnum(string, g_noxUpdateNames);
+				  for(int i = 0; (string = strtok(NULL, " +")) != NULL; i++)
+				       strncpy(Object.update_args[i], string, 30);
+			  }
+		  }
+		  else if(!strcmp(string, "USE"))
+		  {
+			  strtok(NULL, " +"); // =
+			  if( (string = strtok(NULL, " +")) != NULL)
+			  {
+				  Object.use = noxNameToEnum(string, g_noxUseNames);
+				  for(int i = 0; (string = strtok(NULL, " +")) != NULL; i++)
+				       strncpy(Object.use_args[i], string, 30);
 			  }
 		  }
 		  else if(!strcmp(string, "EXTENT"))

@@ -19,16 +19,19 @@
 #ifndef _SPELL_H
 #define _SPELL_H
 
+#include "Player.h"
 #include "Policies/Singleton.h"
 #include "WorldSession.h"
+
+class SpellMgr;
 
 struct SpellHandler
 {
     SpellHandler() : classFlag(0), handler(NULL) {};
-    SpellHandler( uint8 _classFlag, void (WorldSession::*_handler)(bool invert) ) : classFlag(_classFlag), handler(_handler) {};
+    SpellHandler( uint8 _classFlag, void (SpellMgr::*_handler)(Player* plr, bool invert) ) : classFlag(_classFlag), handler(_handler) {};
 
 	uint8 classFlag;
-    void (WorldSession::*handler)(bool invert);
+    void (SpellMgr::*handler)(Player* plr, bool invert);
 };
 
 typedef HM_NAMESPACE::hash_map< uint8 , SpellHandler > SpellTableMap;
@@ -36,9 +39,9 @@ typedef HM_NAMESPACE::hash_map< uint8 , SpellHandler > SpellTableMap;
 struct AbilityHandler
 {
     AbilityHandler() : handler(NULL) {};
-    AbilityHandler( void (WorldSession::*_handler)() ) : handler(_handler) {};
+    AbilityHandler( void (SpellMgr::*_handler)(Player* plr) ) : handler(_handler) {};
 
-    void (WorldSession::*handler)();
+    void (SpellMgr::*handler)(Player* plr);
 };
 
 typedef HM_NAMESPACE::hash_map< uint8 , AbilityHandler > AbilityTableMap;
@@ -201,8 +204,15 @@ public:
 	SpellMgr();
 	~SpellMgr();
 
+	void HandleSpellUnknown(Player* plr, bool invert) {};
+	void HandleAbilityUnknown(Player* plr) {};
+	void HandleBerserkerChargeAbility(Player* plr);
+
 	SpellTableMap spellTable;
 	AbilityTableMap abilityTable;
+private:
+	void FillSpellHandlerHashTable();
+	void FillAbilityHandlerHashTable();
 };
 
 #define spellmgr MaNGOS::Singleton<SpellMgr>::Instance()

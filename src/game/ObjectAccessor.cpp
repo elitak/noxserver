@@ -105,9 +105,9 @@ ObjectAccessor::RemovePlayer(Player *pl)
     if( iter != i_players.end() )
         i_players.erase(iter);
 
-    std::set<WorldObject *>::iterator iter2 = std::find(i_objects.begin(), i_objects.end(), (Object *)pl);
-    if( iter2 != i_objects.end() )
-        i_objects.erase(iter2);
+    std::set<WorldObject *>::iterator iter2 = std::find(i_changed_objects.begin(), i_changed_objects.end(), (Object *)pl);
+    if( iter2 != i_changed_objects.end() )
+        i_changed_objects.erase(iter2);
 
 	objmgr.RemoveObject(pl);
 }
@@ -115,9 +115,8 @@ ObjectAccessor::RemovePlayer(Player *pl)
 void
 ObjectAccessor::_update()
 {
-    //UpdateDataMapType update_players;
+	RemoveAllObjectsInRemoveList();
     {
-        Guard guard(i_updateGuard);
 		Guard guard2(i_playerGuard);
 
 		for(PlayersMapType::iterator iter = i_players.begin(); iter != i_players.end(); ++iter)
@@ -128,38 +127,13 @@ ObjectAccessor::_update()
 					iter2->second->AddUpdateObject(iter->second);
 			}
 		}
-
-        for(std::set<WorldObject *>::iterator iter=i_objects.begin(); iter != i_objects.end(); ++iter)
-        {
-            // check for valid pointer
-            if (!*iter)
-                continue;
-
-			for(PlayersMapType::iterator iter2 = i_players.begin(); iter2 != i_players.end(); ++iter2)
-			{
-				if(iter2->second->CanSeePoint((*iter)->GetPositionX(), (*iter)->GetPositionY(), 0))
-					iter2->second->AddUpdateObject(*iter);
-			}
-//            _buildUpdateObject(*iter, update_players);
-//            (*iter)->ClearUpdateMask(false);
-        }
-        i_objects.clear();
     }
-
-    /*WorldPacket packet; // here we allocate a std::vector with a size of 0x10000
-    for(UpdateDataMapType::iterator iter = update_players.begin(); iter != update_players.end(); ++iter)
-    {
-        iter->second.BuildPacket(&packet);
-        iter->first->GetSession()->SendPacket(&packet);
-        packet.clear(); // clean the string
-    }*/
 }
 
 void
 ObjectAccessor::UpdateObject(Object* obj, Player* exceptPlayer)
 {
     UpdateDataMapType update_players;
-//    obj->BuildUpdate(update_players);
 
     WorldPacket packet;
     for(UpdateDataMapType::iterator iter = update_players.begin(); iter != update_players.end(); ++iter)
@@ -174,17 +148,17 @@ ObjectAccessor::UpdateObject(Object* obj, Player* exceptPlayer)
 }
 
 void
-ObjectAccessor::AddUpdateObject(WorldObject *obj)
+ObjectAccessor::AddUpdateObject(Object *obj)
 {
     Guard guard(i_updateGuard);
     i_objects.insert(obj);
 }
 
 void
-ObjectAccessor::RemoveUpdateObject(WorldObject *obj)
+ObjectAccessor::RemoveUpdateObject(Object *obj)
 {
     Guard guard(i_updateGuard);
-    std::set<WorldObject *>::iterator iter = i_objects.find(obj);
+    std::set<Object *>::iterator iter = i_objects.find(obj);
     if( iter != i_objects.end() )
         i_objects.erase( iter );
 }
@@ -215,6 +189,7 @@ void ObjectAccessor::RemoveAllObjectsInRemoveList()
     {
         WorldObject* obj = *i_objectsToRemove.begin();
         i_objectsToRemove.erase(i_objectsToRemove.begin());
+		delete obj;
         /*switch(obj->GetTypeId())
         {
             case TYPEID_CORPSE:
@@ -317,18 +292,13 @@ ObjectAccessor::_buildChangeObjectForPlayer(WorldObject *obj, UpdateDataMapType 
 void
 ObjectAccessor::Update(const uint32  &diff)
 {
-	uint32 mstime = getMSTime();
 	_update();
-	sLog.outDebug("UpdateTime: %u", getMSTime() - mstime);
     {
-		mstime = getMSTime();
-	
-        Guard guard(i_playerGuard);
-        for(PlayersMapType::iterator iter=i_players.begin(); iter != i_players.end(); ++iter)
+		Guard guard(i_updateGuard);
+        for(std::set<Object *>::iterator iter=i_objects.begin(); iter != i_objects.end(); ++iter)
         {
-            iter->second->Update(diff);
+            (*iter)->Update(diff);
         }
-		sLog.outDebug("PlayerTime: %u", getMSTime() - mstime);
     }
 }
 
@@ -385,6 +355,10 @@ ObjectAccessor::SendPlayerInfo(WorldSession* session)
 			iter->second->_BuildNewPlayerPacket(packet);
 			session->SendPacket(&packet);
 			iter->second->_BuildClientStatusPacket(packet);
+			session->SendPacket(&packet);
+			iter->second->_BuildTotalHealthPacket(packet);
+			session->SendPacket(&packet);
+			iter->second->_BuildStatsPacket(packet);
 			session->SendPacket(&packet);
 		}
     }

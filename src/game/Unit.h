@@ -171,17 +171,67 @@ enum UnitWeaponType
 	STAFF_OBLIVION_WIERDLING = 0x02000000,
 	STAFF_OBLIVION_ORB = 0x04000000
 };
+enum UnitEnchantType
+{
+	ENCHANT_INVISIBLE,
+	ENCHANT_MOONGLOW,
+	ENCHANT_BLINDED,
+	ENCHANT_CONFUSED,
+	ENCHANT_SLOWED,
+	ENCHANT_HELD,
+	ENCHANT_DETECTING,
+	ENCHANT_ETHEREAL,
+	ENCHANT_RUN,
+	ENCHANT_HASTED,
+	ENCHANT_VILLAIN,
+	ENCHANT_AFRAID,
+	ENCHANT_BURNING,
+	ENCHANT_VAMPIRISM,
+	ENCHANT_ANCHORED,
+	ENCHANT_LIGHT,
+	ENCHANT_DEATH,
+	ENCHANT_PROTECT_FROM_FIRE,
+	ENCHANT_PROTECT_FROM_POISON,
+	ENCHANT_PROTECT_FROM_MAGIC,
+	ENCHANT_PROTECT_FROM_ELECTRICITY,
+	ENCHANT_INFRAVISION,
+	ENCHANT_SHOCK,
+	ENCHANT_INVULNERABLE,
+	ENCHANT_TELEKINESIS,
+	ENCHANT_FREEZE,
+	ENCHANT_SHIELD,
+	ENCHANT_REFLECTIVE_SHIELD,
+	ENCHANT_CHARMING,
+	ENCHANT_ANTI_MAGIC,
+	ENCHANT_CROWN,
+	ENCHANT_SNEAK,
+	ENCHANT_SIZE
+};
+
 class MANGOS_DLL_SPEC Unit : public WorldObject
 {
     public:
 		Unit(uint16 type, GridPair pos, uint16 extent);
         virtual ~Unit ( );
         virtual void Update( uint32 time );
-		virtual void MoveToward( uint16 x, uint16 y );
+		virtual void MoveToward( uint16 x, uint16 y, float speed );
+		virtual bool SetActionAnim( UnitActionType anim, uint32 frames );
+		virtual void ResetActionAnim()
+		{
+			m_action = ACTION_IDLE;
+			m_action_time = 0;
+			m_angle &= 0x7F;
+			dBodySetLinearVel(body->GetBody(), 0.0f, 0.0f, 0.0f);
+		}
 
 		virtual void Laugh();
         virtual void Point();
         virtual void Taunt();
+
+		virtual void SetEnchant( UnitEnchantType enchant, int16 frames = 0 );
+		virtual void UnsetEnchant( UnitEnchantType enchant );
+		virtual bool HasEnchant( UnitEnchantType enchant ) { return m_auras & (1 << (uint8)enchant); }
+		virtual void ResetEnchants();
 
 		virtual bool Equip( WorldObject* obj );
 		virtual bool Equip( WorldObject* obj, uint32 slot );
@@ -189,20 +239,28 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
 
 		void _BuildEquipPacket(WorldPacket& packet, bool armor, uint32 slot, uint32 modifier = 0);
 		void _BuildDequipPacket(WorldPacket& packet, bool armor, uint32 slot);
+		void _BuildEnchantsPacket(WorldPacket& packet);
 		static uint32 ObjectToUnitArmor(Object* obj);
-		
-		void SetAngle (uint8 angle) { m_angle = angle; }
+	
+		void SetAngle (uint8 angle) 
+		{ 
+			const uint8 rot_data[] = { 0x40, 0x70, 0x60, 0x50, 0x30, 0x00, 0x10, 0x20 }; 
+			if(!IsDead())
+				m_angle = rot_data[(uint8)floor((double)angle / 0x20 + 0.5) & 0x7]; 
+		}
 		uint8 GetAngle () { return m_angle; }
     protected:
         Unit ( WorldObject *instantiator );
+		void InitRespawn();
 		UnitActionType m_action;
 		time_t m_action_time;
 
 		uint8 m_angle;
+		uint32 m_auras; // UnitEnchantType
+		int16 m_aura_times[32];
 		WorldObject* m_equipment[SLOT_SIZE];
    
     private:
-
         uint32 m_state;                                     // Even derived shouldn't modify
         uint32 m_CombatTimer;
 };

@@ -19,6 +19,7 @@
 
 #include "CollisionResponse.h"
 #include "Object.h"
+#include "Player.h"
 
 #include "flatland/flatland.hpp"
 
@@ -31,8 +32,8 @@ void CollisionResponse::DamageCollideCallback(Flatland::ContactList &contacts)
 		return;
 	Player* player = (Player*)other;
 
-	int damage = atoi(me->GetObjectInfo()->collide_args[0]);
+	float damage = atoi(me->GetObjectInfo()->collide_args[0]);
 	// damagetype = me->GetObjectInfo()->collide_args[1] // convert from string to enum?
 
-	// player->Damage(damage);
+	player->Damage(damage/3);
 }

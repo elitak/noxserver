@@ -25,7 +25,8 @@ INSTANTIATE_SINGLETON_1(SpellMgr);
 
 SpellMgr::SpellMgr()
 {
-	
+	FillSpellHandlerHashTable();
+	FillAbilityHandlerHashTable();
 }
 
 SpellMgr::~SpellMgr()
@@ -44,7 +45,7 @@ bool WorldSession::ExecuteSpell(uint8 spellId, bool invert)
 	}
 	else
 	{
-	    (this->*iter->second.handler)(invert);
+	    (spellmgr.*iter->second.handler)(GetPlayer(), invert);
 	}
 
 	return true;
@@ -61,10 +62,170 @@ bool WorldSession::ExecuteAbility(uint8 abilityId)
 	}
 	else
 	{
-	    (this->*iter->second.handler)();
+	    (spellmgr.*iter->second.handler)(GetPlayer());
 	}
 
 	return true;
+}
+
+void SpellMgr::FillSpellHandlerHashTable()
+{
+	if(!spellTable.empty())
+		return;
+
+	spellTable[ SPELL_ANCHOR ]					= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_ARACHNAPHOBIA ]			= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_BLIND ]					= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_BLINK ]					= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_BURN ]					= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_CANCEL ]					= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_CHAIN_LIGHTNING_BOLT ]	= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_CHANNEL_LIFE ]			= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_CHARM ]					= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_CLEANSING_FLAME ]		= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_CLEANSING_MANA_FLAME ]	= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_CONFUSE ]				= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_COUNTERSPELL ]			= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_CURE_POISON ]			= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_DEATH ]					= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_DEATH_RAY ]				= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_DETECT_MAGIC ]			= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_DETONATE ]				= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_DETONATE_GLYPHS ]		= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_DISENCHANT_ALL ]			= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_TURN_UNDEAD ]			= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_DRAIN_MANA ]				= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_EARTHQUAKE ]				= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_LIGHTNING ]				= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_EXPLOSION ]				= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_FEAR ]					= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_FIREBALL ]				= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_FIREWALK ]				= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_FIST ]					= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_FORCE_FIELD ]			= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_FORCE_OF_NATURE ]		= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_FREEZE ]					= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_FUMBLE ]					= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_GLYPH ]					= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_GREATER_HEAL ]			= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_HASTE ]					= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_INFRAVISION ]			= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_INVERSION ]				= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_INVISIBILITY ]			= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_INVULNERABILITY ]		= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_LESSER_HEAL ]			= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_LIGHT ]					= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_CHAIN_LIGHTNING ]		= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_LOCK ]					= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_MARK ]					= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_MARK_1 ]					= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_MARK_2 ]					= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_MARK_3 ]					= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_MARK_4 ]					= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_MAGIC_MISSILE ]			= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_SHIELD ]					= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_METEOR ]					= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_METEOR_SHOWER ]			= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_MOONGLOW ]				= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_NULLIFY ]				= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_MANA_BOMB ]				= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_PHANTOM ]				= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_PIXIE_SWARM ]			= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_PLASMA ]					= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_POISON ]					= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_PROTECTION_FROM_ELECTRICITY ]	= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_PROTECTION_FROM_FIRE ]	= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_PROTECTION_FROM_MAGIC ]	= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_PROTECTION_FROM_POISON ]	= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_PULL ]					= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_PUSH ]					= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_OVAL_SHIELD ]			= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_RESTORE_HEALTH ]			= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_RESTORE_MANA ]			= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_RUN ]					= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_SHOCK ]					= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_SLOW ]					= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_SMALL_ZAP ]				= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_STUN ]					= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_SUMMON_BAT ]				= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_SUMMON_BLACK_BEAR ]		= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_SUMMON_BEAR ]			= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_SUMMON_BEHOLDER ]		= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_SUMMON_BOMBER ]			= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_SUMMON_CARNIVOROUS_PLANT ]		= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_SUMMON_ALBINO_SPIDER ]	= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_SUMMON_SMALL_ALBINO_SPIDER ]		= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_SUMMON_EVIL_CHERUB ]		= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_SUMMON_EMBER_DEMON ]		= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_SUMMON_GHOST ]			= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_SUMMON_GIANT_LEECH ]		= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_SUMMON_IMP ]				= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_SUMMON_MECHANICAL_FLYER ]		= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_SUMMON_MECHANICAL_GOLEM ]		= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_SUMMON_MIMIC ]			= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_SUMMON_OGRE ]			= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_SUMMON_OGRE_BRUTE ]		= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_SUMMON_OGRE_WARLORD ]	= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_SUMMON_SCORPION ]		= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_SUMMON_SHADE ]			= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_SUMMON_SKELETON ]		= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_SUMMON_SKELETON_LORD ]	= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_SUMMON_SPIDER ]			= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_SUMMON_SMALL_SPIDER ]	= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_SUMMON_SPITTING_SPIDER ]	= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_SUMMON_STONE_GOLEM ]		= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_SUMMON_TROLL ]			= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_SUMMON_URCHIN ]			= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_SUMMON_WASP ]			= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_SUMMON_WILLOWISP ]		= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_SUMMON_WOLF ]			= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_SUMMON_BLACK_WOLF ]		= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_SUMMON_WHITE_WOLF ]		= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_SUMMON_ZOMBIE ]			= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_SUMMON_VILE_ZOMBIE ]		= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_SUMMON_DEMON ]			= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_SUMMON_LICH ]			= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_SUMMON_DRYAD ]			= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_SUMMON_URCHIN_SHAMAN ]	= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_SWAP ]					= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_TAG ]					= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_TELEPORT_OTHER_TO_MARK_1 ]		= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_TELEPORT_OTHER_TO_MARK_2 ]		= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_TELEPORT_OTHER_TO_MARK_3 ]		= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_TELEPORT_OTHER_TO_MARK_4 ]		= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_TELEPORT_POP ]			= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_TELEPORT_TO_MARK_1 ]		= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_TELEPORT_TO_MARK_2 ]		= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_TELEPORT_TO_MARK_3 ]		= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_TELEPORT_TO_MARK_4 ]		= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_TELEPORT_TO_TARGET ]		= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_TELEKINESIS ]			= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_TOXIC_CLOUD ]			= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_TRIGGER_GLYPH ]			= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_VAMPIRISM ]				= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_VILLAIN ]				= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_WALL ]					= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_WINK ]					= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_SUMMON_CREATURE ]		= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_MARK_LOCATION ]			= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_TELEPORT_TO_MARKER ]		= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );}
+void SpellMgr::FillAbilityHandlerHashTable()
+{
+	if(!abilityTable.empty())
+		return;
+
+	abilityTable[ ABILITY_BERSERKER_CHARGE ]	= AbilityHandler( &SpellMgr::HandleBerserkerChargeAbility );
+	abilityTable[ ABILITY_WARCRY ]				= AbilityHandler( &SpellMgr::HandleAbilityUnknown );
+	abilityTable[ ABILITY_HARPOON ]			= AbilityHandler( &SpellMgr::HandleAbilityUnknown );
+	abilityTable[ ABILITY_TREAD_LIGHTLY ]		= AbilityHandler( &SpellMgr::HandleAbilityUnknown );
+	abilityTable[ ABILITY_EYE_OF_THE_WOLF ]	= AbilityHandler( &SpellMgr::HandleAbilityUnknown );
+}
+void SpellMgr::HandleBerserkerChargeAbility(Player *plr)
+{
+	GridPair cursor = plr->GetSession()->GetCursor();
+	plr->SetActionAnim(ACTION_BERSERKER_CHARGE, 90); //frames is from gamedata.bin
+	plr->MoveToward(cursor.x_coord, cursor.y_coord, 0.42);
+	
 }
 
 const char *g_spellNames[] =

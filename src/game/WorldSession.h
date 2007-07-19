@@ -68,6 +68,7 @@ class MANGOS_DLL_SPEC WorldSession
 		void SetClient(ClientAddr addr) { _client = addr; }
 		ClientAddr GetClient() { return _client; }
 		SessionStatus GetStatus() { return m_status; }
+		GridPair GetCursor() { return _mouse; }
 
         /// Is the user engaged in a log out process?
         bool isLogingOut() const
@@ -161,7 +162,6 @@ class MANGOS_DLL_SPEC WorldSession
 				return ExecuteSpell(id, invert);
 		}
 		bool ExecuteSpell(uint8 spellId, bool invert);
-		void HandleSpellUnknown(bool invert) {};
 		// Abilities
 		bool ExecuteAbility(const char* name)
 		{
@@ -172,7 +172,6 @@ class MANGOS_DLL_SPEC WorldSession
 				return ExecuteAbility(id);
 		}
 		bool ExecuteAbility(uint8 abilityId);
-		void HandleAbilityUnknown() {};
 		// Opcodes
 		void HandleJoinConfirmation();
 		void HandleNewUnknownOpcode(WorldPacket& recv_data);
@@ -254,8 +253,6 @@ class MANGOS_DLL_SPEC WorldSession
 		uint8 m_unk;
 
         void FillOpcodeHandlerHashTable();
-		void FillSpellHandlerHashTable();
-		void FillAbilityHandlerHashTable();
 
         ZThread::LockedQueue<WorldPacket*,ZThread::FastMutex> _recvQueue;
 		ByteBuffer loginBuffer;

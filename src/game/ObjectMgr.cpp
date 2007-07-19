@@ -43,7 +43,48 @@ ObjectMgr::ObjectMgr()
 	memset(objectExtents, 0, MAX_EXTENT);
 	World.SetContactMaxCorrectingVel(0.0f);
 
+	// Build Collide Table
 	collideTable[ COLLIDE_DAMAGE ]	= CollideHandler( &CollisionResponse::DamageCollideCallback );
+
+	// Build Update Table
+	updateTable[ UPDATE_ONESECONDDIE ] = UpdateHandler( &Object::OneSecondDieUpdate );
+
+	// Build Enchant Table, frame value came from gamedata.bin
+	enchantTable[ ENCHANT_INVISIBLE ] = EnchantEntry("ENCHANT_INVISIBLE", 1800);
+	enchantTable[ ENCHANT_MOONGLOW ] = EnchantEntry("ENCHANT_MOONGLOW", 9000);
+	enchantTable[ ENCHANT_BLINDED ] = EnchantEntry("ENCHANT_BLINDED");
+	enchantTable[ ENCHANT_CONFUSED ] = EnchantEntry("ENCHANT_CONFUSED", 90);
+	enchantTable[ ENCHANT_SLOWED ] = EnchantEntry("ENCHANT_SLOWED", 120);
+	enchantTable[ ENCHANT_HELD ] = EnchantEntry("ENCHANT_HELD", 60);
+	enchantTable[ ENCHANT_DETECTING ] = EnchantEntry("ENCHANT_DETECTING");
+	enchantTable[ ENCHANT_ETHEREAL ] = EnchantEntry("ENCHANT_ETHEREAL");
+	enchantTable[ ENCHANT_RUN ] = EnchantEntry("ENCHANT_RUN");
+	enchantTable[ ENCHANT_HASTED ] = EnchantEntry("ENCHANT_HASTED", 600);
+	enchantTable[ ENCHANT_VILLAIN ] = EnchantEntry("ENCHANT_VILLAIN");
+	enchantTable[ ENCHANT_AFRAID ] = EnchantEntry("ENCHANT_AFRAID");
+	enchantTable[ ENCHANT_BURNING ] = EnchantEntry("ENCHANT_BURNING");
+	enchantTable[ ENCHANT_VAMPIRISM ] = EnchantEntry("ENCHANT_VAMPIRISM");
+	enchantTable[ ENCHANT_ANCHORED ] = EnchantEntry("ENCHANT_ANCHORED", 300);
+	enchantTable[ ENCHANT_LIGHT ] = EnchantEntry("ENCHANT_LIGHT", 9000);
+	enchantTable[ ENCHANT_DEATH ] = EnchantEntry("ENCHANT_DEATH");
+	enchantTable[ ENCHANT_PROTECT_FROM_FIRE ] = EnchantEntry("ENCHANT_PROTECT_FROM_FIRE", 1800);
+	enchantTable[ ENCHANT_PROTECT_FROM_POISON ] = EnchantEntry("ENCHANT_PROTECT_FROM_POISON", 1800);
+	enchantTable[ ENCHANT_PROTECT_FROM_MAGIC ] = EnchantEntry("ENCHANT_PROTECT_FROM_MAGIC", 1800);
+	enchantTable[ ENCHANT_PROTECT_FROM_ELECTRICITY ] = EnchantEntry("ENCHANT_PROTECT_FROM_ELECTRICITY", 1800);
+	enchantTable[ ENCHANT_INFRAVISION ] = EnchantEntry("ENCHANT_INFRAVISION", 900);
+	enchantTable[ ENCHANT_SHOCK ] = EnchantEntry("ENCHANT_SHOCK", 600);
+	enchantTable[ ENCHANT_INVULNERABLE ] = EnchantEntry("ENCHANT_INVULNERABLE", 150);
+	enchantTable[ ENCHANT_TELEKINESIS ] = EnchantEntry("ENCHANT_TELEKINESIS");
+	enchantTable[ ENCHANT_FREEZE ] = EnchantEntry("ENCHANT_FREEZE");
+	enchantTable[ ENCHANT_SHIELD ] = EnchantEntry("ENCHANT_SHIELD");
+	enchantTable[ ENCHANT_REFLECTIVE_SHIELD ] = EnchantEntry("ENCHANT_REFLECTIVE_SHIELD");
+	enchantTable[ ENCHANT_CHARMING ] = EnchantEntry("ENCHANT_CHARMING");
+	enchantTable[ ENCHANT_ANTI_MAGIC ] = EnchantEntry("ENCHANT_ANTI_MAGIC");
+	enchantTable[ ENCHANT_CROWN ] = EnchantEntry("ENCHANT_CROWN");
+	enchantTable[ ENCHANT_SNEAK ] = EnchantEntry("ENCHANT_SNEAK");
+
+	// Build Use Table
+	useTable[ USE_POTION ] = UseHandler( &WorldObject::PotionUse );
 }
 
 ObjectMgr::~ObjectMgr()
@@ -158,11 +199,9 @@ void ObjectMgr::Update(float diff)
 {
 	if(!objectTable.size())
 		return;
-	uint32 mstime = getMSTime();
 
 	//Having our own list of dynamic players cuts time by ALOT
 	World.GenerateContacts(objectTable, playerList);
-	sLog.outDebug("ContactTime: %u", getMSTime() - mstime);
 	World.QuickStep(diff);
 	//ASSERT(!World.IsCorrupt(objectTable));
 }
@@ -174,7 +213,7 @@ NoxWallObject::NoxWallObject() : Object()
 
 	body->Property().bounceVelocity = 0.0f;
 	body->Property().collisionMask = 0x00000001;
-
+	body->SetUserPointer(0);
 
 }
 NoxWallObject::~NoxWallObject()
