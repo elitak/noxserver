@@ -35,5 +35,5 @@ void CollisionResponse::DamageCollideCallback(Flatland::ContactList &contacts)
 	float damage = atoi(me->GetObjectInfo()->collide_args[0]);
 	// damagetype = me->GetObjectInfo()->collide_args[1] // convert from string to enum?
 
-	player->Damage(damage/3);
+	player->Damage(damage/3, NULL);
 }

@@ -41,9 +41,6 @@ Player::Player (WorldSession *session): Unit(0x2C9, GridPair(2285, 2600), 0)
 	memset(&plrInfo, 0, sizeof(plrInfo));
 	plrInfo.flag = 0x20;
 	updateAll = false;
-
-	m_health = 100; //this should come from thing.bin
-	m_max_health = 150;
 }
 
 Player::~Player ()
@@ -89,6 +86,15 @@ void Player::Update(uint32 time)
 		m_combined_health = 0;
 	}
 
+	// Update ability delays
+	if(plrInfo.pclass == PLAYER_CLASS_WARRIOR)
+	{
+		for(int i = 0; i < 5; i++)
+			if(m_ability_delays[i] > 0)
+				if(--m_ability_delays[i] == 0)
+					_BuildResetAbilityPacket(packet, (AbilityType)(i+1));
+	}
+
 	// TODO: health/mana regen, death stuff, etc.
 	SendUpdatePacket();
 
@@ -111,7 +117,7 @@ void Player::_BuildUpdatePacket(WorldPacket& packet)
 
 void Player::_BuildNewPlayerPacket(WorldPacket& packet)
 {
-	packet.Initialize(MSG_NEW_PLAYER, 0x0, 0, 0x80);
+	packet.Initialize(MSG_NEW_PLAYER, 0x80, 0, 0x80);
 	packet << (uint16)GetExtent();
 	packet.append((uint8*)(&plrInfo), 0x7E);
 }
@@ -122,6 +128,17 @@ void Player::_BuildClientStatusPacket(WorldPacket& packet)
 	packet << (uint32)m_session->IsObserving();
 }
 
+void Player::_BuildResetAbilityPacket(WorldPacket& packet, uint8 ability)
+{
+	packet.Initialize(MSG_RESET_ABILITIES);
+	packet << (uint8)ability;
+}
+void Player::_BuildAbilityStatePacket(WorldPacket& packet, uint8 ability)
+{
+	packet.Initialize(MSG_REPORT_ABILITY_STATE);
+	packet << (uint8)ability;
+	packet << (uint8)(IsAbilityReady(ability));
+}
 void Player::SendUpdatePacket()
 {
 	WorldPacket packet(MSG_UPDATE_STREAM);
@@ -182,6 +199,15 @@ void Player::Taunt()
      m_session->SendPacket(&packet);
 }
 
+void Player::Attack()
+{
+	if(HasEnchant(ENCHANT_INVULNERABLE))
+		UnsetEnchant(ENCHANT_INVULNERABLE);
+	if(GetSession()->IsObserving())
+		GetSession()->SetObserving(false);
+	if(IsDead())
+		Respawn();
+}
 bool Player::Equip(WorldObject* obj)
 {
 	if(Unit::Equip(obj))
@@ -284,7 +310,7 @@ void Player::PlayerCollideCallback(Flatland::ContactList &contacts)
 		{
 			plr->ResetActionAnim();
 			//plr->SetActionAnim(ACTION_RECOIL, 60);
-			plr->Damage(plr->GetHealth() * 0.2);
+			plr->Damage(plr->GetHealth() * 0.2, NULL);
 			plr->SetEnchant( ENCHANT_HELD, 45 );
 		}
 	}
@@ -294,7 +320,9 @@ void Player::PlayerCollideCallback(Flatland::ContactList &contacts)
 		{
 			plr->ResetActionAnim();
 			//plr->SetActionAnim(ACTION_RECOIL, 60);
-			((Player*)obj)->Damage(100);
+			if(obj->GetHealth() <= 100)
+				plr->SetAbilityDelay(ABILITY_BERSERKER_CHARGE, 0);
+			((Player*)obj)->Damage(100, plr);
 		}
 	}
 }
@@ -330,12 +358,17 @@ void Player::UpdateView()
 
 void Player::Poison( byte poisoned )
 {
-     Unit::Poison(poisoned);
-     WorldPacket packet;
-     packet.Initialize(MSG_REPORT_OBJECT_POISON);
-     packet << GetExtent();
-     packet << m_poison;
-     m_session->SendPacket(&packet);
+    Unit::Poison(poisoned);
+    WorldPacket packet;
+    packet.Initialize(MSG_REPORT_OBJECT_POISON);
+    packet << GetExtent();
+	packet << m_poison;
+	m_session->SendPacket(&packet);
+
+	packet.Initialize(MSG_INFORM, 0, 0, 5);
+	packet << (uint8)0x0D;
+	packet << (uint32)2;
+	GetSession()->SendPacket(&packet);
 }
 
 void Player::_BuildHealthPacket(WorldPacket &packet)
@@ -392,4 +425,83 @@ void Player::MoveTowards(uint16 x, uint16 y)
 		WalkTowards(x, y);
 	else
 		RunTowards(x, y);
+}
+void Player::Respawn()
+{
+	m_health = 100; //these should come from gamedata.bin
+	m_max_health = 150;
+	if(plrInfo.pclass == PLAYER_CLASS_WARRIOR)
+		ResetAbilityDelays();
+	SetPosition(GridPair(3000, 2900));
+	ForceUpdateAll();
+
+	ResetEnchants();
+	SetEnchant(ENCHANT_INVULNERABLE);
+
+	GetSession()->_SendPlayerRespawnOpcode();
+	WorldPacket packet;
+	_BuildTotalHealthPacket(packet);
+	ObjectAccessor::Instance().SendPacketToAll(&packet);
+	_BuildStatsPacket(packet);
+	ObjectAccessor::Instance().SendPacketToAll(&packet);
+
+	_BuildDequipPacket(packet, true, 0xFFFFFFFF);
+	GetSession()->SendPacket(&packet);
+	_BuildDequipPacket(packet, false, 0xFFFFFFFF);
+	GetSession()->SendPacket(&packet);
+
+	uint16 type = sThingBin.Thing.Object.GetIndex("Longsword");
+	if(type)
+	{
+		Equip(NewPickup(type));
+	}
+}
+void Player::ResetAbilityDelays()
+{
+	memset(m_ability_delays, 0, sizeof(uint16) * 5);
+
+	WorldPacket packet;
+	_BuildResetAbilityPacket(packet, ABILITY_ALL);
+	GetSession()->SendPacket(&packet);
+}
+bool Player::IsAbilityReady(uint8 ability)
+{
+	if(ability < 1 || ability > 5)
+		return false;
+	return !(m_ability_delays[ ((uint8)ability) - 1 ]);
+}
+void Player::SetAbilityDelay(uint8 ability, uint16 frames)
+{
+	if(ability < 1 || ability > 5)
+		return;
+	m_ability_delays[ ((uint8)ability) - 1 ] = frames;
+	
+	WorldPacket packet;
+	if(frames)
+	{
+		_BuildAbilityStatePacket(packet, ability);
+		GetSession()->SendPacket(&packet);
+	}
+	else
+	{
+		_BuildResetAbilityPacket(packet, ability);
+		GetSession()->SendPacket(&packet);
+	}
+}
+void Player::SetEnchant(UnitEnchantType enchant, int16 frames)
+{
+	Unit::SetEnchant(enchant, frames);
+	WorldPacket packet(MSG_INFORM, 0, 0, 5);
+	if(enchant == ENCHANT_CONFUSED)
+	{
+		packet << (uint8)0x0D;
+		packet << (uint32)1;
+		GetSession()->SendPacket(&packet);
+	}
+	else if(enchant == ENCHANT_HELD)
+	{
+		packet << (uint8)0x0D;
+		packet << (uint32)0;
+		GetSession()->SendPacket(&packet);
+	}
 }

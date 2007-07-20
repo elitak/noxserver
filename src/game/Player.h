@@ -23,6 +23,7 @@
 #include "Common.h"
 
 #include "Database/DatabaseEnv.h"
+#include "Spell.h"
 #include "Unit.h"
 #include "WorldSession.h"
 
@@ -130,8 +131,8 @@ class MANGOS_DLL_SPEC Player : public Unit
 		void Laugh();
 		void Point();
 		void Taunt();
+		void Attack();
 
-		void SetPosition(GridPair position);
 		void ForceUpdateAll() { updateAll = true; };
 		void UpdateView();
 
@@ -142,8 +143,13 @@ class MANGOS_DLL_SPEC Player : public Unit
 		bool RemoveFromInventory(WorldObject* obj, GridPair newPos);
 		void ObjectOutOfSight(WorldObject* obj);
 		void ObjectDestroyed(WorldObject* obj);
+		void ResetAbilityDelays();
+		void SetAbilityDelay(uint8 ability, uint16 frames);
+		bool IsAbilityReady(uint8 ability);
+		void Respawn();
 
-          virtual void Poison( byte poisoned );
+		void SetEnchant(UnitEnchantType enchant, int16 frames = 0);
+        virtual void Poison( byte poisoned );
 		virtual void _BuildHealthPacket(WorldPacket& packet);
 
 		static void PlayerCollideCallback(Flatland::ContactList &contacts);
@@ -153,6 +159,7 @@ class MANGOS_DLL_SPEC Player : public Unit
 		
 		bool updateAll;
 		GridPair m_oldposition;
+		uint16 m_ability_delays[5]; //may want to change this to a struct to store the delays, level awarded, etc.
 		
 		UpdateQueueType updateQueue;
 
@@ -163,5 +170,7 @@ class MANGOS_DLL_SPEC Player : public Unit
 		virtual void _BuildMyHealthPacket(WorldPacket& packet);
 		virtual void _BuildTotalHealthPacket(WorldPacket& packet);
 		virtual void _BuildStatsPacket(WorldPacket& packet);
+		virtual void _BuildResetAbilityPacket(WorldPacket& packet, uint8 ability);
+		virtual void _BuildAbilityStatePacket(WorldPacket& packet, uint8 ability);
 };
 #endif

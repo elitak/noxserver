@@ -225,7 +225,7 @@ void SpellMgr::HandleBerserkerChargeAbility(Player *plr)
 	GridPair cursor = plr->GetSession()->GetCursor();
 	plr->SetActionAnim(ACTION_BERSERKER_CHARGE, 90); //frames is from gamedata.bin
 	plr->MoveToward(cursor.x_coord, cursor.y_coord, 0.42);
-     //delay 300
+	plr->SetAbilityDelay(ABILITY_BERSERKER_CHARGE, 300);	
 	
 }
 void SpellMgr::HandleEyeOfWolfAbility(Player *plr)

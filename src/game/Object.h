@@ -134,7 +134,7 @@ class MANGOS_DLL_SPEC Object
 		virtual void _BuildDeltaHealthPacket(WorldPacket& packet);
 		virtual void _BuildUpdatePacket(WorldPacket& packet);
 
-		virtual void Damage( float damage );
+		virtual void Damage( float damage, Object* cause );
 		virtual void Heal( float heal );
 		virtual bool IsDead() { return m_health <= 0; }
 		virtual int16 GetHealth() { return m_health; }

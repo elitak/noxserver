@@ -121,8 +121,8 @@ bool Object::Drop(WorldObject* obj, uint32 max_dist, GridPair newPos)
 }
 WorldObject* Object::NewPickup(uint16 type, uint16 extent, uint32 modifier)
 {
-	WorldObject* obj = new WorldObject(type, GridPair(5880, 5880), extent);
-	if(!Pickup(obj))
+	WorldObject* obj = new WorldObject(type, GridPair(0, 0), extent);
+	if(!Pickup(obj, 0))
 	{
 		delete obj;
 		obj = NULL;
@@ -175,7 +175,7 @@ void Object::Die()
 {
 	m_health = 0;
 }
-void Object::Damage(float damage)
+void Object::Damage(float damage, Object* cause)
 {
 	if(!IsDead())
 		m_delta_health -= damage;
@@ -238,7 +238,7 @@ void WorldObject::SetPosition(GridPair position)
 	std::set<Player*> oldPlayers = objacc.PlayersCanSeePoint(oldPos.x_coord, oldPos.y_coord, 1);
 	std::set<Player*> newPlayers = objacc.PlayersCanSeePoint(position.x_coord, position.y_coord, 1);
 
-	body->GetGeometry().SetCenter(Flatland::vec2(position.x_coord, position.y_coord));
+	body->SetCenter(Flatland::vec2(position.x_coord, position.y_coord));
 
 	if(!InAnInventory())
 	{

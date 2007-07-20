@@ -238,6 +238,8 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
 		virtual bool Equip( WorldObject* obj, uint32 slot );
 		virtual bool Dequip( WorldObject* obj );
 
+		//virtual bool HitDamage( float damage,	
+
 		void _BuildEquipPacket(WorldPacket& packet, bool armor, uint32 slot, uint32 modifier = 0);
 		void _BuildDequipPacket(WorldPacket& packet, bool armor, uint32 slot);
 		void _BuildEnchantsPacket(WorldPacket& packet);

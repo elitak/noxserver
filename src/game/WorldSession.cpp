@@ -40,10 +40,13 @@
 
 #include <cmath>
 
+#define TIMEOUT_MS 1000
+
 /// WorldSession constructor
 WorldSession::WorldSession(uint32 id, WorldSocket *sock, uint32 sec) : _player(NULL), _socket(sock),
 _security(sec), _accountId(id), _logoutTime(0), m_playerLoading(false), m_playerRecentlyLogout(false),
-m_status(STATUS_AUTHED), xorKey(0), m_timestamp(1000), m_unk(0), m_playerObserving(true)
+m_status(STATUS_AUTHED), xorKey(0), m_timestamp(1000), m_unk(0), m_playerObserving(true), m_playerDownloading(0),
+m_connTimer(TIMEOUT_MS)
 {
     FillOpcodeHandlerHashTable();
 }
@@ -303,10 +306,8 @@ void WorldSession::SendPacket(WorldPacket* packet, bool ifReady, bool changeUnk)
 		if(changeUnk)
 			packet->SetUnk(m_unk);
 
-		if(sendPacket.GetOpcode() && (packet->GetUnk() != sendPacket.GetUnk())) // || packet->GetAccountId() != sendPacket.GetAccountId()
+		if(sendPacket.GetOpcode() && (packet->GetUnk() != sendPacket.GetUnk() || packet->GetAccountId() != sendPacket.GetAccountId())) // || packet->GetAccountId() != sendPacket.GetAccountId()
 			_SendPacket(&sendPacket);
-		if(packet->GetAccountId() & 0x80)
-			sendPacket.SetAccountId(packet->GetAccountId());
 		if(!sendPacket.GetOpcode())
 		{
 			sendPacket.SetOpcode(packet->GetOpcode());
@@ -345,7 +346,7 @@ bool WorldSession::Update(uint32 diff)
     WorldPacket *packet = NULL;
 
 	// Always send new timestamp
-	if(m_status == STATUS_LOGGEDIN && !PlayerLoading())
+	if(m_status == STATUS_LOGGEDIN)
 	{
 		m_timestamp++;
 		_SendPartialTimestampOpcode();
@@ -354,6 +355,16 @@ bool WorldSession::Update(uint32 diff)
     ///- Retrieve packets from the receive queue and call the appropriate handlers
     /// \todo Is there a way to consolidate the OpcondeHandlerTable and the g_worldOpcodeNames to only maintain 1 list?
     /// answer : there is a way, but this is better, because it would use redundand RAM
+	if(!_recvQueue.empty() && m_connTimer < TIMEOUT_MS)
+		m_connTimer = TIMEOUT_MS;
+	else
+	{
+		if(m_connTimer < diff)
+			LogoutRequest(1);
+		else
+			m_connTimer -= diff;
+	}
+
     while ( (packet || !_recvQueue.empty()) && _socket)
     {
 		if(!packet)
@@ -421,6 +432,8 @@ bool WorldSession::Update(uint32 diff)
 
 	if(sendPacket.GetOpcode())
 		_SendPacket(&sendPacket);
+	if(m_playerDownloading > 0)
+		_SendMapSendPacket();
 
     ///- If necessary, log the player out
     time_t currTime = time(NULL);
@@ -524,8 +537,7 @@ void WorldSession::HandlePlayerInputOpcode(WorldPacket &recvPacket)
 			case 0x06:
 				sLog.outDebug("Player attacked.");
 				//if observer
-				m_playerObserving = false;
-				_SendClientStatusOpcode();
+				_player->Attack();
 				break;
 			case 0x07:
 				//jumped
@@ -692,22 +704,8 @@ void WorldSession::HandleClientReadyOpcode(WorldPacket &recvPacket)
 		_SendPartialTimestampOpcode();
 		_player->SendUpdatePacket();
 		_SendFadeBeginOpcode();
-		_SendPlayerRespawnOpcode();	
+		_player->Respawn();
 		ObjectAccessor::Instance().SendPlayerInfo(this);
-
-		WorldPacket packet;
-		_player->_BuildTotalHealthPacket(packet);
-		ObjectAccessor::Instance().SendPacketToAll(&packet);
-		_player->_BuildStatsPacket(packet);
-		ObjectAccessor::Instance().SendPacketToAll(&packet);
-
-		_player->ForceUpdateAll();
-
-		uint16 type = sThingBin.Thing.Object.GetIndex("LongSword");
-		if(type)
-		{
-			_player->Equip(_player->NewPickup(type));
-		}
 	}
 }
 
@@ -793,7 +791,8 @@ void WorldSession::HandleTryAbilityOpcode(WorldPacket& recv_data)
 		uint8 ability = recv_data.read<uint8>();
 		sLog.outDebug("TryAbility: 0x%2X", ability);
 
-		ExecuteAbility(ability);
+		if(GetPlayer()->IsAbilityReady(ability))
+			ExecuteAbility(ability);
     }
     catch(ByteBuffer::error &)
     {
@@ -883,14 +882,12 @@ void WorldSession::HandleTryCollideOpcode(WorldPacket& recv_data)
 }
 void WorldSession::HandleImportantAckOpcode(WorldPacket& recv_data)
 {
-    sLog.outDebug("New Unknown Opcode %u", recv_data.GetOpcode());
-    recv_data.hexlike();
-	recv_data.read<uint32>();
+	recv_data.read<uint32>(); // should check this if we sent out an important packet
 }
 void WorldSession::HandleRequestMapOpcode(WorldPacket& recv_data)
 {
-    sLog.outDebug("New Unknown Opcode %u", recv_data.GetOpcode());
-    recv_data.hexlike();
+	m_unk = recv_data.GetUnk();
+	_SendMapSendStart();
 }
 void WorldSession::HandleCancelMapOpcode(WorldPacket& recv_data)
 {
@@ -905,13 +902,14 @@ void WorldSession::HandleSysopPwOpcode(WorldPacket& recv_data)
 }
 void WorldSession::HandleKeepAliveOpcode(WorldPacket& recv_data)
 {
-    sLog.outDebug("New Unknown Opcode %u", recv_data.GetOpcode());
-    recv_data.hexlike();
+	// this opcode just keeps the connection open
 }
 void WorldSession::HandleReceivedMapOpcode(WorldPacket& recv_data)
 {
     sLog.outDebug("New Unknown Opcode %u", recv_data.GetOpcode());
     recv_data.hexlike();
+
+	m_playerDownloading = 0;
 }
 void WorldSession::HandleRequestSavePlayerOpcode(WorldPacket& recv_data)
 {
@@ -1005,134 +1003,6 @@ void WorldSession::HandleInventoryFailOpcode(WorldPacket& recv_data)
 /// %Log the player out
 void WorldSession::LogoutPlayer(bool Save)
 {
-	/*
-    if (_player)
-    {
-        ///- If the player just died before logging out, make him appear as a ghost
-        //FIXME: logout must be delayed in case lost connection with client in time of combat
-        if (_player->GetDeathTimer() || _player->isAttacked())
-        {
-            _player->CombatStop(true);
-            _player->DeleteInHateListOf();
-            _player->KillPlayer();
-            _player->BuildPlayerRepop();
-
-            // build set of player who attack _player or who have pet attacking of _player
-            std::set<Player*> aset;
-            for(Unit::AttackerSet::const_iterator itr = _player->getAttackers().begin(); itr != _player->getAttackers().end(); ++itr)
-            {
-                Unit* owner = (*itr)->GetOwner();           // including player controled case
-                if(owner)
-                {
-                    if(owner->GetTypeId()==TYPEID_PLAYER)
-                        aset.insert((Player*)owner);
-                }
-                else
-                if((*itr)->GetTypeId()==TYPEID_PLAYER)
-                    aset.insert((Player*)(*itr));
-            }
-            // give honor to all attackers from set
-            for(std::set<Player*>::const_iterator itr = aset.begin(); itr != aset.end(); ++itr)
-                (*itr)->CalculateHonor(_player);
-        }
-
-        ///- Remove player from battleground (teleport to entrance)
-        if(_player->InBattleGround())
-        {
-            BattleGround* bg = sBattleGroundMgr.GetBattleGround(_player->GetBattleGroundId());
-            if(bg)
-                bg->RemovePlayer(_player->GetGUID(), true, true);
-        }
-        if(_player->InBattleGroundQueue())
-        {
-            BattleGround* bg = sBattleGroundMgr.GetBattleGround(_player->GetBattleGroundQueueId());
-            if(bg)
-                bg->RemovePlayerFromQueue(_player->GetGUID());
-        }
-
-        ///- Reset the online field in the account table
-        // no point resetting online in character table here as Player::SaveToDB() will set it to 1 since player has not been removed from world at this stage
-        //No SQL injection as AccountID is uint32
-        loginDatabase.PExecute("UPDATE `account` SET `online` = 0 WHERE `id` = '%u'", GetAccountId());
-
-        ///- If the player is in a guild, update the guild roster and broadcast a logout message to other guild members
-        Guild *guild = objmgr.GetGuildById(_player->GetGuildId());
-        if(guild)
-        {
-            guild->LoadPlayerStatsByGuid(_player->GetGUID());
-
-            WorldPacket data(SMSG_GUILD_EVENT, (5+12));     // name limited to 12 in character table.
-            data<<(uint8)GE_SIGNED_OFF;
-            data<<(uint8)1;
-            data<<_player->GetName();
-            data<<(uint8)0<<(uint8)0<<(uint8)0;
-            guild->BroadcastPacket(&data);
-        }
-
-        ///- Release charmed creatures and unsummon totems
-        _player->Uncharm();
-        _player->UnsummonTotem();
-        _player->InvisiblePjsNear.clear();
-
-        ///- empty buyback items and save the player in the database
-        // some save parts only correctly work in case player present in map/player_lists (pets, etc)
-        if(Save)
-        {
-            uint32 eslot;
-            for(int j = BUYBACK_SLOT_START; j < BUYBACK_SLOT_END; j++)
-            {
-                eslot = j - BUYBACK_SLOT_START;
-                _player->SetUInt64Value(PLAYER_FIELD_VENDORBUYBACK_SLOT_1+eslot*2,0);
-                _player->SetUInt32Value(PLAYER_FIELD_BUYBACK_PRICE_1+eslot,0);
-                _player->SetUInt32Value(PLAYER_FIELD_BUYBACK_TIMESTAMP_1+eslot,0);
-            }
-            _player->SaveToDB();
-        }
-
-        ///- Leave all channels before player delete...
-        _player->CleanupChannels();
-
-        ///- Remove the player's pet from the world
-        _player->RemovePet(NULL,PET_SAVE_AS_CURRENT);
-
-        ///- If the player is in a group (or invited), remove him. If the group if then only 1 person, disband the group.
-        _player->UninviteFromGroup();
-
-        // remove player from the group if he is:
-        // a) in group; b) not in raid group; c) logging out normally (not being kicked or disconnected)
-        if(_player->groupInfo.group && !_player->groupInfo.group->isRaidGroup() && _socket)
-            _player->RemoveFromGroup();
-
-        ///- Remove the player from the world
-        ObjectAccessor::Instance().RemovePlayer(_player);
-        MapManager::Instance().GetMap(_player->GetMapId(), _player)->Remove(_player, false);
-
-        ///- Send update to group
-        if(_player->groupInfo.group)
-            _player->groupInfo.group->SendUpdate();
-
-        ///- Broadcast a logout message to the player's friends
-        WorldPacket data(SMSG_FRIEND_STATUS, 9);
-        data<<uint8(FRIEND_OFFLINE);
-        data<<_player->GetGUID();
-        _player->BroadcastPacketToFriendListers(&data);
-
-        ///- Delete the player object
-        delete _player;
-        _player = 0;
-
-        ///- Send the 'logout complete' packet to the client
-        data.Initialize( SMSG_LOGOUT_COMPLETE, 0 );
-        SendPacket( &data );
-
-        ///- Since each account can only have one online character at any given time, ensure all characters for active account are marked as offline
-        //No SQL injection as AccountId is uint32
-        sDatabase.PExecute("UPDATE `character` SET `online` = 0 WHERE `account` = '%u'", GetAccountId());
-        sLog.outDebug( "SESSION: Sent SMSG_LOGOUT_COMPLETE Message" );
-    }
-
-    m_playerRecentlyLogout = true;
-    LogoutRequest(0);*/
 	if(_player)
 	{
 		ObjectAccessor::Instance().RemovePlayer(_player);
@@ -1175,7 +1045,7 @@ void WorldSession::CryptData(uint8* data, uint32 datalen)
 
 void WorldSession::_SendFullTimestampOpcode()
 {
-	WorldPacket packet(MSG_FULL_TIMESTAMP, 0x0, _client, 4);
+	WorldPacket packet(MSG_FULL_TIMESTAMP, 0x80, _client, 4);
 	packet << m_timestamp;
 	SendPacket(&packet, false);
 }
@@ -1188,7 +1058,7 @@ void WorldSession::_SendJoinDataOpcode()
 }
 void WorldSession::_SendGameSettings2Opcode()
 {
-	WorldPacket packet(MSG_GAME_SETTINGS_2, 0, _client, 0x30);
+	WorldPacket packet(MSG_GAME_SETTINGS_2, 0x80, _client, 0x30);
 	packet.append("ZoaEDK's Game\0\0\0", 0x10); // 0x10
 	packet << (uint32)0xFFFFFFFF;
 	packet << (uint32)0xFFFFFFFF;
@@ -1202,7 +1072,7 @@ void WorldSession::_SendGameSettings2Opcode()
 }
 void WorldSession::_SendGameSettingsOpcode()
 {
-	WorldPacket packet(MSG_GAME_SETTINGS, 0, _client, 0x13);
+	WorldPacket packet(MSG_GAME_SETTINGS, 0x80, _client, 0x13);
 	packet << m_timestamp;
 	packet << (uint32)0x0001039A;
 	packet << (uint32)0x00032080;
@@ -1291,6 +1161,49 @@ void WorldSession::_SendClientStatusOpcode()
 	WorldPacket packet(MSG_REPORT_CLIENT_STATUS, 0x0, _client, 2);
 	packet << (uint16)_player->GetExtent();
 	packet << (uint32)m_playerObserving;
-	
 	objacc.SendPacketToAll(&packet);
+	
+	if(m_playerObserving) //should a different function send this?
+	{
+		packet.Initialize(MSG_INFORM);
+		packet << (uint8)0x0C;
+		packet << (uint32)m_playerObserving;
+		SendPacket(&packet);
+	}
+}
+void WorldSession::_SendMapSendStart()
+{
+	if(!m_playerDownloading)
+	{
+		WorldPacket packet(MSG_MAP_SEND_START, 0x80, _client, 87);
+		packet << (uint8)0xF8; //unknown
+		packet << (uint16)0x0013; //unknown
+		packet << (uint32)sWorld.GetMap()->GetNxzSize();
+		packet.append(sWorld.GetMap()->GetNxzName(), 0x50);
+
+		SendPacket(&packet, false);
+		m_playerDownloading = 1;
+		m_unk2 = m_unk;
+	}
+}
+void WorldSession::_SendMapSendPacket()
+{
+	m_unk2++;
+	int PACKET_SIZE = 0x200;
+	uint8 data[0x200];
+
+	//put data in data and update size
+	PACKET_SIZE = sWorld.GetMap()->ReadNxzBytes( (m_playerDownloading - 1) * PACKET_SIZE, data, PACKET_SIZE);
+
+	WorldPacket packet(MSG_MAP_SEND_PACKET, 0x80, _client, PACKET_SIZE + 0x5);
+	packet << (uint8)0xF8; //unknown/not used
+	packet << (uint16)m_playerDownloading; //packet #
+	packet << (uint16)PACKET_SIZE; //data size
+	packet.append(data, PACKET_SIZE);
+	packet.SetUnk(m_unk2);
+	SendPacket(&packet, false, false);
+
+	m_playerDownloading++;
+	if((m_playerDownloading - 1) * PACKET_SIZE > sWorld.GetMap()->GetNxzSize())
+		m_playerDownloading = 0;
 }

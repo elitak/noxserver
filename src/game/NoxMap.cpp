@@ -28,6 +28,8 @@ bool NoxMap::open(char *fileName)
 	char buffer[255];
 	if(!NoxBuffer::open(fileName))
 		return false;
+	strncpy(mappath, fileName, 512);
+	getNxz();
 
 	if(read<uint32>() != 0xFADEFACE)
 		decrypt(NC_MAP);
@@ -96,6 +98,49 @@ void NoxMap::readObjects()
 	}
 }
 
+
+void NoxMap::getNxz()
+{
+	memcpy(nxzpath, mappath, 512);
+	char* ptr = strrchr(nxzpath, '.');
+	if(ptr == NULL)
+		return;
+	else
+	{
+		ptr[1] = 'n';
+		ptr[2] = 'x';
+		ptr[3] = 'z';
+
+		nxzFile = fopen(nxzpath, "rb");
+		if(nxzFile)
+		{
+			fseek(nxzFile, 0, SEEK_END);
+			nxzSize = ftell(nxzFile);
+			ptr = strrchr(mappath, '\\');
+			if(ptr != NULL)
+				strncpy(nxzname, ptr+1, 0x50);
+		}
+		else
+			nxzSize = 0;
+	}
+}
+uint32 NoxMap::GetNxzSize()
+{
+	return nxzSize;
+}
+
+uint16 NoxMap::ReadNxzBytes(uint32 offset, uint8* buffer, uint16 size)
+{
+	if(nxzFile == NULL || !nxzSize)
+		return 0;
+	uint16 read = (size + offset) > nxzSize ? (nxzSize - offset) : size;
+	fseek(nxzFile, offset, SEEK_SET);
+	return fread(buffer, 1, size, nxzFile);
+}
+const char* NoxMap::GetNxzName()
+{
+	return nxzname;
+}
 NoxMapHeader::NoxMapHeader(NoxBuffer* rdr)
 {
 	read(rdr);

@@ -167,10 +167,21 @@ public:
 	bool open(char* fileName);
 	NoxWallMap walls;
 
+	uint32 GetNxzSize();
+	uint16 ReadNxzBytes(uint32 offset, uint8* buffer, uint16 size);
+	const char* GetNxzName(); //will always be a pointer to a 0x50 buffer
+
 protected:
 	NoxObjectTOC objectTOC;
 	NoxMapHeader mapHeader;
 
+	char mappath[512];
+	char nxzpath[512];
+	char nxzname[0x50]; // don't change this size, used by packet to send map
+	FILE * nxzFile;
+	uint32 nxzSize;
+
+	void getNxz();
 	void skipSection();
 	void readObjects();
 };

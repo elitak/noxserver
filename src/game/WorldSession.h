@@ -44,6 +44,7 @@ class WorldSession;
 /// Player session in the World
 class MANGOS_DLL_SPEC WorldSession
 {
+	friend Player;
     public:
         WorldSession(uint32 id, WorldSocket *sock, uint32 sec);
         ~WorldSession();
@@ -97,52 +98,6 @@ class MANGOS_DLL_SPEC WorldSession
 
 		void CryptData(uint8* data, uint32 datalen);
 
-        //void SendTestCreatureQueryOpcode( uint32 entry, uint64 guid, uint32 testvalue );
-//        void SendNameQueryOpcode(Player* p);
-        void SendNameQueryOpcodeFromDB(uint64 guid);
-
-        void SendCreatureQuery( uint32 entry, uint64 guid );
-        void SendTrainerList( uint64 guid );
-        void SendTrainerList( uint64 guid,std::string strTitle );
-        void SendListInventory( uint64 guid );
-        void SendShowBank( uint64 guid );
-        void SendTabardVendorActivate( uint64 guid );
-        void SendSpiritResurrect();
-        void SendBindPoint(Creature* npc);
-        void SendGMTicketGetTicket(uint32 status, char const* text);
-
-        void SendTradeStatus(uint32 status);
-        void SendCancelTrade();
-
-        void SendStablePet(uint64 guid );
-        void SendPetitionQueryOpcode( uint64 petitionguid);
-        void SendUpdateTrade();
-
-        //pet
-        void SendPetNameQuery(uint64 guid, uint32 petnumber);
-
-        //mail
-                                                            //used with item_page table
-        bool SendItemInfo( uint32 itemid, WorldPacket data );
-        //auction
-        void SendAuctionHello( uint64 guid, Creature * unit );
-        void SendAuctionCommandResult( uint32 auctionId, uint32 Action, uint32 ErrorCode, uint32 bidError = 0);
-        void SendAuctionBidderNotification( uint32 location, uint32 auctionId, uint64 bidder, uint32 bidSum, uint32 diff, uint32 item_template);
-        void SendAuctionOwnerNotification( AuctionEntry * auction );
-        bool SendAuctionInfo(WorldPacket & data, AuctionEntry* auction);
-        void SendAuctionOutbiddedMail( AuctionEntry * auction, uint32 newPrice );
-        void SendAuctionCancelledToBidderMail( AuctionEntry* auction );
-
-        //Item Enchantement
-        void SendEnchantmentLog(uint64 Target, uint64 Caster,uint32 ItemID,uint32 SpellID);
-        void SendItemEnchantTimeUpdate(uint64 Playerguid, uint64 Itemguid,uint32 slot,uint32 Duration);
-
-        //Taxi
-        void SendTaxiStatus( uint64 guid );
-        void SendTaxiMenu( uint64 guid );
-        void SendDoFlight( uint16 MountId, uint32 path );
-        bool SendLearnNewTaxiNode( uint64 guid );
-
 		//Cursor
 		void MoveMouse( uint16 deltax, uint16 deltay )
 		{
@@ -150,6 +105,11 @@ class MANGOS_DLL_SPEC WorldSession
 			_mouse += deltay;
 		}
 		bool IsObserving() { return m_playerObserving; }
+		void SetObserving(bool state)
+		{
+			m_playerObserving = state;
+			_SendClientStatusOpcode();
+		}
     protected:
 
 		// Spells
@@ -229,6 +189,8 @@ class MANGOS_DLL_SPEC WorldSession
 		//void _SendUpdateStreamOpcode();
 		void _SendImportantAckOpcode(uint32 timestamp);
 		void _SendClientStatusOpcode();
+		void _SendMapSendStart();
+		void _SendMapSendPacket();
 
 		void _SendPacket(WorldPacket* packet);
 
@@ -246,11 +208,14 @@ class MANGOS_DLL_SPEC WorldSession
         bool m_playerLoading;
         bool m_playerRecentlyLogout;
 		bool m_playerObserving;
+		int32 m_playerDownloading;
+		uint32 m_connTimer;
 
 		uint8 xorKey;
 		SessionStatus m_status;
 		uint32 m_timestamp;
 		uint8 m_unk;
+		uint8 m_unk2;
 
         void FillOpcodeHandlerHashTable();
 

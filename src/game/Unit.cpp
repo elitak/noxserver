@@ -81,21 +81,24 @@ void Unit::Update( uint32 p_time )
 		m_action = ACTION_DEAD;
 		m_health = 0;
 	}
-	else if(m_action)
+	else if(m_action || m_action != ACTION_RAISE_SHIELD)
 	{
 		if(p_time > m_action_time)
 		{
 			dBodySetLinearVel(body->GetBody(), 0.0f, 0.0f, 0.0f);
-			m_action = ACTION_IDLE;
+			if(m_equipment[SLOT_SHIELD])
+				m_action = ACTION_RAISE_SHIELD;
+			else
+				m_action = ACTION_IDLE;
 			m_action_time = 0;
 		}
 		else
 			m_action_time -= p_time;
 	}
 
-     if(m_poison==1)
+     if(m_poison == 1)
      {
-          Damage(.03);
+          Damage(.03, 0);
      }
 
 	//Update Enchants
