@@ -18,6 +18,57 @@
 
 #include "NoxCrypt.h"
 
+void NoxCrypt::DecryptBitwise(unsigned char *data, size_t dataLen)
+{
+  // 1,2,4,8,16,32,64,128
+  unsigned char *bittester = 0;
+  unsigned char val = 0;
+  unsigned char val2 = 0;
+
+// This way starts at the most significant
+  bittester = data;
+  bittester++;
+  
+  for(int i=0; i<dataLen-1; i++)
+  {
+	val = *bittester;
+	val2 = *(data+i);
+	val2 = val2 << 1;
+	val2
+	*(data+i) += val<<7;
+	*bittester = val>>1;
+	bittester++;
+  }
+
+  *(data+dataLen) = 0;
+}
+
+
+void NoxCrypt::EncryptBitwise(unsigned char *data, size_t dataLen)
+{
+  // 1,2,4,8,16,32,64,128
+
+	//make new buffer with len++
+  unsigned char *bittester = 0;
+  unsigned char val = 0;
+
+// This way starts at the most significant
+  bittester = data;
+  bittester++;
+
+  for(int i=0; i<dataLen-1; i++)
+  {
+	val = *bittester;
+	*(data+i) += val>>7;
+	*bittester = val<<1;
+	bittester++;
+  }
+
+  //*(data+dataLen) = 0;
+}
+
+
+
 unsigned int NoxCrypt_plr_table[] = 
 {
 	0x46bf7295, 0x4ee10071, 0x5115d3a9, 0xa239401d, 

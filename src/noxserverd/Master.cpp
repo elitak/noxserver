@@ -38,7 +38,6 @@
 #include "Database/DatabaseEnv.h"
 #include "NoxMap.h"
 #include "NoxThinglib.h"
-#include "ConfigINI.h"
 
 
 #define NOX_CONFIG "NXsrv.ini"
@@ -161,7 +160,6 @@ void Master::Run()
 		sLog.outError("Could not load server, using default");
 		wsServer = "d224.x-mailer.de";
 	}
-
 
 	wolSocket.SetUsername((char*)wsLogin.c_str());
 	wolSocket.SetPassword((char*)wsPassword.c_str());
