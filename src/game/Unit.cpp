@@ -51,6 +51,8 @@ void Unit::InitRespawn()
 	
 	memset(m_equipment, 0, SLOT_SIZE * sizeof(Object*));
 	ResetEnchants();
+	m_animFrames = -1;
+	m_animTimer = 0;
 }
 
 Unit::~Unit()
@@ -68,12 +70,6 @@ Unit::~Unit()
 
 void Unit::Update( uint32 p_time )
 {
-    /*if(p_time > m_AurasCheck)
-    {
-    m_AurasCheck = 2000;
-    _UpdateAura();
-    }else
-    m_AurasCheck -= p_time;*/
 	WorldPacket packet;
 
 	if(IsDead())
@@ -110,6 +106,22 @@ void Unit::Update( uint32 p_time )
 			UnsetEnchant((UnitEnchantType)i);
 	}
 
+	//Update Anim. Frame
+	if(m_animFrames >= 0 && m_animFrames < 256)
+	{	
+		packet.Initialize(MSG_DRAW_FRAME);
+		packet << (uint16)GetExtent();
+		packet << (uint8)(m_animFrames);
+		objacc.SendPacketToAll(&packet); // save on bandwidth and only send to those in range?
+		if(m_animTimer < p_time)
+		{
+			m_animFrames++;
+			m_animTimer = 40;
+		}
+		else
+			m_animTimer -= p_time;
+	}
+
 	if(m_updateMask & MASK_ENCHANTMENTS)
 	{
 		m_updateMask &= ~MASK_ENCHANTMENTS;
@@ -139,18 +151,24 @@ void Unit::MoveToward(uint16 _x, uint16 _y, float speed)
 
 void Unit::Laugh()
 {
-     SetActionAnim(ACTION_LAUGH, 30);
+     SetActionAnim(ACTION_LAUGH, 40);
 }
 void Unit::Point()
 {
-     SetActionAnim(ACTION_POINT, 10);
+     SetActionAnim(ACTION_POINT, 40);
 }
 
 void Unit::Taunt()
 {
-     SetActionAnim(ACTION_TAUNT, 20);
+     SetActionAnim(ACTION_TAUNT, 40);
 }
 
+void Unit::Attack()
+{
+	SetActionAnim(ACTION_LONG_SWORD_STRIKE, 30);
+	if(HasEnchant(ENCHANT_INVULNERABLE))
+		UnsetEnchant(ENCHANT_INVULNERABLE);
+}
 bool Unit::Equip(WorldObject *obj)
 {
 	if(!obj)
@@ -292,6 +310,7 @@ bool Unit::SetActionAnim(UnitActionType anim, uint32 frames)
 
 	m_action = anim;
 	m_action_time = frames*30;
+	m_animFrames = 0;
 
 	return true;
 }

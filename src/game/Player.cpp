@@ -168,11 +168,6 @@ void Player::SendUpdatePacket()
 	packet << (uint8)0x00;
 
 	GetSession()->SendPacket(&packet);
-
-	packet.Initialize(MSG_DRAW_FRAME);
-	packet << (uint16)33113;
-	packet << (uint8)0;
-	GetSession()->SendPacket(&packet);
 }
 
 void Player::Laugh()
@@ -201,8 +196,7 @@ void Player::Taunt()
 
 void Player::Attack()
 {
-	if(HasEnchant(ENCHANT_INVULNERABLE))
-		UnsetEnchant(ENCHANT_INVULNERABLE);
+	Unit::Attack();
 	if(GetSession()->IsObserving())
 		GetSession()->SetObserving(false);
 	if(IsDead())

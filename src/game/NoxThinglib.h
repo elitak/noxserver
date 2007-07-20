@@ -507,6 +507,24 @@ public:
    LIST2<DUA> Sounds;
    DUASTRUCT()
    {}
+
+	unsigned short GetIndex(const char* name, int max = 0x50)
+	{
+		DUA* aud;
+		int maxlen = 50 > max ? 50 : max;
+		unsigned short id = 0;
+		while(aud = Sounds.Get())
+		{
+			id++;
+			if(!strncmp((const char*)aud->Name, name, maxlen))
+			{
+				Sounds.ClearGet();
+				return id;
+			}
+		}
+		Sounds.ClearGet();
+		return 0;
+	}
    //{delete [] Tiles;} //ERROR PRONE?
 };
 

@@ -228,6 +228,7 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
 		virtual void Laugh();
 		virtual void Point();
 		virtual void Taunt();
+		virtual void Attack();
 
 		virtual void SetEnchant( UnitEnchantType enchant, int16 frames = 0 );
 		virtual void UnsetEnchant( UnitEnchantType enchant );
@@ -257,6 +258,8 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
 		void InitRespawn();
 		UnitActionType m_action;
 		time_t m_action_time;
+		int16 m_animFrames;
+		time_t m_animTimer;
 
           byte m_poison;
 		uint8 m_angle;

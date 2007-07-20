@@ -442,7 +442,7 @@ LLAW Wall;
 		   memcpy((void*)&*(Type),(const void*)&*(buff+count),sizeof(int));
            count+=4;
 	  }
-
+count -= 4;
 memset((void*)&Wall, 0x00,sizeof(LLAW));
 
 return(true);
@@ -491,13 +491,15 @@ bool ThingBin::Load_Sounds(unsigned char *buff,long &count)
    memset(Type,0x00,5);
    memcpy((void*)&*(Type),(const void*)&*(buff+count),sizeof(int));
    count+=4;
-      while(!strcmp(Type," DUA"))
+      if(!strcmp(Type," DUA"))
 	  {
+		  int len = *((uint32*)(buff+count));
+		  count += 4;
+		  for(; len > 0; len--)
+		  {
            Load_Aud(count,buff,Aud);
 		   Thing.Sounds.Sounds.Add(Aud);
-	       memset((void*)&Aud, 0x00,sizeof(DUA));
-             memcpy((void*)&*(Type),(const void*)&*(buff+count),sizeof(int));
-             count+=4;
+		  }
 	  }
 return(true);
 }
@@ -1327,10 +1329,6 @@ return(false);
 //////////////////////////////////////////////////////////////////////////
 bool ThingBin::Load_Aud(long &count,unsigned char *buff, DUA & Aud)
 {
-
-memcpy((void*)&Aud.Unknown,(const void*)&*(buff+count),sizeof(int));
-count+=4;
-
 memcpy((void*)&Aud.nameLen,(const void*)&*(buff+count),sizeof(BYTE));
 count++;
 
