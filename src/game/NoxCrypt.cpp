@@ -20,52 +20,84 @@
 
 void NoxCrypt::DecryptBitwise(unsigned char *data, size_t dataLen)
 {
-  // 1,2,4,8,16,32,64,128
+  // 128,64,32,16,8,4,2,1
   unsigned char *bittester = 0;
   unsigned char val = 0;
   unsigned char val2 = 0;
+  int bitcount = 0;
+  int bitloc = 0;
 
 // This way starts at the most significant
   bittester = data;
-  bittester++;
-  
-  for(int i=0; i<dataLen-1; i++)
-  {
-	val = *bittester;
-	val2 = *(data+i);
-	val2 = val2 << 1;
-	val2 = val2 >> 1;
-	val2 += val << 7;
-	*(data+i) =val2;
-	*bittester = val>>1;
-	bittester++;
-  }
 
-  *(data+dataLen) = 0;
+ // get 1st 7 bits, skip 8, get 9
+  for(int i=0; i<dataLen-9; i++)
+  {
+	  val = 0;
+	  for(int j=0; j<8; j++)
+	  {
+		if( bitcount == 7 )
+		{
+			bitcount = 0;
+			bitloc++;
+		}
+	    if( bitloc == 8 )
+		{
+			*bittester = 0;
+			bittester++;
+			bitloc = 0;
+		}
+	    val2 = 0 + ((*bittester & (1 << bitloc))>>bitloc);
+		val2 = val2 << j;
+		val ^= val2;
+		bitloc++;
+		bitcount++;
+	  }
+	  *(data+i) = val;
+  }
+ // *(data+dataLen) = 0;
 }
 
 
 void NoxCrypt::EncryptBitwise(unsigned char *data, size_t dataLen)
 {
-  // 1,2,4,8,16,32,64,128
-
-	//make new buffer with len++
+  // 128,64,32,16,8,4,2,1
   unsigned char *bittester = 0;
+  unsigned char *valloc = 0;
   unsigned char val = 0;
+  unsigned char val2 = 0;
+  unsigned char bitcount = 0;
+  unsigned char bitloc = 0;
 
 // This way starts at the most significant
   bittester = data;
-  bittester++;
 
-  for(int i=0; i<dataLen-1; i++)
+ // get 1st 7 bits, skip 8, get 9
+  for(int i=0; i<dataLen; i++)
   {
-	val = *bittester;
-	*(data+i) += val>>7;
-	*bittester = val<<1;
-	bittester++;
+	  val = 0;
+	  for(int j=0; j<8; j++)
+	  {
+		if( bitcount == 7 )
+		{
+			bitcount = 0;
+			bitloc++;
+		}
+	    if( bitloc == 8 )
+		{
+			*bittester = 0;
+			bittester++;
+			bitloc = 0;
+		}
+	    val2 = 0 + ((*bittester & (1 << bitloc))>>bitloc);
+		val2 = val2 << j;
+	    val ^= val2;
+		bitloc++;
+		bitcount++;
+	  }
+	  *(data+i) = val;
   }
-
-  //*(data+dataLen) = 0;
+ // *(data+dataLen) = 0;
 }
 
 
