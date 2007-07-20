@@ -34,8 +34,9 @@ void NoxCrypt::DecryptBitwise(unsigned char *data, size_t dataLen)
 	val = *bittester;
 	val2 = *(data+i);
 	val2 = val2 << 1;
-	val2
-	*(data+i) += val<<7;
+	val2 = val2 >> 1;
+	val2 += val << 7;
+	*(data+i) =val2;
 	*bittester = val>>1;
 	bittester++;
   }
