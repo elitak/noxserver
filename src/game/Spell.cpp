@@ -231,7 +231,7 @@ void SpellMgr::HandleBerserkerChargeAbility(Player *plr)
 void SpellMgr::HandleEyeOfWolfAbility(Player *plr)
 {
      plr->SetEnchant(ENCHANT_INFRAVISION,300);
-     //delay 600
+     plr->SetAbilityDelay(ABILITY_EYE_OF_THE_WOLF, 600);
 }
 
 const char *g_spellNames[] =
