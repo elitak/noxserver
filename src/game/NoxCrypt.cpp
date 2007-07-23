@@ -21,41 +21,26 @@
 void NoxCrypt::DecryptBitwise(unsigned char *data, size_t dataLen)
 {
   // 128,64,32,16,8,4,2,1
-  unsigned char *bittester = 0;
-  unsigned char val = 0;
+  unsigned char *bittester = data;
   unsigned char val2 = 0;
-  int bitcount = 0;
-  int bitloc = 0;
-
-// This way starts at the most significant
-  bittester = data;
+  unsigned char bitcount = 0;
+  unsigned char bitloc = 0;
 
  // get 1st 7 bits, skip 8, get 9
-  for(int i=0; i<dataLen-9; i++)
+  for(int i=0; i<dataLen-0x09; i++)
   {
-	  val = 0;
+	  val2=0;
 	  for(int j=0; j<8; j++)
 	  {
-		if( bitcount == 7 )
-		{
-			bitcount = 0;
-			bitloc++;
-		}
-	    if( bitloc == 8 )
-		{
-			*bittester = 0;
-			bittester++;
-			bitloc = 0;
-		}
-	    val2 = 0 + ((*bittester & (1 << bitloc))>>bitloc);
-		val2 = val2 << j;	
-		val ^= val2;
+		(bitcount == 7) ? bitcount = 0,bitloc++ : NULL;
+		(bitloc == 8) ? *bittester = 0,bittester++,bitloc = 0 : NULL;
+
+	    val2 ^= ((*bittester & (1 << bitloc))>>bitloc) << j;
 		bitloc++;
 		bitcount++;
 	  }
-	  *(data+i) = val;
+	  *(data+i) = val2;
   }
- // *(data+dataLen) = 0;
 }
 
 
@@ -63,41 +48,41 @@ void NoxCrypt::EncryptBitwise(unsigned char *data, size_t dataLen)
 {
   // 128,64,32,16,8,4,2,1
   unsigned char *bittester = 0;
-  unsigned char *valloc = 0;
-  unsigned char val = 0;
   unsigned char val2 = 0;
   unsigned char bitcount = 0;
   unsigned char bitloc = 0;
+  unsigned char bitloc2 = 0;
+
+  unsigned char * temdata = new unsigned char[dataLen];
+  memcpy((void*)temdata,(const void*)data,dataLen);
 
 // This way starts at the most significant
-  bittester = data;
+  bittester = temdata;
 
- // get 1st 7 bits, skip 8, get 9
-  for(int i=0; i<dataLen; i++)
+// Set 1st 7 bits, write NULL bit 8, set bit 9
+  for(int i=0; i<dataLen-0x09; i++) //dataLen - 9
   {
-	  val = 0;
 	  for(int j=0; j<8; j++)
 	  {
-		if( bitcount == 7 )
-		{
-			bitcount = 0;
-			bitloc++;
-		}
-	    if( bitloc == 8 )
-		{
-			*bittester = 0;
-			bittester++;
+		  if( bitloc == 8 )
+		  {
 			bitloc = 0;
-		}
-	    val2 = (0 + ((*bittester & (1 << bitloc))>>bitloc)) << j;
-		//val2 = val2 << j;
-	    val ^= val2;
-		bitloc++;
-		bitcount++;
-	  }
-	  *(data+i) = val;
+			bittester++;
+		  }
+		  if( bitloc2 == 7 )
+		  {		
+		    val2 ^= 1 << 7;
+			*(data+bitcount) = val2;
+			bitcount++;
+			val2 = 0;
+			bitloc2 = 0;
+		  }
+			val2 ^= ((*bittester & (1 << bitloc))>>bitloc) << bitloc2;
+			bitloc++;
+			bitloc2++;
+	  }	
   }
- // *(data+dataLen) = 0;
+delete [] temdata;
 }
 
 
