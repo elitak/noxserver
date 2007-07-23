@@ -48,7 +48,7 @@ void NoxCrypt::DecryptBitwise(unsigned char *data, size_t dataLen)
 			bitloc = 0;
 		}
 	    val2 = 0 + ((*bittester & (1 << bitloc))>>bitloc);
-		val2 = val2 << j;
+		val2 = val2 << j;	
 		val ^= val2;
 		bitloc++;
 		bitcount++;
@@ -89,8 +89,8 @@ void NoxCrypt::EncryptBitwise(unsigned char *data, size_t dataLen)
 			bittester++;
 			bitloc = 0;
 		}
-	    val2 = 0 + ((*bittester & (1 << bitloc))>>bitloc);
-		val2 = val2 << j;
+	    val2 = (0 + ((*bittester & (1 << bitloc))>>bitloc)) << j;
+		//val2 = val2 << j;
 	    val ^= val2;
 		bitloc++;
 		bitcount++;
