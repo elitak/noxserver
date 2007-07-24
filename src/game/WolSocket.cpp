@@ -92,24 +92,24 @@ void WolSocket::OnConnect()
 	if( NXConfig.GetString("ServerName",&val) )// ServerName;
 	{
 		if( val.length() > 0xE )
-			memcpy((void*)(&gameData2[0x15]),(const void*)val.c_str(),0xE);
+			memcpy((void*)(&gameData2[0x14]),(const void*)val.c_str(),0xE);
 		else
-			memcpy((void*)(&gameData2[0x15]),(const void*)val.c_str(),val.length());
+			memcpy((void*)(&gameData2[0x14]),(const void*)val.c_str(),val.length());
 	}
 
-	//if( NXConfig.GetString("MapName",&val) )// ServerName;
-	//{	
-	//	if( val.length() > 0x08 )
-	//		memcpy((void*)(&gameData2[0x0C]),(const voi	d*)val.c_str(),0x08);
-	//	else
-	//		memcpy((void*)(&gameData2[0x0C]),(const void*)val.c_str(),val.length());
-	//}
+	if( NXConfig.GetString("MapName",&val) )// ServerName;
+	{	
+		if( val.length() > 0x08 )
+			memcpy((void*)(&gameData2[0xB]),(const void*)val.c_str(),0x08);
+		else
+			memcpy((void*)(&gameData2[0xB]),(const void*)val.c_str(),val.length());
+	}
 
-	//int ival;
-	//if( NXConfig.GetInt("NumPlayers",&ival) )// ServerName;
-	//{
-	//		memcpy((void*)(&gameData2[0x05]),(const void*)((unsigned char)ival),0x01);
-	//}
+	int ival;
+	if( NXConfig.GetInt("NumPlayers",&ival) )// ServerName;
+	{
+			memcpy((void*)(&gameData2[0x4]),(const void*)((unsigned char*)&ival),0x01);
+	}
 
 	NoxCrypt crypt;	
 	crypt.encrypt_bitwise((unsigned char*)&gameData2, 0x4E);
