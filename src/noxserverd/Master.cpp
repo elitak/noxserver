@@ -106,8 +106,8 @@ void Master::Run()
 
     sWorld.SetInitialWorldSettings();
 
-	ModifierBin bin;
-	bin.LoadBin("C:\\Program Files\\Nox\\modifier.bin");
+	//ModifierBin bin;
+	//bin.LoadBin("C:\\Program Files\\Nox\\modifier.bin");
 	
     if (!NXConfig.SetSource(NOX_CONFIG))
     {
