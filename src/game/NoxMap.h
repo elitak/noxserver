@@ -149,6 +149,7 @@ class NoxMapHeader
 {
 	friend NoxMap;
 public:
+	uint32 GetChecksum() { return mapHeader.checksum; }
 protected:
 	NoxMapHeader() {};
 	NoxMapHeader(NoxBuffer* rdr);
@@ -170,6 +171,8 @@ public:
 	uint32 GetNxzSize();
 	uint16 ReadNxzBytes(uint32 offset, uint8* buffer, uint16 size);
 	const char* GetNxzName(); //will always be a pointer to a 0x50 buffer
+
+	uint32 GetChecksum() { return mapHeader.GetChecksum(); }
 
 protected:
 	NoxObjectTOC objectTOC;
