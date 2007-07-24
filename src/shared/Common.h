@@ -58,6 +58,7 @@
 #include <math.h>
 #include <errno.h>
 #include <signal.h>
+
 // #include <wstring.h>
 
 #if PLATFORM == PLATFORM_WIN32
@@ -74,6 +75,7 @@
 #include <queue>
 #include <sstream>
 #include <algorithm>
+#include "stringfuncs.h"
 
 #include <zthread/FastMutex.h>
 #include <zthread/LockedQueue.h>

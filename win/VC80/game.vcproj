@@ -362,6 +362,14 @@
 			Name="Nox Files"
 			>
 			<File
+				RelativePath="..\..\src\game\Modifierbin.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\game\Modifierbin.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\game\NoxBuffer.cpp"
 				>
 			</File>

@@ -38,6 +38,7 @@
 #include "Database/DatabaseEnv.h"
 #include "NoxMap.h"
 #include "NoxThinglib.h"
+#include "modifierbin.h"
 
 
 #define NOX_CONFIG "NXsrv.ini"
@@ -105,6 +106,9 @@ void Master::Run()
 
     sWorld.SetInitialWorldSettings();
 
+	ModifierBin bin;
+	bin.LoadBin("C:\\Program Files\\Nox\\modifier.bin");
+	
     if (!NXConfig.SetSource(NOX_CONFIG))
     {
         sLog.outError("Could not find nox configuration file.");
@@ -125,7 +129,7 @@ void Master::Run()
 			if( !NXConfig.GetInt("ServerPort",&val) )// 4000;
 			{
 				sLog.outError("Could not load server port, using default");
-				wsport = 4000;
+				wsServerport = 4000;
 			}
 			else
 				wsServerport = val;

@@ -575,6 +575,14 @@
 			>
 		</File>
 		<File
+			RelativePath="..\..\src\shared\stringfuncs.cpp"
+			>
+		</File>
+		<File
+			RelativePath="..\..\src\shared\stringfuncs.h"
+			>
+		</File>
+		<File
 			RelativePath="..\..\src\shared\SystemConfig.h.in"
 			>
 			<FileConfiguration

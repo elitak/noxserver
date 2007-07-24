@@ -65,11 +65,6 @@ void NoxCrypt::EncryptBitwise(unsigned char *data, size_t dataLen)
 	  for(int j=0; j<8; j++)
 	  {
 		  (bitloc == 8) ? bitloc = 0,bittester++ : NULL;	
-		  //if( bitloc == 8 )
-		  //{
-		  ///bitloc = 0;
-	      //bittester++;
-		  //}
 		  if( bitloc2 == 7 )
 		  {		
 		    val2 ^= 1 << 7;

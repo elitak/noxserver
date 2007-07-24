@@ -26,7 +26,7 @@ struct DUA
   BYTE nameLen;
   BYTE Name[25];
   BYTE Unknowns[9];
-  LIST2<Property> Sounds;
+  MLIST<Property> Sounds;
 
    DUA()
    {
@@ -43,7 +43,7 @@ struct TNVA
   BYTE nameLen;
   BYTE Name[50];
   BYTE Unknowns[9];
-  LIST2<Property> Sounds;
+  MLIST<Property> Sounds;
 
    TNVA()
    {
@@ -59,7 +59,7 @@ struct GAMI
   BYTE aniName[50];
   BYTE nameLen;
   unsigned int ImageCode;//[70];
-  LIST2<unsigned int> Images;
+  MLIST<unsigned int> Images;
 
    GAMI()
    {
@@ -75,7 +75,7 @@ class LOOP
 	private:
     public:
 	unsigned char Name[50];
-    LIST2<unsigned int> Images;
+    MLIST<unsigned int> Images;
 	//Image_List List;
 };
 
@@ -85,7 +85,7 @@ class LOOP
 	 public:
            unsigned int SubCat;
            BYTE loopName[50];
-		   LIST2<unsigned int> Images;
+		   MLIST<unsigned int> Images;
            BYTE nullString[50];
      TATS()
      {
@@ -422,8 +422,8 @@ struct GNHT // Object Class
    char collide_args[5][30];
    NoxExtentType extent;
    //Image_List List;
-   //LIST2<unsigned int> Images;
-   LIST2<Property> Properties;
+   //MLIST<unsigned int> Images;
+   MLIST<Property> Properties;
 
  
    //IMAGE AND ANIMATION STRUCTS
@@ -433,9 +433,9 @@ struct GNHT // Object Class
    char aniName[255];
 
    //PLAYER/MONSTER DRAW FUNCS
-   LIST2<TATS> Stats;
-   LIST2<TATS> PlayerStats;
-   LIST2<Property> Subcats;
+   MLIST<TATS> Stats;
+   MLIST<TATS> PlayerStats;
+   MLIST<Property> Subcats;
    ///////////////////////////   
    GNHT()
    {   
@@ -460,7 +460,7 @@ struct LLAW
        BYTE nameLen;
        BYTE Name[25];
        BYTE Unknowns[14];//14 of them; may not be BYTES
-	   LIST2<Property> Objects;
+	   MLIST<Property> Objects;
 
        BYTE Sound_Open_Len;
        BYTE SoundOpen[25]; 
@@ -470,7 +470,7 @@ struct LLAW
        BYTE SoundDestroy[25]; 
 
        unsigned int ImageCode;
-	   LIST2<unsigned int> Images;
+	   MLIST<unsigned int> Images;
 
    LLAW()
    {
@@ -496,7 +496,7 @@ struct EGDE
       BYTE nameLen; // Name Len
       char Name[25]; // Name
       BYTE Unknowns[14]; //14 unknown bytes - must be tile properties
-	  LIST2<unsigned int> Images;
+	  MLIST<unsigned int> Images;
 
   EGDE()
    {
@@ -536,7 +536,7 @@ struct ROLF
 struct DUASTRUCT
 {
 public:
-   LIST2<DUA> Sounds;
+   MLIST<DUA> Sounds;
    DUASTRUCT()
    {}
 
@@ -568,7 +568,7 @@ public:
 struct TNVASTRUCT
 {
 public:
-   LIST2<TNVA> Animations;
+   MLIST<TNVA> Animations;
    TNVASTRUCT()
    {}
    //{delete [] Tiles;} //ERROR PRONE?
@@ -582,7 +582,7 @@ public:
 struct GAMISTRUCT
 {
 public:
-   LIST2<GAMI> Images;
+   MLIST<GAMI> Images;
    GAMISTRUCT()
    {}
    //{delete [] Tiles;} //ERROR PRONE?
@@ -596,7 +596,7 @@ public:
 struct ROLFSTRUCT
 {
 public:
-  LIST2<ROLF> Tiles;
+  MLIST<ROLF> Tiles;
 
   ROLFSTRUCT()
   {}
@@ -610,7 +610,7 @@ public:
 struct EGDESTRUCT
 {
 public:
-  LIST2<EGDE> Edges;
+  MLIST<EGDE> Edges;
 
   EGDESTRUCT()
   {}
@@ -625,7 +625,7 @@ public:
 struct LLAWSTRUCT
 {
 public:
-	LIST2<LLAW> Walls;
+	MLIST<LLAW> Walls;
 
     LLAWSTRUCT()
 	{}
@@ -639,7 +639,7 @@ public:
 struct GNHTSTRUCT
 {
 	public:
-		LIST2<GNHT> Objects;
+		MLIST<GNHT> Objects;
 
 		unsigned short GetIndex(const char* name, int max = 0x50)
 		{

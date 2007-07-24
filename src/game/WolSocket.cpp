@@ -110,9 +110,8 @@ void WolSocket::OnConnect()
 	{
 			memcpy((void*)(&gameData2[0x4]),(const void*)((unsigned char*)&ival),0x01);
 	}
-
-	NoxCrypt crypt;	
-	crypt.encrypt_bitwise((unsigned char*)&gameData2, 0x4E);
+	
+	NoxCrypt::encrypt_bitwise((unsigned char*)&gameData2, 0x4E);
 	memcpy((void*)&gameData[3],(const void*)&gameData2,0x4E);
 
 	char buffer[0x100];

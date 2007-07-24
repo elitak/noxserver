@@ -36,11 +36,11 @@ enum NoxCryptFileTypes
 class NoxCrypt
 {
 public:
-	void decrypt_bitwise(unsigned char *data, size_t dataLen)
+	static void decrypt_bitwise(unsigned char *data, size_t dataLen)
 	{
 		DecryptBitwise(data, dataLen);
 	}
-	void encrypt_bitwise(unsigned char *data, size_t dataLen)
+	static void encrypt_bitwise(unsigned char *data, size_t dataLen)
 	{
 		EncryptBitwise(data, dataLen);
 	}
@@ -54,8 +54,8 @@ public:
 	}
 private:
 	static int NoxCrypt_crypt(uint8 *data, size_t BuffLen, int tabl, int mode);
-	void DecryptBitwise(unsigned char *data, size_t dataLen);
-	void EncryptBitwise(unsigned char *data, size_t dataLen);
+	static void DecryptBitwise(unsigned char *data, size_t dataLen);
+	static void EncryptBitwise(unsigned char *data, size_t dataLen);
 };
 
 #endif

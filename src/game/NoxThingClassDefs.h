@@ -159,7 +159,7 @@ public:
 //
 //********************************************************************
 template <typename var>
-class LIST2
+class MLIST
 {
 
 protected:
@@ -273,14 +273,14 @@ public:
 	      return(NULL);
 	}
 
-	LIST2()
+	MLIST()
 	{
       memset((void*)&*this,NULL,sizeof(*this));
 	  first = NULL;
 	  last = NULL;
 	  cur = first;
 	}
-	~LIST2()
+	~MLIST()
 	{
        Clear();
 	}		
@@ -292,12 +292,12 @@ public:
 //
 //********************************************************************
 template <typename var>
-class FASTLIST : public LIST2<var>
+class FASTLIST : public MLIST<var>
 {
 
 private:
 
-	LIST2<NODE *> SpeedList; // Stores 1000 places to increase speed.
+	MLIST<NODE *> SpeedList; // Stores 1000 places to increase speed.
 
 public:
     
@@ -305,14 +305,14 @@ public:
 
 	void Remove( long number )
 	{
-	  LIST2::Remove( number );	  
+	  MLIST::Remove( number );	  
 	  if( (numNodes / 1000) < SpeedList.numNodes)
 		   SpeedList.Remove(SpeedList.numNodes);
 
 	}
 	void Add(var & val, long ID = NULL)
 	{
-	  LIST2::Add( val, ID );
+	  MLIST::Add( val, ID );
 	  if( !((numNodes%1000) - 1) )
 		  SpeedList.Add(last);
 	}
@@ -321,7 +321,7 @@ public:
 	{
 
 	   if( number == (-1) || number < 1000)
-		   return(LIST2::Get());
+		   return(MLIST::Get());
  
 	   int skipCount = 0;
 	   int leftCount = number;
@@ -390,7 +390,7 @@ struct ARG_STRUCT
   long arg2;
 };
 
-class QUEUE : private LIST2<ARG_STRUCT>
+class QUEUE : private MLIST<ARG_STRUCT>
 {
 public:
    void Add(int MSG_ID, long arg1 = NULL, long arg2 = NULL )
@@ -399,7 +399,7 @@ public:
 	 tem.MSG_ID = MSG_ID;
 	 tem.arg1 = arg1;
 	 tem.arg2 = arg2;
-	 LIST2::Add(tem);
+	 MLIST::Add(tem);
    }
    long GetCount()
    {
@@ -408,28 +408,28 @@ public:
    ARG_STRUCT Get()
    {
       ARG_STRUCT tem;
-	  if( !LIST2::numNodes )
+	  if( !MLIST::numNodes )
 	  {
           tem.MSG_ID = EMPTY_QUEUE;
 	      return(tem);
 	  }
 
-	  tem = *(LIST2::Get( 0 ));
-	  LIST2::Remove( 0 );
+	  tem = *(MLIST::Get( 0 ));
+	  MLIST::Remove( 0 );
 	  return( tem );
    }
    void Clear()
    {
-	  LIST2::Clear();
+	  MLIST::Clear();
    }
    QUEUE()
    {
-	  LIST2();
+	  MLIST();
       memset((void*)&*this,NULL,sizeof(*this));
    }
    ~QUEUE()
    {
-	   LIST2::Clear();
+	   MLIST::Clear();
    }
 
 };
