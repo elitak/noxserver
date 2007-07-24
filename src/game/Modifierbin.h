@@ -57,7 +57,7 @@ struct MOD_OBJ
 {
 private:
 public:
-
+char ObjectName[0x80];
 MLIST<ModProperty> Properties;
 
 };
@@ -66,7 +66,8 @@ struct MOD_LIST
 private:
 public:
 
-MLIST<MOD_OBJ> ObjectList;
+char SectionTitle[0x80];
+MLIST<MOD_OBJ> ElementList;
 
 };
 class ModifierBin
@@ -74,7 +75,7 @@ class ModifierBin
 
 private:
 	void Load_Modifier(char* buff, long len);
-
+    bool GetString(stringstream * rdr, char * buff);
 public:
 	MLIST<MOD_LIST> ModifierList;
 

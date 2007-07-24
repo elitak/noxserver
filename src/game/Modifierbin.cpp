@@ -21,15 +21,41 @@ void ModifierBin::Load_Modifier(char* buff, long len)
 	stringstream rdr(st,ios::in);
 
 	char buff2[255];
-	for(; !rdr.eof() && rdr.getline(buff2,255); NULL)
+	MOD_LIST list;
+	MOD_OBJ obj;
+	ModProperty prop;
+	for(; GetString(&rdr,buff2) && strcmp(buff2,"END"); NULL)
 	{
-		strcws(buff2);
-		strrc(buff2,';');
-		if( buff2[0] )
+	/*	if( !buff2[0] )
+			continue;
+		for(strcpy(list.SectionTitle,buff2); GetString(&rdr,buff2) && strcmp(buff2,"END"); NULL)
 		{
+			if( !buff2[0] )
+				continue;
 
-
-
-		}
+			GetString(&rdr,buff2);
+			for(strcpy(obj.ObjectName,buff2); GetString(&rdr,buff2) && strcmp(buff2,"END"); NULL)
+			{
+				if( !buff2[0] )
+					continue;
+				prop.Load(buff2);
+				obj.Properties.Add(prop);
+				prop.Ident = NULL;
+				prop.Value = NULL;
+			}
+			list.ElementList.Add(obj);
+			
+		}*/			
 	}
+}
+
+bool ModifierBin::GetString(stringstream * rdr, char * buff)
+{
+	if( rdr->eof() )
+		return false;
+
+	bool ret = rdr->getline(buff,255);
+	strcws(buff);
+	strrc(buff,';');
+	return( ret );
 }
