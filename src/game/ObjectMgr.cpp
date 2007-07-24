@@ -85,9 +85,39 @@ ObjectMgr::ObjectMgr()
 
 	// Build Use Table
 	useTable[ USE_POTION ] = UseHandler( &WorldObject::PotionUse );
-     useTable[ USE_CONSUME ] = UseHandler( &WorldObject::ConsumeUse );
-     useTable[ USE_CONSUMECONFUSE ] = UseHandler( &WorldObject::ConsumeConfuseUse );
-     useTable[ USE_MUSHROOM ] = UseHandler( &WorldObject::MushroomUse );
+	useTable[ USE_CONSUME ] = UseHandler( &WorldObject::ConsumeUse );
+	useTable[ USE_CONSUMECONFUSE ] = UseHandler( &WorldObject::ConsumeConfuseUse );
+	useTable[ USE_MUSHROOM ] = UseHandler( &WorldObject::MushroomUse );
+
+	// Build Xfer Table
+	xferTable[ XFER_DEFAULT ] = XferHandler( &ObjectMgr::DefaultXferHandler );
+	xferTable[ XFER_SPELLPAGEPEDESTAL ] = XferHandler( &ObjectMgr::DefaultXferHandler );
+	xferTable[ XFER_SPELLREWARD ] = XferHandler( &ObjectMgr::SpellRewardXferHandler );
+	xferTable[ XFER_ABILITYREWARD ] = XferHandler( &ObjectMgr::AbilityRewardXferHandler );
+	xferTable[ XFER_FIELDGUIDE ] = XferHandler( &ObjectMgr::FieldGuideXferHandler );
+	xferTable[ XFER_READABLE ] = XferHandler( &ObjectMgr::ReadableXferHandler );
+	xferTable[ XFER_EXIT ] = XferHandler( &ObjectMgr::ExitXferHandler );
+	xferTable[ XFER_DOOR ] = XferHandler( &ObjectMgr::DoorXferHandler );
+	xferTable[ XFER_TRIGGER ] = XferHandler( &ObjectMgr::TriggerXferHandler );
+	xferTable[ XFER_MONSTER ] = XferHandler( &ObjectMgr::DefaultXferHandler );
+	xferTable[ XFER_HOLE ] = XferHandler( &ObjectMgr::DefaultXferHandler );
+	xferTable[ XFER_TRANSPORTER ] = XferHandler( &ObjectMgr::DefaultXferHandler );
+	xferTable[ XFER_ELEVATOR ] = XferHandler( &ObjectMgr::DefaultXferHandler );
+	xferTable[ XFER_ELEVATORSHAFT ] = XferHandler( &ObjectMgr::DefaultXferHandler );
+	xferTable[ XFER_MOVER ] = XferHandler( &ObjectMgr::DefaultXferHandler );
+	xferTable[ XFER_GLYPH ] = XferHandler( &ObjectMgr::DefaultXferHandler );
+	xferTable[ XFER_INVISIBLELIGHT ] = XferHandler( &ObjectMgr::DefaultXferHandler );
+	xferTable[ XFER_SENTRY ] = XferHandler( &ObjectMgr::DefaultXferHandler );
+	xferTable[ XFER_WEAPON ] = XferHandler( &ObjectMgr::DefaultXferHandler );
+	xferTable[ XFER_ARMOR ] = XferHandler( &ObjectMgr::DefaultXferHandler );
+	xferTable[ XFER_TEAM ] = XferHandler( &ObjectMgr::DefaultXferHandler );
+	xferTable[ XFER_GOLD ] = XferHandler( &ObjectMgr::GoldXferHandler );
+	xferTable[ XFER_AMMO ] = XferHandler( &ObjectMgr::AmmoXferHandler );
+	xferTable[ XFER_NPC ] = XferHandler( &ObjectMgr::DefaultXferHandler );
+	xferTable[ XFER_OBELISK ] = XferHandler( &ObjectMgr::ObeliskXferHandler );
+	xferTable[ XFER_TOXICCLOUD ] = XferHandler( &ObjectMgr::ToxicCloudXferHandler );
+	xferTable[ XFER_MONSTERGENERATOR ] = XferHandler( &ObjectMgr::DefaultXferHandler );
+	xferTable[ XFER_REWARDMARKER ] = XferHandler( &ObjectMgr::RewardMarkerXferHandler );
 }
 
 ObjectMgr::~ObjectMgr()
@@ -96,7 +126,6 @@ ObjectMgr::~ObjectMgr()
 
 Object* ObjectMgr::CreateObjectFromFile(NoxBuffer* rdr, NoxObjectTOC* toc)
 {
-	char buffer[256];
 	uint8 inventory = 0;
 
 	uint16 type = rdr->read<uint16>(), type2 = 0;
@@ -107,48 +136,21 @@ Object* ObjectMgr::CreateObjectFromFile(NoxBuffer* rdr, NoxObjectTOC* toc)
 	type = sThingBin.Thing.Object.GetIndex((*toc)[type].c_str(), (*toc)[type].size());
 	ASSERT(type != 0);
 
-	size_t finish = rdr->read<int64>() + rdr->rpos();
-
-	rdr->read<uint16>(); // properties
-	type2 = rdr->read<uint16>(); // type2
-	uint16 extent = rdr->read<uint16>(); // extent
-	rdr->read<uint16>();
-	rdr->read<uint32>();
-
-	float x = rdr->read<float>();
-	float y = rdr->read<float>();
-	
-	sWorldLog.Log("\tX: %f Y: %f\n", x, y);
-
-	if(rdr->read<uint8>() == 0xFF)
-	{
-		rdr->read<uint8>();
-		rdr->read<uint8>();
-		rdr->read<uint16>();
-		rdr->readstring<uint8>(buffer, 256);
-		rdr->read<uint8>();
-		inventory = rdr->read<uint8>();
-		for (int i = rdr->read<uint16>(); i > 0; i--)
-			rdr->read<uint32>();
-		rdr->read<uint16>();
-		rdr->read<uint32>();
-		if (type2 == 0x40)
-		{
-			rdr->readstring<uint32>(buffer, 256);
-		}
-		rdr->read<uint64>();
-	}
-
 	Object* obj = NULL;
 	if(sThingBin.Thing.Object.Objects.Get(type)->classes & CLASS_IMMOBILE)
-		obj = new Object(type, GridPair(x, y), extent);
+		obj = new Object(type, GridPair());
 	else
-		obj = new WorldObject(type, GridPair(x, y), extent);
+		obj = new WorldObject(type, GridPair());
 
-	if(rdr->rpos() < finish)
-		rdr->rpos(finish); // ignore modifiers for now
-	else
-		ASSERT(rdr->rpos() == finish);
+	size_t finish = rdr->read<int64>() + rdr->rpos();
+
+	/*XferTableMap::iterator iter = xferTable.find(obj->GetObjectInfo()->xfer);
+	if(iter != xferTable.end())
+		inventory = (this->*iter->second.handler)(obj, rdr);*/
+	inventory = DefaultXferHandler(obj, rdr);
+	rdr->rpos(finish);
+
+	ASSERT(rdr->rpos() == finish);
 	
 	for(;inventory > 0; inventory--)
 	{
@@ -159,6 +161,7 @@ Object* ObjectMgr::CreateObjectFromFile(NoxBuffer* rdr, NoxObjectTOC* toc)
 			break;
 	}
 
+	obj->AddToWorld();
 	return obj;
 }
 
@@ -297,4 +300,275 @@ Flatland::Composite* NoxWallObject::CreateWall(CoordPair<255> pos, uint8 flags)
 NoxWallLine::NoxWallLine(Flatland::vec2 a, Flatland::vec2 b) : Flatland::Line(a, b)
 {
 	extent[1] = 5;
+}
+
+int ObjectMgr::DefaultXferHandler(Object* obj, NoxBuffer* rdr)
+{
+	char buffer[256];
+	uint8 inventory = 0;
+
+	obj->m_props1 = rdr->read<uint16>(); // properties
+	obj->m_props2 = rdr->read<uint16>(); // type2
+	obj->m_extent = (uint16)rdr->read<uint32>(); // extent
+	rdr->read<uint32>();
+
+	float x = rdr->read<float>();
+	float y = rdr->read<float>();
+	obj->body->SetCenter(Flatland::vec2(x, y));
+
+	if(rdr->read<uint8>() == 0xFF)
+	{
+		obj->m_flags = rdr->read<uint32>();
+		rdr->readstring<uint8>(buffer, 256); //script name
+		rdr->read<uint8>();
+		inventory = rdr->read<uint8>();
+		for (int i = rdr->read<uint16>(); i > 0; i--)
+			rdr->read<uint32>();
+		rdr->read<uint16>();
+		rdr->read<uint32>();
+		if (obj->m_props2 == 0x40)
+		{
+			rdr->readstring<uint32>(buffer, 256);
+		}
+		rdr->read<uint64>();
+	}
+
+	return inventory;
+}
+
+int ObjectMgr::GoldXferHandler(Object* obj, NoxBuffer* rdr)
+{
+	int inventory = DefaultXferHandler(obj, rdr);
+	obj->m_worth = rdr->read<uint32>();
+
+	return inventory;
+}
+
+int ObjectMgr::ObeliskXferHandler(Object* obj, NoxBuffer* rdr)
+{
+	int inventory = DefaultXferHandler(obj, rdr);
+	if(obj->m_props1 < 0x3D)
+		return inventory;
+
+	rdr->read<uint32>();
+	rdr->read<uint8>();
+
+	return inventory;
+}
+int ObjectMgr::ToxicCloudXferHandler(Object* obj, NoxBuffer* rdr)
+{
+	int inventory = DefaultXferHandler(obj, rdr);
+
+	rdr->read<uint32>();
+
+	return inventory;
+}
+
+int ObjectMgr::RewardMarkerXferHandler(Object* obj, NoxBuffer* rdr)
+{
+	char buffer[256];
+	int inventory = DefaultXferHandler(obj, rdr);
+
+	rdr->read<uint32>();
+	rdr->read<uint32>();
+	int strings = rdr->read<uint16>();
+	for(; strings; strings--)
+		rdr->readstring<uint8>(buffer, 256);
+	strings = rdr->read<uint16>();
+	for(; strings; strings--)
+		rdr->readstring<uint8>(buffer, 256);
+	strings = rdr->read<uint16>();
+	for(; strings; strings--)
+		rdr->readstring<uint8>(buffer, 256);
+
+	rdr->read<uint32>();
+	rdr->read<uint32>();
+	rdr->read<uint32>();
+	rdr->read<uint32>();
+	rdr->read<uint32>();
+
+	if(obj->m_props1 > 0x3E)
+		rdr->read<uint32>();
+	if(obj->m_props2 > 0x3F)
+		rdr->read<uint8>();
+
+	return inventory;
+}
+
+int ObjectMgr::AmmoXferHandler(Object* obj, NoxBuffer* rdr)
+{
+	char buffer[256];
+	int inventory = DefaultXferHandler(obj, rdr);
+
+	int strings = 4;
+	for(; strings; strings--)
+		rdr->readstring<uint8>(buffer, 256);
+
+	rdr->read<uint8>();
+	rdr->read<uint8>();
+
+	return inventory;
+}
+int ObjectMgr::SpellPagePedestalXferHandler(Object* obj, NoxBuffer* rdr)
+{
+	int inventory = DefaultXferHandler(obj, rdr);
+
+	rdr->read<uint32>();
+
+	return inventory;
+}
+int ObjectMgr::SpellRewardXferHandler(Object* obj, NoxBuffer* rdr)
+{
+	char buffer[256];
+	int inventory = DefaultXferHandler(obj, rdr);
+
+	rdr->readstring<uint8>(buffer, 256);
+
+	return inventory;
+}
+
+int ObjectMgr::AbilityRewardXferHandler(Object* obj, NoxBuffer* rdr)
+{
+	char buffer[256];
+	int inventory = DefaultXferHandler(obj, rdr);
+
+	rdr->readstring<uint8>(buffer, 256);
+
+	return inventory;
+}
+int ObjectMgr::FieldGuideXferHandler(Object* obj, NoxBuffer* rdr)
+{
+	char buffer[256];
+	int inventory = DefaultXferHandler(obj, rdr);
+
+	rdr->readstring<uint8>(buffer, 256); // i think this is correct
+
+	return inventory;
+}
+int ObjectMgr::ReadableXferHandler(Object* obj, NoxBuffer* rdr)
+{
+	char buffer[256];
+	int inventory = DefaultXferHandler(obj, rdr);
+
+	rdr->readstring<uint32>(buffer, 256); // might want to make this dynamic to allow for bigger text
+
+	return inventory;
+}
+int ObjectMgr::ExitXferHandler(Object* obj, NoxBuffer* rdr)
+{
+	char buffer[256];
+	int inventory = DefaultXferHandler(obj, rdr);
+
+	rdr->readstring<uint32>(buffer, 256); // might want to make this dynamic to allow for bigger text
+	rdr->read<uint32>();
+	rdr->read<uint32>();
+
+	return inventory;
+}
+int ObjectMgr::DoorXferHandler(Object* obj, NoxBuffer* rdr)
+{
+	int inventory = DefaultXferHandler(obj, rdr);
+
+	rdr->read<uint32>(); // direction, see for map editor code for details
+	rdr->read<uint32>(); // lock
+	rdr->read<uint32>(); // if obj->props1 > 0x29, i'll be shocked if we find one that isn't
+
+	return inventory;
+}
+int ObjectMgr::TriggerXferHandler(Object* obj, NoxBuffer* rdr)
+{
+	char buffer[256];
+	int inventory = DefaultXferHandler(obj, rdr);
+
+	rdr->read<uint32>(); // x
+	rdr->read<uint32>(); // y
+	if(obj->m_props1 > 0x29)
+	{
+		rdr->read<uint8>();
+		rdr->read<uint8>();
+		rdr->read<uint8>();
+		rdr->read<uint8>();
+		rdr->read<uint8>();
+		rdr->read<uint8>();
+	}
+	else
+	{
+		/// exe has this has three sets of three, but they don't seem to be important
+		rdr->read<uint32>();
+		rdr->read<uint32>();
+		rdr->read<uint8>();
+	}
+	rdr->read<uint32>();
+	// these calls need to be moved to a separate function
+	rdr->read<uint16>(); // should be <= 1
+	rdr->readstring<uint32>(buffer, 256); // on enter
+	rdr->read<uint32>();
+
+	rdr->read<uint16>(); // should be <= 1
+	rdr->readstring<uint32>(buffer, 256);
+	rdr->read<uint32>();
+
+	rdr->read<uint16>(); // should be <= 1
+	rdr->readstring<uint32>(buffer, 256);
+	rdr->read<uint32>();
+
+	rdr->read<uint32>();
+
+	// these four only if props1 > 0x1F
+	rdr->read<uint8>();
+	rdr->read<uint8>();
+	rdr->read<uint8>();
+	rdr->read<uint8>();
+
+	rdr->read<uint32>();
+	rdr->read<uint32>();
+
+	return inventory;
+}
+int ObjectMgr::HoleXferHandler(Object* obj, NoxBuffer* rdr)
+{
+	char buffer[256];
+	int inventory = DefaultXferHandler(obj, rdr);
+
+	// if props1 > 0x29
+	rdr->read<uint32>();
+	
+	// same as the calls in trigger xfer
+	rdr->read<uint16>(); // should be <= 1
+	rdr->readstring<uint32>(buffer, 256);
+	rdr->read<uint32>();
+
+	rdr->read<uint32>(); //x
+	rdr->read<uint32>(); //y
+	// if props1 > 0x28
+	rdr->read<uint32>(); //default 0
+	rdr->read<uint16>(); //default 0
+	
+	return inventory;
+}
+int ObjectMgr::TransporterXferHandler(Object* obj, NoxBuffer* rdr)
+{
+	int inventory = DefaultXferHandler(obj, rdr);
+
+	rdr->read<uint32>();
+
+	return inventory;
+}
+int ObjectMgr::ElevatorXferHandler(Object* obj, NoxBuffer* rdr)
+{
+	int inventory = DefaultXferHandler(obj, rdr);
+
+	rdr->read<uint32>();
+	rdr->read<uint32>(); // if props1 > 0x28
+	rdr->read<uint8>(); // if props1 > 0x3C
+
+	return inventory;
+}
+int ObjectMgr::ElevatorShaftXferHandler(Object* obj, NoxBuffer* rdr)
+{
+	int inventory = DefaultXferHandler(obj, rdr);
+
+	rdr->read<uint32>();
+
+	return inventory;
 }

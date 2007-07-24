@@ -31,7 +31,7 @@
 
 #include "flatland/flatland.hpp"
 
-Player::Player (WorldSession *session): Unit(0x2C9, GridPair(2285, 2600), 0)
+Player::Player (WorldSession *session): Unit(0x2C9, GridPair(2285, 2600), -1)
 {
 	//body->setCollisionFlags(body->getCollisionFlags()  | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
 	body->Property().collisionMask = 0xFFFFFFFF; //collide with everything
@@ -280,9 +280,8 @@ void Player::EquipSecondary(WorldObject* obj)
 		return;
 	WorldObject* newSecondary = obj ? obj : m_equipment[SLOT_WEP_PRIMARY];
 	WorldObject* oldSecondary = m_equipment[SLOT_WEP_SECONDARY];
-	m_equipment[SLOT_WEP_SECONDARY] = newSecondary;
-
 	Dequip(newSecondary);
+	m_equipment[SLOT_WEP_SECONDARY] = newSecondary;
 
 	WorldPacket packet(MSG_REPORT_SECONDARY_WEAPON);
 	packet << (uint16)(newSecondary ? newSecondary->GetExtent() : 0);

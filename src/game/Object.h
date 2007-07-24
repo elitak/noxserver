@@ -99,10 +99,12 @@ class MANGOS_DLL_SPEC Object
 {
 	friend ObjectMgr;
     public:
-		Object (uint16 type, GridPair pos, uint16 extent = 0);
+		Object (uint16 type, GridPair pos, int16 extent = 0);
         virtual ~Object ( );
 
         virtual void Update ( uint32 time );
+		virtual void AddToWorld ();
+		virtual void RemoveFromWorld ();
 
 		uint16 GetExtent() { return m_extent; }
 		uint16 GetType() { return m_objectType; }
@@ -138,6 +140,7 @@ class MANGOS_DLL_SPEC Object
 		virtual void Heal( float heal );
 		virtual bool IsDead() { return m_health <= 0; }
 		virtual int16 GetHealth() { return m_health; }
+		virtual void DropAll();
 
 		/// Collisions
 		int joint;
@@ -148,6 +151,11 @@ class MANGOS_DLL_SPEC Object
 
 		uint16 m_extent;
 		uint16 m_objectType;
+		uint32 m_flags;
+		uint16 m_props1;
+		uint16 m_props2;
+
+		uint32 m_worth; //perhaps this should be in worldobject, related to thing.bin worth entry, also use it for gold/treasure value
 		//GridPair m_position; /// this can only be initialized for static objects
 
 		bool CanSeePoint(uint16 x, uint16 y, uint32 size);
@@ -179,7 +187,7 @@ class MANGOS_DLL_SPEC Object
 class MANGOS_DLL_SPEC WorldObject : public Object
 {
     public:
-		WorldObject(uint16 type, GridPair pos, uint16 extent);
+		WorldObject(uint16 type, GridPair pos, int16 extent = 0);
         virtual ~WorldObject ( ) {}
 
 		void SetPosition(GridPair position);

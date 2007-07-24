@@ -37,7 +37,7 @@
 
 using namespace std;
 
-Object::Object(uint16 type, GridPair pos, uint16 extent) : m_objectType(type), m_extent(extent), m_update_timer(0), m_health(0), m_max_health(0), m_delta_health(0), m_combined_health(0)
+Object::Object(uint16 type, GridPair pos, int16 extent) : m_objectType(type), m_extent(extent), m_update_timer(0), m_health(0), m_max_health(0), m_delta_health(0), m_combined_health(0)
 {
 	Flatland::Geometry* g;
 	switch(GetObjectInfo()->extent.shape)
@@ -72,32 +72,36 @@ Object::Object(uint16 type, GridPair pos, uint16 extent) : m_objectType(type), m
 		body->Property().collisionMask = 0x00000000;
 	}
 
-	body->Property().bounceVelocity = 0.0f;
+	body->Property().bounceVelocity = 0.0f;		
+
+	/// Call create function in here someplace
+
+	if(m_extent > MAX_EXTENT)
+		m_extent = 0;
+	if(extent)
+		AddToWorld();
+}
+
+Object::Object( )
+{
+	m_extent = 0;
+	m_objectType = 0;
+}
+
+Object::~Object( )
+{
+	RemoveFromWorld();
+}
+
+void Object::AddToWorld()
+{
 	objmgr.AddObject(this);
 
 	if(GetObjectInfo()->update != UPDATE_NONE)
 		objacc.AddUpdateObject(this);
 }
 
-Object::Object( )
-{
- /*   m_objectTypeId      = TYPEID_OBJECT;
-    m_objectType        = TYPE_OBJECT;
-
-    m_uint32Values      = 0;
-    m_uint32Values_mirror = 0;
-    m_valuesCount       = 0;
-
-    m_inWorld           = false;
-    m_objectUpdated     = false;
-
-    m_PackGUID.clear();
-    _SetPackGUID(&m_PackGUID,0);*/
-	m_extent = 0;
-	m_objectType = 0;
-}
-
-Object::~Object( )
+void Object::RemoveFromWorld()
 {
 	objmgr.RemoveObject(this);
 	objacc.RemoveUpdateObject(this);
@@ -121,7 +125,7 @@ bool Object::Drop(WorldObject* obj, uint32 max_dist, GridPair newPos)
 }
 WorldObject* Object::NewPickup(uint16 type, uint16 extent, uint32 modifier)
 {
-	WorldObject* obj = new WorldObject(type, GridPair(0, 0), extent);
+	WorldObject* obj = new WorldObject(type, GridPair(0, 0), extent == 0 ? -1 : extent);
 	if(!Pickup(obj, 0))
 	{
 		delete obj;
@@ -173,7 +177,18 @@ void Object::Update(uint32 time)
 
 void Object::Die()
 {
+	DropAll();
 	m_health = 0;
+}
+void Object::DropAll()
+{
+	GridPair pos = GetPosition();
+	for(InventoryType::iterator iter = m_inventory.begin(); iter != m_inventory.end();)
+	{
+		WorldObject* obj = *iter;
+		++iter;
+		RemoveFromInventory(obj, pos);
+	}
 }
 void Object::Damage(float damage, Object* cause)
 {
@@ -201,7 +216,7 @@ void Object::_BuildDeltaHealthPacket(WorldPacket &packet)
 		packet << (uint16)m_combined_health;
 	}
 }
-WorldObject::WorldObject(uint16 type, GridPair pos, uint16 extent) : Object(type, pos, extent), m_updateMask(0)
+WorldObject::WorldObject(uint16 type, GridPair pos, int16 extent) : Object(type, pos, extent), m_updateMask(0)
 {
 }
 
@@ -267,6 +282,7 @@ void WorldObject::Use(Player* plr)
 		(this->*iter->second.handler)(plr);
 	
 }
+
 /// Use Handlers
 void WorldObject::PotionUse(Player *plr)
 {

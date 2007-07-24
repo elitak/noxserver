@@ -211,7 +211,7 @@ enum UnitEnchantType
 class MANGOS_DLL_SPEC Unit : public WorldObject
 {
     public:
-		Unit(uint16 type, GridPair pos, uint16 extent);
+		Unit(uint16 type, GridPair pos, int16 extent);
 		virtual ~Unit ( );
 		virtual void Update( uint32 time );
           virtual void Poison( byte poisoned );

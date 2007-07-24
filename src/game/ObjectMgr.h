@@ -74,6 +74,13 @@ struct UseHandler
 
 	void (WorldObject::*handler)(Player* plr);
 };
+struct XferHandler
+{
+	XferHandler() : handler(NULL) {};
+	XferHandler( int (ObjectMgr::*_handler)(Object* obj, NoxBuffer* rdr) ) : handler(_handler) {};
+
+	int (ObjectMgr::*handler)(Object* obj, NoxBuffer* rdr);
+};
 struct EnchantEntry
 {
 	EnchantEntry() : name(NULL), frames(0) {};
@@ -90,6 +97,7 @@ typedef HM_NAMESPACE::hash_map< uint16 , OpcodeHandler > OpcodeTableMap;
 typedef HM_NAMESPACE::hash_map< uint16 , CollideHandler > CollideTableMap;
 typedef HM_NAMESPACE::hash_map< uint16 , UpdateHandler > UpdateTableMap;
 typedef HM_NAMESPACE::hash_map< uint16 , UseHandler > UseTableMap;
+typedef HM_NAMESPACE::hash_map< uint16 , XferHandler > XferTableMap;
 typedef HM_NAMESPACE::hash_map< uint32 , EnchantEntry > EnchantTableMap;
 typedef std::set< Object* > ObjectTableMap;
 
@@ -195,6 +203,7 @@ class ObjectMgr
 		UpdateTableMap updateTable;
 		EnchantTableMap enchantTable;
 		UseTableMap useTable;
+		XferTableMap xferTable;
     protected:
         //template<class T> HM_NAMESPACE::hash_map<uint32,T*>& _GetContainer();
         //template<class T> TYPEID _GetTypeId() const;
@@ -204,6 +213,27 @@ class ObjectMgr
 		std::set<Object*> playerList;
 
 		Flatland::World World;
+
+
+		/// XFER Handlers (used to create object from map file)
+		int DefaultXferHandler(Object* obj, NoxBuffer* rdr);
+		int GoldXferHandler(Object* obj, NoxBuffer* rdr);
+		int ObeliskXferHandler(Object* obj, NoxBuffer* rdr);
+		int ToxicCloudXferHandler(Object* obj, NoxBuffer* rdr);
+		int RewardMarkerXferHandler(Object* obj, NoxBuffer* rdr);
+		int AmmoXferHandler(Object* obj, NoxBuffer* rdr);
+		int AbilityRewardXferHandler(Object* obj, NoxBuffer* rdr);
+		int SpellPagePedestalXferHandler(Object* obj, NoxBuffer* rdr);
+		int SpellRewardXferHandler(Object* obj, NoxBuffer* rdr);
+		int FieldGuideXferHandler(Object* obj, NoxBuffer* rdr);
+		int ReadableXferHandler(Object* obj, NoxBuffer* rdr);
+		int ExitXferHandler(Object* obj, NoxBuffer* rdr);
+		int DoorXferHandler(Object* obj, NoxBuffer* rdr);
+		int TriggerXferHandler(Object* obj, NoxBuffer* rdr);
+		int HoleXferHandler(Object* obj, NoxBuffer* rdr);
+		int TransporterXferHandler(Object* obj, NoxBuffer* rdr);
+		int ElevatorXferHandler(Object* obj, NoxBuffer* rdr);
+		int ElevatorShaftXferHandler(Object* obj, NoxBuffer* rdr);
     private:
 };
 

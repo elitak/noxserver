@@ -466,7 +466,8 @@ void WorldSession::HandleJoinConfirmation()
 void WorldSession::HandlePlayerJoinOpcode(WorldPacket &recvPacket)
 {
 	uint8 data[0x20];	
-	_player = new Player(this);
+	if(!_player)
+		_player = new Player(this);
 
 	try
     {
@@ -485,11 +486,6 @@ void WorldSession::HandlePlayerJoinOpcode(WorldPacket &recvPacket)
         sLog.outDetail("Incomplete join packet");
         return;
     }
-	if(m_status == STATUS_LOGGEDIN)
-	{
-		delete _player;
-		return;
-	}
 	m_status = STATUS_LOGGEDIN;
 
 	ObjectAccessor::Instance().InsertPlayer(_player);

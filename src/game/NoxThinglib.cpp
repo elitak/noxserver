@@ -275,6 +275,39 @@ NoxEnumNamePair g_noxUseNames[] =
 	0, NULL
 };
 
+NoxEnumNamePair g_noxXferNames[] = 
+{
+	XFER_DEFAULT, "DefaultXfer",
+	XFER_SPELLPAGEPEDESTAL, "SpellPagePedestalXfer",
+	XFER_SPELLREWARD, "SpellRewardXfer",
+	XFER_ABILITYREWARD, "AbilityRewardXfer",
+	XFER_FIELDGUIDE, "FieldGuideXfer",
+	XFER_READABLE, "ReadableXfer",
+	XFER_EXIT, "ExitXfer",
+	XFER_DOOR, "DoorXfer",
+	XFER_TRIGGER, "TriggerXfer",
+	XFER_MONSTER, "MonsterXfer",
+	XFER_HOLE, "HoleXfer",
+	XFER_TRANSPORTER, "TransporterXfer",
+	XFER_ELEVATOR, "ElevatorXfer",
+	XFER_ELEVATORSHAFT, "ElevatorShaftXfer",
+	XFER_MOVER, "MoverXfer",
+	XFER_GLYPH, "GlyphXfer",
+	XFER_INVISIBLELIGHT, "InvisibleLightXfer",
+	XFER_SENTRY, "SentryXfer",
+	XFER_WEAPON, "WeaponXfer",
+	XFER_ARMOR, "ArmorXfer",
+	XFER_TEAM, "TeamXfer",
+	XFER_GOLD, "GoldXfer",
+	XFER_AMMO, "AmmoXfer",
+	XFER_NPC, "NPCXfer",
+	XFER_OBELISK, "ObeliskXfer",
+	XFER_TOXICCLOUD, "ToxicCloudXfer",
+	XFER_MONSTERGENERATOR, "MonsterGeneratorXfer",
+	XFER_REWARDMARKER, "RewardMarkerXfer",
+	XFER_DEFAULT, NULL
+};
+
 //////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
@@ -630,6 +663,16 @@ while(strcmp(Type,"GNHT") && count<filelen)
 				  Object.use = noxNameToEnum(string, g_noxUseNames);
 				  for(int i = 0; (string = strtok(NULL, " +")) != NULL; i++)
 				       strncpy(Object.use_args[i], string, 30);
+			  }
+		  }
+		  else if(!strcmp(string, "USE"))
+		  {
+			  strtok(NULL, " +"); // =
+			  if( (string = strtok(NULL, " +")) != NULL)
+			  {
+				  Object.xfer = noxNameToEnum(string, g_noxXferNames);
+				  //for(int i = 0; (string = strtok(NULL, " +")) != NULL; i++)
+				       //strncpy(Object.use_args[i], string, 30);
 			  }
 		  }
 		  else if(!strcmp(string, "EXTENT"))

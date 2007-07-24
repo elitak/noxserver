@@ -33,7 +33,7 @@
 
 #include "ode/ode.h"
 
-Unit::Unit( uint16 type, GridPair pos, uint16 extent) : WorldObject(type, pos, extent)
+Unit::Unit( uint16 type, GridPair pos, int16 extent) : WorldObject(type, pos, extent)
 {
 	InitRespawn();
 }
@@ -73,7 +73,7 @@ void Unit::Update( uint32 p_time )
 	WorldPacket packet;
 
 	if(IsDead())
-	{
+	{ 
 		m_action = ACTION_DEAD;
 		m_health = 0;
 	}
@@ -83,7 +83,9 @@ void Unit::Update( uint32 p_time )
 		{
 			dBodySetLinearVel(body->GetBody(), 0.0f, 0.0f, 0.0f);
 			if(m_equipment[SLOT_SHIELD])
-				m_action = ACTION_RAISE_SHIELD;
+			{
+				SetActionAnim(ACTION_RAISE_SHIELD, 0);
+			}
 			else
 				m_action = ACTION_IDLE;
 			m_action_time = 0;
@@ -214,7 +216,7 @@ bool Unit::Dequip(WorldObject *obj)
 		if(m_equipment[i] == obj)
 		{
 			WorldPacket packet;
-			if(obj->GetObjectInfo()->subclass & SUBCLASS_WEAPON)
+			if(obj->GetObjectInfo()->subclass & SUBCLASS_WEAPON && i != SLOT_WEP_SECONDARY)
 				_BuildDequipPacket(packet, false, 1 << (obj->GetObjectInfo()->subclass & 0x1F));
 			else
 				_BuildDequipPacket(packet, true, Unit::ObjectToUnitArmor(obj));
