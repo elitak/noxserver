@@ -1102,7 +1102,7 @@ void WorldSession::_SendUseMapOpcode()
 	packet << (uint16)0x0;
 	packet << (uint16)0x0;
 	packet << (uint8)0;
-	packet << (uint32)0xEB0D1373; //checksum
+	packet << (uint32)sWorld.GetMap()->GetChecksum(); //checksum
 	packet << (uint32)m_timestamp;
 	SendPacket(&packet, false);
 }
