@@ -22,6 +22,7 @@
 */
 
 #include "Master.h"
+#include "Common.h"
 #include "Network/SocketHandler.h"
 #include "Network/ListenSocket.h"
 #include "WolSocket.h"
@@ -39,6 +40,7 @@
 #include "NoxMap.h"
 #include "NoxThinglib.h"
 #include "modifierbin.h"
+
 
 #define NOX_CONFIG "NXsrv.ini"
 
@@ -110,8 +112,6 @@ void Master::Run()
     }
     sLog.outString("Using nox configuration file.");
 
-    sWorld.SetInitialWorldSettings();
-
 			int val = 0;
 			port_t wsport;
 			if( !NXConfig.GetInt("Port",&val) )// 18590;
@@ -131,18 +131,6 @@ void Master::Run()
 			else
 				wsServerport = val;
 
-    SocketHandler h;
-    WorldSocket worldListenSocket(h);
-	WolSocket wolSocket(h);
-    if (worldListenSocket.Bind(wsport))
-    {
-        clearOnlineAccounts();
-        sLog.outError("MaNGOS cannot bind to port %d", wsport);
-        return;
-    }
-
-    h.Add(&worldListenSocket);
-
 	std::string wsLogin;
 	if( !NXConfig.GetString("Login",&wsLogin) )// ZoaBot;
 	{
@@ -161,6 +149,20 @@ void Master::Run()
 		sLog.outError("Could not load server, using default");
 		wsServer = "d224.x-mailer.de";
 	}
+
+    sWorld.SetInitialWorldSettings();
+
+    SocketHandler h;
+    WorldSocket worldListenSocket(h);
+	WolSocket wolSocket(h);
+    if (worldListenSocket.Bind(wsport))
+    {
+        clearOnlineAccounts();
+        sLog.outError("MaNGOS cannot bind to port %d", wsport);
+        return;
+    }
+
+    h.Add(&worldListenSocket);
 
 	wolSocket.SetUsername((char*)wsLogin.c_str());
 	wolSocket.SetPassword((char*)wsPassword.c_str());

@@ -172,6 +172,54 @@ void World::SetInitialWorldSettings()
 
 	std::string ThingPath = DataPath + "thing.bin";
 	std::string ModPath = DataPath + "modifier.bin";
+	std::string GamedataPath = DataPath + "gamedata.bin";
+
+	std::string GameDataName;
+	if( !NXConfig.GetString("GamedataName",&GameDataName) )// File Path;
+	{
+		sLog.outError("Could not find gamedata name, using default");
+		GameDataName = "Gamedata.txt";
+	}
+	bool GameDataEncoded = false;
+	if( !NXConfig.GetBool("EncodedGamedata",&GameDataEncoded) )// File Path;
+	{
+		sLog.outError("Could not load gamedata info, assuming gamedata.bin is original!!");
+		GameDataEncoded = true;
+	}
+	if( GameDataEncoded )
+	{		
+		fstream file;
+		file.open(GamedataPath.c_str(),ios::in | ios::binary);
+		if( !file.is_open())
+			return;		// return Failed
+	
+		file.seekg(0,ios::end);
+		long len = file.tellg();
+		file.seekg(0,ios::beg);
+		unsigned char *buff = NULL;
+
+		buff = new unsigned char [len];
+		memset(buff,0x00,len);
+	
+		file.read((char*)buff,len); // Read file
+		NoxCrypt::decrypt(buff, len, NC_GAMEDATA_BIN); // Decrypt by modifier
+		file.close(); // Close file
+
+		GameDataName = "Gamedata.txt";
+		file.open((DataPath + GameDataName).c_str(),ios::out | ios::trunc);
+		file.write((const char*)buff,len);
+		file.close();
+
+		if( buff ) // If buff was used
+			delete [] buff; // Clear data
+	}
+
+    if (!GamedataBin.SetSource((DataPath + GameDataName).c_str()))
+    {
+        sLog.outError("Could not find gamedata configuration file.");
+        return;
+    }
+    sLog.outString("Using gamedata configuration file.");
 
 	sLog.outError("Loading thing.bin");
 	fstream* thing = new fstream(ThingPath.c_str(), ios_base::in|ios_base::binary);

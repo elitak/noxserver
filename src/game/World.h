@@ -35,6 +35,7 @@ class WorldPacket;
 class WorldSession;
 class Player;
 
+
 /// Timers for different object refresh rates
 enum WorldTimers
 {
