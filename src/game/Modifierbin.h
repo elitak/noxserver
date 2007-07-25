@@ -137,4 +137,5 @@ public:
 	}
 };
 
+#define sModifierBin MaNGOS::Singleton<ModifierBin>::Instance()
 #endif

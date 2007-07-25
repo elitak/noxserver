@@ -370,6 +370,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\game\Monsterbin.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\game\Monsterbin.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\game\NoxBuffer.cpp"
 				>
 			</File>

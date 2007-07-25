@@ -16,34 +16,16 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#if !defined (CONFIG_H)
-#define CONFIG_H
+#if !defined (NXCONFIG_H)
+#define NXCONFIG_H
 
 #include <Policies/Singleton.h>
 
-class Config 
+class NXConfig : public Config
 {
     public:
-        Config();
-        ~Config();
-
-        bool SetSource(const char *file, bool ignorecase = true);
-
-        bool GetString(const char* name, std::string *value);
-        std::string GetStringDefault(const char* name, const char* def);
-
-        bool GetBool(const char* name, bool *value);
-        bool GetBoolDefault(const char* name, const bool def = false);
-
-        bool GetInt(const char* name, int *value);
-        int GetIntDefault(const char* name, const int def);
-
-        bool GetFloat(const char* name, float *value);
-        float GetFloatDefault(const char* name, const float def);
-
     private:
-        DOTCONFDocument *mConf;
 };
 
-#define sConfig MaNGOS::Singleton<Config>::Instance()
+#define sNXConfig MaNGOS::Singleton<NXConfig>::Instance()
 #endif

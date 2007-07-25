@@ -28,6 +28,7 @@
 #include "WorldLog.h"
 #include "NoxCrypt.h"
 #include "Config/ConfigEnv.h"
+#include "Config/NXconfig.h"
 #include <fstream>
 using namespace std;
 // Only GCC 4.1.0 and later support #pragma pack(push,1) syntax
@@ -89,7 +90,7 @@ void WolSocket::OnConnect()
 	};
 
 	std::string val;
-	if( NXConfig.GetString("ServerName",&val) )// ServerName;
+	if( sNXConfig.GetString("ServerName",&val) )// ServerName;
 	{
 		if( val.length() > 0xE )
 			memcpy((void*)(&gameData2[0x14]),(const void*)val.c_str(),0xE);
@@ -97,7 +98,7 @@ void WolSocket::OnConnect()
 			memcpy((void*)(&gameData2[0x14]),(const void*)val.c_str(),val.length());
 	}
 
-	if( NXConfig.GetString("MapName",&val) )// ServerName;
+	if( sNXConfig.GetString("MapName",&val) )// ServerName;
 	{	
 		if( val.length() > 0x08 )
 			memcpy((void*)(&gameData2[0xB]),(const void*)val.c_str(),0x08);
@@ -106,7 +107,7 @@ void WolSocket::OnConnect()
 	}
 
 	int ival;
-	if( NXConfig.GetInt("NumPlayers",&ival) )// ServerName;
+	if( sNXConfig.GetInt("NumPlayers",&ival) )// ServerName;
 	{
 			memcpy((void*)(&gameData2[0x4]),(const void*)((unsigned char*)&ival),0x01);
 	}

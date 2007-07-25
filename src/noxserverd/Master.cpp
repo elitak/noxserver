@@ -36,6 +36,7 @@
 #include "Policies/SingletonImp.h"
 #include "SystemConfig.h"
 #include "Config/ConfigEnv.h"
+#include "Config/NXconfig.h"
 #include "Database/DatabaseEnv.h"
 #include "NoxMap.h"
 #include "NoxThinglib.h"
@@ -105,7 +106,7 @@ void Master::Run()
     sLog.outTitle( "        MM  MMM http://www.mangosproject.org");
     sLog.outTitle( "        MMMMMM\n\n");
 
-    if (!NXConfig.SetSource(NOX_CONFIG))
+    if (!sNXConfig.SetSource(NOX_CONFIG))
     {
         sLog.outError("Could not find nox configuration file.");
         return;
@@ -114,7 +115,7 @@ void Master::Run()
 
 			int val = 0;
 			port_t wsport;
-			if( !NXConfig.GetInt("Port",&val) )// 18590;
+			if( !sNXConfig.GetInt("Port",&val) )// 18590;
 			{
 				sLog.outError("Could not load port, using default");
 				wsport = 18590;
@@ -123,7 +124,7 @@ void Master::Run()
 				wsport = val;
 
 			port_t wsServerport;
-			if( !NXConfig.GetInt("ServerPort",&val) )// 4000;
+			if( !sNXConfig.GetInt("ServerPort",&val) )// 4000;
 			{
 				sLog.outError("Could not load server port, using default");
 				wsServerport = 4000;
@@ -132,19 +133,19 @@ void Master::Run()
 				wsServerport = val;
 
 	std::string wsLogin;
-	if( !NXConfig.GetString("Login",&wsLogin) )// ZoaBot;
+	if( !sNXConfig.GetString("Login",&wsLogin) )// ZoaBot;
 	{
 		sLog.outError("Could not load login, using default");
 		wsLogin = "ZoaBot";
 	}
 	std::string wsPassword;
-	if( !NXConfig.GetString("Password",&wsPassword) )// computer;
+	if( !sNXConfig.GetString("Password",&wsPassword) )// computer;
 	{
 		sLog.outError("Could not load password, using default");
 		wsPassword = "computer";
 	}
 	std::string wsServer;
-	if( !NXConfig.GetString("Server",&wsServer) )// "d224.x-mailer.de";
+	if( !sNXConfig.GetString("Server",&wsServer) )// "d224.x-mailer.de";
 	{
 		sLog.outError("Could not load server, using default");
 		wsServer = "d224.x-mailer.de";

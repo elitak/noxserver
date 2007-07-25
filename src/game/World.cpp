@@ -24,6 +24,8 @@
 #include "Common.h"
 #include "Database/DatabaseEnv.h"
 #include "Config/ConfigEnv.h"
+#include "Config/NXconfig.h"
+#include "Config/GameConfig.h"
 #include "SystemConfig.h"
 #include "Log.h"
 #include "Opcodes.h"
@@ -35,6 +37,7 @@
 #include "Database/DBCStores.h"
 #include "Policies/SingletonImp.h"
 #include "modifierbin.h"
+#include "monsterbin.h"
 
 INSTANTIATE_SINGLETON_1( World );
 
@@ -158,13 +161,13 @@ void World::SetInitialWorldSettings()
 	// We should get filenames from ini file
 	// Must load thing.bin before the map
 	std::string DataPath;
-	if( !NXConfig.GetString("DataPath",&DataPath) )// File Path;
+	if( !sNXConfig.GetString("DataPath",&DataPath) )// File Path;
 	{
 		sLog.outError("Could not load data path!!");
 		PostQuitMessage(0);
 	}
 	std::string MapPath;
-	if( !NXConfig.GetString("DefaultMap",&MapPath) )// File Path;
+	if( !sNXConfig.GetString("DefaultMap",&MapPath) )// File Path;
 	{
 		sLog.outError("Could not load map path, using default value.");
 		MapPath = "maps\\manamine\\manamine.map";
@@ -172,16 +175,17 @@ void World::SetInitialWorldSettings()
 
 	std::string ThingPath = DataPath + "thing.bin";
 	std::string ModPath = DataPath + "modifier.bin";
+	std::string MonPath = DataPath + "monster.bin";
 	std::string GamedataPath = DataPath + "gamedata.bin";
 
 	std::string GameDataName;
-	if( !NXConfig.GetString("GamedataName",&GameDataName) )// File Path;
+	if( !sNXConfig.GetString("GamedataName",&GameDataName) )// File Path;
 	{
 		sLog.outError("Could not find gamedata name, using default");
 		GameDataName = "Gamedata.txt";
 	}
 	bool GameDataEncoded = false;
-	if( !NXConfig.GetBool("EncodedGamedata",&GameDataEncoded) )// File Path;
+	if( !sNXConfig.GetBool("EncodedGamedata",&GameDataEncoded) )// File Path;
 	{
 		sLog.outError("Could not load gamedata info, assuming gamedata.bin is original!!");
 		GameDataEncoded = true;
@@ -214,7 +218,7 @@ void World::SetInitialWorldSettings()
 			delete [] buff; // Clear data
 	}
 
-    if (!GamedataBin.SetSource((DataPath + GameDataName).c_str()))
+    if (!sGameConfig.SetSource((DataPath + GameDataName).c_str()))
     {
         sLog.outError("Could not find gamedata configuration file.");
         return;
@@ -227,9 +231,11 @@ void World::SetInitialWorldSettings()
 	thing->close();
 	delete thing;
 
-	ModifierBin bin;
 	sLog.outError("Loading modifier.bin");
-	bin.LoadBin((char*)ModPath.c_str());
+	sModifierBin.LoadBin((char*)ModPath.c_str());
+
+	sLog.outError("Loading monster.bin");
+	sMonsterBin.LoadBin((char*)MonPath.c_str());
 
 	sLog.outError((((std::string)"Loading map: ")+MapPath).c_str());
 	sLog.outError("");

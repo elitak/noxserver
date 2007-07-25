@@ -329,6 +329,22 @@
 				RelativePath="..\..\src\shared\Config\ConfigEnv.h"
 				>
 			</File>
+			<File
+				RelativePath="..\..\src\shared\Config\Gameconfig.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\shared\Config\GameConfig.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\shared\Config\NXConfig.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\shared\Config\NXConfig.h"
+				>
+			</File>
 			<Filter
 				Name="dotconfpp"
 				>
