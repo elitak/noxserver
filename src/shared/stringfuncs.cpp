@@ -1,11 +1,5 @@
 #include "stringfuncs.h"
 
-#define MAX_CHAR 0x7E  // Max valid char value
-#define MIN_CHAR 0x20  // Min valid char value
-
-#define isChar(a)  (a >= MIN_CHAR && a <= MAX_CHAR) // Tests for whitespace (not including spaces)
-#define isCharw(a)  (a > MIN_CHAR && a <= MAX_CHAR) // Tests for whitespace (including spaces)
-
 // This function will sort through a string and remove all whitespaces
 // Moving all characters to the beginning of the string and leaving a null at the end
 void strcws(char *string, bool removespaces)

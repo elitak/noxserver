@@ -40,7 +40,6 @@
 #include "NoxThinglib.h"
 #include "modifierbin.h"
 
-
 #define NOX_CONFIG "NXsrv.ini"
 
 #ifdef ENABLE_CLI
@@ -104,17 +103,15 @@ void Master::Run()
     sLog.outTitle( "        MM  MMM http://www.mangosproject.org");
     sLog.outTitle( "        MMMMMM\n\n");
 
-    sWorld.SetInitialWorldSettings();
-
-	//ModifierBin bin;
-	//bin.LoadBin("C:\\Program Files\\Nox\\modifier.bin");
-	
     if (!NXConfig.SetSource(NOX_CONFIG))
     {
         sLog.outError("Could not find nox configuration file.");
         return;
     }
     sLog.outString("Using nox configuration file.");
+
+    sWorld.SetInitialWorldSettings();
+
 			int val = 0;
 			port_t wsport;
 			if( !NXConfig.GetInt("Port",&val) )// 18590;

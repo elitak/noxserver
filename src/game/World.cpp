@@ -34,6 +34,7 @@
 #include "ObjectMgr.h"
 #include "Database/DBCStores.h"
 #include "Policies/SingletonImp.h"
+#include "modifierbin.h"
 
 INSTANTIATE_SINGLETON_1( World );
 
@@ -156,12 +157,36 @@ void World::SetInitialWorldSettings()
 
 	// We should get filenames from ini file
 	// Must load thing.bin before the map
-	fstream* thing = new fstream("C:\\Program Files\\Nox\\thing.bin", ios_base::in|ios_base::binary);
+	std::string DataPath;
+	if( !NXConfig.GetString("DataPath",&DataPath) )// File Path;
+	{
+		sLog.outError("Could not load data path!!");
+		PostQuitMessage(0);
+	}
+	std::string MapPath;
+	if( !NXConfig.GetString("DefaultMap",&MapPath) )// File Path;
+	{
+		sLog.outError("Could not load map path, using default value.");
+		MapPath = "maps\\manamine\\manamine.map";
+	}
+
+	std::string ThingPath = DataPath + "thing.bin";
+	std::string ModPath = DataPath + "modifier.bin";
+
+	sLog.outError("Loading thing.bin");
+	fstream* thing = new fstream(ThingPath.c_str(), ios_base::in|ios_base::binary);
 	sThingBin.Load_Thingdb(thing);
 	thing->close();
 	delete thing;
 
-	m_map->open("C:\\Program Files\\Nox\\maps\\manamine\\manamine.map");
+	ModifierBin bin;
+	sLog.outError("Loading modifier.bin");
+	bin.LoadBin((char*)ModPath.c_str());
+
+	sLog.outError((((std::string)"Loading map: ")+MapPath).c_str());
+	sLog.outError("");
+	sLog.outError("");
+	m_map->open((char*)MapPath.c_str());
 
     ///- Read the version of the configuration file and warn the user in case of emptiness or mismatch
     /*uint32 confVersion = sConfig.GetIntDefault("ConfVersion", 0);
