@@ -4,6 +4,7 @@
 	Version="8.00"
 	Name="flatland"
 	ProjectGUID="{885D23A9-8136-4E65-BC65-436A6D63DFE4}"
+	RootNamespace="flatland"
 	Keyword="Win32Proj"
 	>
 	<Platforms>
@@ -111,7 +112,7 @@
 				Optimization="2"
 				InlineFunctionExpansion="0"
 				OmitFramePointers="true"
-				AdditionalIncludeDirectories="..\..\dep\include\;..\..\dep\include\flatland\;..\..\dep\src"
+				AdditionalIncludeDirectories="..\..\dep\include\;..\..\dep\include\flatland\;..\..\dep\include\ode\source"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
 				StringPooling="true"
 				RuntimeLibrary="0"
