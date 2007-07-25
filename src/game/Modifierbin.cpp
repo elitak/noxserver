@@ -26,20 +26,8 @@ void ModifierBin::Load_Modifier(char* buff, long len)
 	ModProperty prop;
 	for(; GetString(&rdr,buff2) && strcmp(buff2,"END"); NULL)
 	{
-		// Object string / item
-		// Object length
-		// Object size
-		// Object type
-		// Object weight
-		// Object density
-		// Object radius
-		// Object Diameter
-		// Object polygon
-		// Object surface
-		// Object text
 
-
-	/*	if( !buff2[0] )
+		if( !buff2[0] )
 			continue;
 		for(strcpy(list.SectionTitle,buff2); GetString(&rdr,buff2) && strcmp(buff2,"END"); NULL)
 		{
@@ -58,7 +46,7 @@ void ModifierBin::Load_Modifier(char* buff, long len)
 			}
 			list.ElementList.Add(obj);
 			
-		}*/			
+		}	
 	}
 }
 
