@@ -15,7 +15,10 @@ void dGeomSetBody(dGeomID g, dBodyID b) {}
 ObjectProperties Object::defaults = { 5, dInfinity, 0.35, 0, ~0, ~0, 0 };
 std::stack<ObjectProperties> Object::defaultStack;
 
-Object::Object() : properties(defaults) {}
+Object::Object() : properties(defaults) 
+{
+	usrPointer = 0;
+}
 
 Geometry::Geometry()
 {
@@ -74,6 +77,7 @@ void Geometry::Rotate(const vec2 &xform)
 void Geometry::SetCenter(const vec2 &center)
 {
     this->center = center;
+	UpdateBounds();
 }
 
 void Geometry::SetAxis(const vec2 &axis)
