@@ -166,13 +166,14 @@ void World::SetInitialWorldSettings()
 		sLog.outError("Could not load data path!!");
 		PostQuitMessage(0);
 	}
-	std::string MapPath;
-	if( !sNXConfig.GetString("DefaultMap",&MapPath) )// File Path;
+	std::string MapLoc;
+	if( !sNXConfig.GetString("DefaultMap",&MapLoc) )// File Path;
 	{
 		sLog.outError("Could not load map path, using default value.");
-		MapPath = "maps\\manamine\\manamine.map";
+		MapLoc = "maps\\manamine\\manamine.map";
 	}
 
+	std::string MapPath = DataPath + MapLoc;
 	std::string ThingPath = DataPath + "thing.bin";
 	std::string ModPath = DataPath + "modifier.bin";
 	std::string MonPath = DataPath + "monster.bin";
