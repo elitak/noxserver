@@ -164,7 +164,11 @@ private:
 class NoxMap : NoxBuffer
 {
 public:
-	NoxMap() {};
+	NoxMap() 
+	{
+		nxzFile = 0;
+		nxzSize = 0;
+	};
 	bool open(char* fileName);
 	NoxWallMap walls;
 

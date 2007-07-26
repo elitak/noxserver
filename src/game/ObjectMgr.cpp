@@ -91,7 +91,7 @@ ObjectMgr::ObjectMgr()
 
 	// Build Xfer Table
 	xferTable[ XFER_DEFAULT ] = XferHandler( &ObjectMgr::DefaultXferHandler );
-	xferTable[ XFER_SPELLPAGEPEDESTAL ] = XferHandler( &ObjectMgr::DefaultXferHandler );
+	xferTable[ XFER_SPELLPAGEPEDESTAL ] = XferHandler( &ObjectMgr::SpellPagePedestalXferHandler );
 	xferTable[ XFER_SPELLREWARD ] = XferHandler( &ObjectMgr::SpellRewardXferHandler );
 	xferTable[ XFER_ABILITYREWARD ] = XferHandler( &ObjectMgr::AbilityRewardXferHandler );
 	xferTable[ XFER_FIELDGUIDE ] = XferHandler( &ObjectMgr::FieldGuideXferHandler );
@@ -100,17 +100,17 @@ ObjectMgr::ObjectMgr()
 	xferTable[ XFER_DOOR ] = XferHandler( &ObjectMgr::DoorXferHandler );
 	xferTable[ XFER_TRIGGER ] = XferHandler( &ObjectMgr::TriggerXferHandler );
 	xferTable[ XFER_MONSTER ] = XferHandler( &ObjectMgr::DefaultXferHandler );
-	xferTable[ XFER_HOLE ] = XferHandler( &ObjectMgr::DefaultXferHandler );
-	xferTable[ XFER_TRANSPORTER ] = XferHandler( &ObjectMgr::DefaultXferHandler );
-	xferTable[ XFER_ELEVATOR ] = XferHandler( &ObjectMgr::DefaultXferHandler );
-	xferTable[ XFER_ELEVATORSHAFT ] = XferHandler( &ObjectMgr::DefaultXferHandler );
-	xferTable[ XFER_MOVER ] = XferHandler( &ObjectMgr::DefaultXferHandler );
-	xferTable[ XFER_GLYPH ] = XferHandler( &ObjectMgr::DefaultXferHandler );
-	xferTable[ XFER_INVISIBLELIGHT ] = XferHandler( &ObjectMgr::DefaultXferHandler );
-	xferTable[ XFER_SENTRY ] = XferHandler( &ObjectMgr::DefaultXferHandler );
-	xferTable[ XFER_WEAPON ] = XferHandler( &ObjectMgr::DefaultXferHandler );
-	xferTable[ XFER_ARMOR ] = XferHandler( &ObjectMgr::DefaultXferHandler );
-	xferTable[ XFER_TEAM ] = XferHandler( &ObjectMgr::DefaultXferHandler );
+	xferTable[ XFER_HOLE ] = XferHandler( &ObjectMgr::HoleXferHandler );
+	xferTable[ XFER_TRANSPORTER ] = XferHandler( &ObjectMgr::TransporterXferHandler );
+	xferTable[ XFER_ELEVATOR ] = XferHandler( &ObjectMgr::ElevatorXferHandler );
+	xferTable[ XFER_ELEVATORSHAFT ] = XferHandler( &ObjectMgr::ElevatorShaftXferHandler );
+	xferTable[ XFER_MOVER ] = XferHandler( &ObjectMgr::MoverXferHandler );
+	xferTable[ XFER_GLYPH ] = XferHandler( &ObjectMgr::GlyphXferHandler );
+	xferTable[ XFER_INVISIBLELIGHT ] = XferHandler( &ObjectMgr::InvisibleLightXferHandler );
+	xferTable[ XFER_SENTRY ] = XferHandler( &ObjectMgr::SentryXferHandler );
+	xferTable[ XFER_WEAPON ] = XferHandler( &ObjectMgr::WeaponXferHandler );
+	xferTable[ XFER_ARMOR ] = XferHandler( &ObjectMgr::ArmorXferHandler );
+	xferTable[ XFER_TEAM ] = XferHandler( &ObjectMgr::TeamXferHandler );
 	xferTable[ XFER_GOLD ] = XferHandler( &ObjectMgr::GoldXferHandler );
 	xferTable[ XFER_AMMO ] = XferHandler( &ObjectMgr::AmmoXferHandler );
 	xferTable[ XFER_NPC ] = XferHandler( &ObjectMgr::DefaultXferHandler );
@@ -570,5 +570,151 @@ int ObjectMgr::ElevatorShaftXferHandler(Object* obj, NoxBuffer* rdr)
 
 	rdr->read<uint32>();
 
+	return inventory;
+}
+int ObjectMgr::MoverXferHandler(Object* obj, NoxBuffer* rdr)
+{
+	int inventory = DefaultXferHandler(obj, rdr);
+
+	rdr->read<uint32>();
+	rdr->read<uint32>();
+	rdr->read<uint32>(); //extent to be moved
+	//if props1 > 0x28
+	rdr->read<uint8>();
+	rdr->read<uint32>();
+	rdr->read<uint32>();
+
+	rdr->read<float>();
+	rdr->read<float>();
+
+	return inventory;
+}
+int ObjectMgr::GlyphXferHandler(Object* obj, NoxBuffer* rdr)
+{
+	char buffer[256];
+	int inventory = DefaultXferHandler(obj, rdr);
+
+	//rdr->read<uint32>(); if props1 < 0x29
+	rdr->read<uint8>();
+	rdr->read<uint32>();
+	rdr->read<uint32>();
+	uint8 num_spells = rdr->read<uint8>();
+	//if props < 0x1F read 0x14 bytes
+	for(; num_spells; num_spells--)
+		rdr->readstring<uint8>(buffer, 256);
+	
+	return inventory;
+}
+
+int ObjectMgr::InvisibleLightXferHandler(Object* obj, NoxBuffer* rdr)
+{
+	char buffer[256];
+	int inventory = DefaultXferHandler(obj, rdr);
+
+	rdr->read<uint32>();
+	rdr->read<float>();
+	rdr->read<uint32>();
+	rdr->read<uint32>();
+
+	//0xC
+	rdr->read<uint32>(); 
+	rdr->read<uint32>(); 
+	rdr->read<uint32>(); 
+
+	rdr->read<uint16>();
+	rdr->read<uint16>();
+	rdr->read<uint32>();
+	rdr->read<uint16>();
+
+	//0x30
+	rdr->read<uint32>();
+	rdr->read<uint32>();
+	rdr->read<uint32>();
+	rdr->read<uint32>();
+	rdr->read<uint32>();
+	rdr->read<uint32>();
+	rdr->read<uint32>();
+	rdr->read<uint32>();
+	rdr->read<uint32>();
+	rdr->read<uint32>();
+	rdr->read<uint32>();
+	rdr->read<uint32>();
+	
+	//0x10
+	rdr->read<uint32>();
+	rdr->read<uint32>();
+	rdr->read<uint32>();
+	rdr->read<uint32>();
+
+	//0x10
+	rdr->read<uint32>();
+	rdr->read<uint32>();
+	rdr->read<uint32>();
+	rdr->read<uint32>();
+
+	rdr->read<uint16>();
+	rdr->read<uint16>();
+	rdr->read<uint16>();
+	rdr->read<uint32>();
+	rdr->read<uint16>();
+	rdr->read<uint16>();
+	rdr->read<uint8>();
+	rdr->read<uint32>();
+	
+	return inventory;
+}
+int ObjectMgr::SentryXferHandler(Object* obj, NoxBuffer* rdr)
+{
+	int inventory = DefaultXferHandler(obj, rdr);
+
+	rdr->read<float>();
+	rdr->read<float>();
+	if(obj->m_props1 > 0x3C)
+		rdr->read<float>();
+
+	return inventory;
+}
+int ObjectMgr::WeaponXferHandler(Object* obj, NoxBuffer* rdr)
+{
+	char buffer[256];
+	int inventory = DefaultXferHandler(obj, rdr);
+
+	rdr->readstring<uint8>(buffer, 256);
+	rdr->readstring<uint8>(buffer, 256);
+	rdr->readstring<uint8>(buffer, 256);
+	rdr->readstring<uint8>(buffer, 256);
+
+	rdr->read<uint16>(); //durability
+	//rdr->read<uint8>() if props = 0x3F
+	//rdr->read<uint32>() if props = 0x40
+	
+	return inventory;
+}
+int ObjectMgr::ArmorXferHandler(Object* obj, NoxBuffer* rdr)
+{
+	char buffer[256];
+	int inventory = DefaultXferHandler(obj, rdr);
+
+	rdr->readstring<uint8>(buffer, 256);
+	rdr->readstring<uint8>(buffer, 256);
+	rdr->readstring<uint8>(buffer, 256);
+	rdr->readstring<uint8>(buffer, 256);
+
+	rdr->read<uint16>(); //durability
+	//rdr->read<uint8>() if props = 0x3F
+	//rdr->read<uint32>() if props = 0x40
+	
+	return inventory;
+}
+int ObjectMgr::TeamXferHandler(Object* obj, NoxBuffer* rdr)
+{
+	char buffer[256];
+	int inventory = DefaultXferHandler(obj, rdr);
+
+	rdr->readstring<uint8>(buffer, 256);
+	rdr->readstring<uint8>(buffer, 256);
+	rdr->readstring<uint8>(buffer, 256);
+	rdr->readstring<uint8>(buffer, 256);
+	
 	return inventory;
 }

@@ -40,7 +40,7 @@
 
 #include <cmath>
 
-#define TIMEOUT_MS 1000
+#define TIMEOUT_MS 5000
 
 /// WorldSession constructor
 WorldSession::WorldSession(uint32 id, WorldSocket *sock, uint32 sec) : _player(NULL), _socket(sock),

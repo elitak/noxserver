@@ -234,6 +234,13 @@ class ObjectMgr
 		int TransporterXferHandler(Object* obj, NoxBuffer* rdr);
 		int ElevatorXferHandler(Object* obj, NoxBuffer* rdr);
 		int ElevatorShaftXferHandler(Object* obj, NoxBuffer* rdr);
+		int MoverXferHandler(Object* obj, NoxBuffer* rdr);
+		int GlyphXferHandler(Object* obj, NoxBuffer* rdr);
+		int InvisibleLightXferHandler(Object* obj, NoxBuffer* rdr);
+		int SentryXferHandler(Object* obj, NoxBuffer* rdr);
+		int WeaponXferHandler(Object* obj, NoxBuffer* rdr);
+		int ArmorXferHandler(Object* obj, NoxBuffer* rdr);
+		int TeamXferHandler(Object* obj, NoxBuffer* rdr);
     private:
 };
 
