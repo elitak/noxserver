@@ -20,6 +20,7 @@
 #define GAMECONFIG_H
 
 #include <Policies/Singleton.h>
+#include "Config.h"
 
 class GameConfig : public Config
 {

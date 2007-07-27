@@ -177,24 +177,24 @@ void World::SetInitialWorldSettings()
 	std::string ThingPath = DataPath + "thing.bin";
 	std::string ModPath = DataPath + "modifier.bin";
 	std::string MonPath = DataPath + "monster.bin";
-	std::string GamedataPath = DataPath + "gamedata.bin";
+	//std::string GamedataPath = DataPath + "gamedata.bin";
 
 	std::string GameDataName;
 	if( !sNXConfig.GetString("GamedataName",&GameDataName) )// File Path;
 	{
 		sLog.outError("Could not find gamedata name, using default");
-		GameDataName = "Gamedata.txt";
+		GameDataName = "Gamedata.bin";
 	}
 	bool GameDataEncoded = false;
 	if( !sNXConfig.GetBool("EncodedGamedata",&GameDataEncoded) )// File Path;
 	{
 		sLog.outError("Could not load gamedata info, assuming gamedata.bin is original!!");
-		GameDataEncoded = true;
+		//GameDataEncoded = true;
 	}
 	if( GameDataEncoded )
 	{		
 		fstream file;
-		file.open(GamedataPath.c_str(),ios::in | ios::binary);
+		file.open(GameDataName.c_str(),ios::in | ios::binary);
 		if( !file.is_open())
 			return;		// return Failed
 	
@@ -219,7 +219,7 @@ void World::SetInitialWorldSettings()
 			delete [] buff; // Clear data
 	}
 
-    if (!sGameConfig.SetSource((DataPath + GameDataName).c_str()))
+    if (!sGameConfig.SetSource((GameDataName).c_str()))
     {
         sLog.outError("Could not find gamedata configuration file.");
         return;

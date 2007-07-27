@@ -311,7 +311,7 @@ bool Unit::SetActionAnim(UnitActionType anim, uint32 frames)
 		ResetActionAnim();
 
 	m_action = anim;
-	m_action_time = frames*30;
+	m_action_time = frames*33;
 	m_animFrames = 0;
 
 	return true;

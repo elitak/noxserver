@@ -41,6 +41,7 @@
 #include "NoxMap.h"
 #include "NoxThinglib.h"
 #include "modifierbin.h"
+#include "Config/GameConfig.h"
 
 
 #define NOX_CONFIG "NXsrv.ini"
@@ -94,17 +95,19 @@ void Master::Run()
     sLog.outString( "MaNGOS daemon %s", _FULLVERSION );
     sLog.outString( "<Ctrl-C> to stop.\n\n" );
 
-    sLog.outTitle( "MM   MM         MM   MM  MMMMM   MMMM   MMMMM");
-    sLog.outTitle( "MM   MM         MM   MM MMM MMM MM  MM MMM MMM");
-    sLog.outTitle( "MMM MMM         MMM  MM MMM MMM MM  MM MMM");
-    sLog.outTitle( "MM M MM         MMMM MM MMM     MM  MM  MMM");
-    sLog.outTitle( "MM M MM  MMMMM  MM MMMM MMM     MM  MM   MMM");
-    sLog.outTitle( "MM M MM M   MMM MM  MMM MMMMMMM MM  MM    MMM");
-    sLog.outTitle( "MM   MM     MMM MM   MM MM  MMM MM  MM     MMM");
-    sLog.outTitle( "MM   MM MMMMMMM MM   MM MMM MMM MM  MM MMM MMM");
+    sLog.outTitle( "MM   MM         MM   MM  MMMMM   MMMM   MMMMM  N   N   NN  N     N");
+    sLog.outTitle( "MM   MM         MM   MM MMM MMM MM  MM MMM MMM NN  N  N  N  N   N");
+    sLog.outTitle( "MMM MMM         MMM  MM MMM MMM MM  MM MMM     NNN N  N  N   N N");
+    sLog.outTitle( "MM M MM         MMMM MM MMM     MM  MM  MMM    N NNN  N  N    N");
+    sLog.outTitle( "MM M MM  MMMMM  MM MMMM MMM     MM  MM   MMM   N  NN  N  N   N N");
+    sLog.outTitle( "MM M MM M   MMM MM  MMM MMMMMMM MM  MM    MMM  N   N   NN   N   N");
+    sLog.outTitle( "MM   MM     MMM MM   MM MM  MMM MM  MM     MMM             N     N");
+    sLog.outTitle( "MM   MM MMMMMMM MM   MM MMM MMM MM  MM MMM MMM --------------------");
     sLog.outTitle( "MM   MM MM  MMM MM   MM  MMMMMM  MMMM   MMMMM");
-    sLog.outTitle( "        MM  MMM http://www.mangosproject.org");
-    sLog.outTitle( "        MMMMMM\n\n");
+    sLog.outTitle( "        MM  MMM ");
+	sLog.outTitle( "        MMMMMM ");
+	sLog.outTitle( "\nhttp://www.mangosproject.org\nhttp://www.noxforum.net\n\n");
+
 
     if (!sNXConfig.SetSource(NOX_CONFIG))
     {
@@ -155,7 +158,7 @@ void Master::Run()
 
     SocketHandler h;
     WorldSocket worldListenSocket(h);
-	WolSocket wolSocket(h);
+	WolSocket wolSocket(h);	
     if (worldListenSocket.Bind(wsport))
     {
         clearOnlineAccounts();

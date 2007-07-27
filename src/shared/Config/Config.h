@@ -20,6 +20,7 @@
 #define CONFIG_H
 
 #include <Policies/Singleton.h>
+#include "dotconfpp/dotconfpp.h"
 
 class Config 
 {

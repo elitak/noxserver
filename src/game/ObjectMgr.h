@@ -142,6 +142,15 @@ class ObjectMgr
 			else
 				return NULL;
 		}
+       /* WorldObject* GetObjByType(const uint16 extent)
+		{
+			//this->objectTable.
+			Object* obj = GetImmobileObj(extent);
+			if(obj && !obj->IsImmobile())
+				return (WorldObject*)obj;
+			else
+				return NULL;
+		}*/
 		Object* GetImmobileObj(const uint16 extent)
 		{
 			if(extent > MAX_EXTENT)

@@ -28,6 +28,8 @@
 #include "WorldSession.h"
 #include "UpdateMask.h"
 #include "Player.h"
+#include "Config/GameConfig.h"
+//#include "World.h"
 
 #include "flatland/flatland.hpp"
 
@@ -421,10 +423,31 @@ void Player::MoveTowards(uint16 x, uint16 y)
 }
 void Player::Respawn()
 {
-	m_health = 100; //these should come from gamedata.bin
-	m_max_health = 150;
-	if(plrInfo.pclass == PLAYER_CLASS_WARRIOR)
-		ResetAbilityDelays();
+	// Set respawn states for the player
+	switch(plrInfo.pclass)
+	{
+	case PLAYER_CLASS_WARRIOR:
+		{
+					ResetAbilityDelays();
+					m_health = sGameConfig.GetFloatDefault("WarriorMaxHealth",150);
+					uint16 type = sThingBin.Thing.Object.GetIndex("Longsword");
+					if(type)
+						Equip(NewPickup(type));
+		}		
+					break;
+
+	case PLAYER_CLASS_CONJURER: 
+					m_health = sGameConfig.GetFloatDefault("ConjurerMaxHealth",100);
+					break;
+
+	case PLAYER_CLASS_WIZARD: 
+					m_health = sGameConfig.GetFloatDefault("WizardMaxHealth",75);
+					break;
+	default:break;
+	}
+	m_max_health = m_health;
+
+	// Get a random spawn point and set position to that
 	SetPosition(GridPair(3000, 2900));
 	ForceUpdateAll();
 
@@ -442,12 +465,6 @@ void Player::Respawn()
 	GetSession()->SendPacket(&packet);
 	_BuildDequipPacket(packet, false, 0xFFFFFFFF);
 	GetSession()->SendPacket(&packet);
-
-	uint16 type = sThingBin.Thing.Object.GetIndex("Longsword");
-	if(type)
-	{
-		Equip(NewPickup(type));
-	}
 }
 void Player::ResetAbilityDelays()
 {
