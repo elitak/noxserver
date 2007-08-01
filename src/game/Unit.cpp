@@ -77,10 +77,12 @@ void Unit::Update( uint32 p_time )
 		m_action = ACTION_DEAD;
 		m_health = 0;
 	}
-	else if(m_action || m_action != ACTION_RAISE_SHIELD)
+	else if(m_action != ACTION_IDLE || m_action != ACTION_RAISE_SHIELD)
 	{
 		if(p_time > m_action_time)
 		{
+               if(HasEnchant(ENCHANT_SNEAK))
+                    UnsetEnchant(ENCHANT_SNEAK);
 			dBodySetLinearVel(body->GetBody(), 0.0f, 0.0f, 0.0f);
 			if(m_equipment[SLOT_SHIELD])
 			{

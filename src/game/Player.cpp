@@ -240,6 +240,11 @@ bool Player::Pickup(WorldObject* obj, uint32 max_dist)
 		packet << (uint32)0xFFFFFFFF;
 
 		m_session->SendPacket(&packet);
+          
+	     uint32 slot = obj->GetObjectInfo()->subclass;//get which slot it is in
+          if(!m_equipment[slot])
+               Equip(obj);
+
 		return true;
 	}
 	else
@@ -405,6 +410,11 @@ void Player::WalkTowards(uint16 x, uint16 y)
 	if(SetActionAnim(ACTION_WALK, 3))
 		MoveToward(x, y, 0.105);
 }
+void Player::TreadTowards(uint16 x, uint16 y)
+{
+     if(SetActionAnim(ACTION_SNEAK, 3))
+          MoveToward(x, y, 0.105);
+}
 void Player::MoveTowards(uint16 x, uint16 y)
 {
 	if(IsDead() || HasEnchant(ENCHANT_HELD))
@@ -414,7 +424,9 @@ void Player::MoveTowards(uint16 x, uint16 y)
 	int _x = pos.x_coord - x;
 	int _y = pos.y_coord - y;
 	int sqlength = (_x*_x) + (_y*_y);
-	if(sqlength < 1600)
+     if(HasEnchant(ENCHANT_SNEAK))
+          TreadTowards(x, y);
+	else if(sqlength < 1600)
 		WalkTowards(x, y);
 	else if(sqlength < 2500 && m_action == ACTION_WALK)
 		WalkTowards(x, y);

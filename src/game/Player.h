@@ -127,6 +127,7 @@ class MANGOS_DLL_SPEC Player : public Unit
 
 		void RunTowards( uint16 x, uint16 y);
 		void WalkTowards( uint16 x, uint16 y);
+          void TreadTowards( uint16 x, uint16 y);
 		void MoveTowards( uint16 x, uint16 y);
 		void Laugh();
 		void Point();

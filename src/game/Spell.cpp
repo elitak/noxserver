@@ -20,6 +20,7 @@
 #include "Policies/SingletonImp.h"
 #include "Spell.h"
 #include "WorldSession.h"
+#include "Config/GameConfig.h"
 
 INSTANTIATE_SINGLETON_1(SpellMgr);
 
@@ -217,21 +218,34 @@ void SpellMgr::FillAbilityHandlerHashTable()
 	abilityTable[ ABILITY_BERSERKER_CHARGE ]	= AbilityHandler( &SpellMgr::HandleBerserkerChargeAbility );
 	abilityTable[ ABILITY_WARCRY ]				= AbilityHandler( &SpellMgr::HandleAbilityUnknown );
 	abilityTable[ ABILITY_HARPOON ]			= AbilityHandler( &SpellMgr::HandleAbilityUnknown );
-	abilityTable[ ABILITY_TREAD_LIGHTLY ]		= AbilityHandler( &SpellMgr::HandleAbilityUnknown );
+	abilityTable[ ABILITY_TREAD_LIGHTLY ]		= AbilityHandler( &SpellMgr::HandleTreadLightlyAbility );
 	abilityTable[ ABILITY_EYE_OF_THE_WOLF ]	= AbilityHandler( &SpellMgr::HandleEyeOfWolfAbility );
 }
 void SpellMgr::HandleBerserkerChargeAbility(Player *plr)
 {
+     plr->UnsetEnchant(ENCHANT_SNEAK);
 	GridPair cursor = plr->GetSession()->GetCursor();
-	plr->SetActionAnim(ACTION_BERSERKER_CHARGE, 90); //frames is from gamedata.bin
+     int duration = sGameConfig.GetFloatDefault("BerserkerChargeDuration",90);
+	plr->SetActionAnim(ACTION_BERSERKER_CHARGE, duration); //frames is from gamedata.bin
 	plr->MoveToward(cursor.x_coord, cursor.y_coord, 0.42);
-	plr->SetAbilityDelay(ABILITY_BERSERKER_CHARGE, 300);	
+     int delay = sGameConfig.GetFloatDefault("BerserkerChargeDelay",300);
+	plr->SetAbilityDelay(ABILITY_BERSERKER_CHARGE, delay);	
 	
 }
+void SpellMgr::HandleTreadLightlyAbility(Player *plr)
+{
+     int duration = sGameConfig.GetFloatDefault("TreadLightlyDuration",99999);
+     plr->SetEnchant(ENCHANT_SNEAK,duration);
+     int delay = sGameConfig.GetFloatDefault("TreadLightlyDelay",30);
+     plr->SetAbilityDelay(ABILITY_TREAD_LIGHTLY,delay);
+}
+
 void SpellMgr::HandleEyeOfWolfAbility(Player *plr)
 {
-     plr->SetEnchant(ENCHANT_INFRAVISION,300);
-     plr->SetAbilityDelay(ABILITY_EYE_OF_THE_WOLF, 600);
+     int duration = sGameConfig.GetFloatDefault("EyeOfTheWolfDuration",300);
+     plr->SetEnchant(ENCHANT_INFRAVISION,duration);
+	int delay = sGameConfig.GetFloatDefault("EyeOfTheWolfDelay",600);
+     plr->SetAbilityDelay(ABILITY_EYE_OF_THE_WOLF, delay);
 }
 
 const char *g_spellNames[] =

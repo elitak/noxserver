@@ -209,6 +209,7 @@ public:
 	void HandleAbilityUnknown(Player* plr) {};
 	void HandleBerserkerChargeAbility(Player* plr);
      void HandleEyeOfWolfAbility(Player* plr);
+     void HandleTreadLightlyAbility(Player* Plr);
 
 	SpellTableMap spellTable;
 	AbilityTableMap abilityTable;
