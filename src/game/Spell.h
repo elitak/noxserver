@@ -31,7 +31,7 @@ struct SpellHandler
     SpellHandler( uint8 _classFlag, void (SpellMgr::*_handler)(Player* plr, bool invert) ) : classFlag(_classFlag), handler(_handler) {};
 
 	uint8 classFlag;
-    void (SpellMgr::*handler)(Player* plr, bool invert);
+    void (SpellMgr::*handler)(Player* plr, bool dontinvert);
 };
 
 typedef HM_NAMESPACE::hash_map< uint8 , SpellHandler > SpellTableMap;
@@ -205,12 +205,22 @@ public:
 	SpellMgr();
 	~SpellMgr();
 
-	void HandleSpellUnknown(Player* plr, bool invert) {};
+	void HandleSpellUnknown(Player* plr, bool dontinvert) {};
 	void HandleAbilityUnknown(Player* plr) {};
 	void HandleBerserkerChargeAbility(Player* plr);
      void HandleEyeOfWolfAbility(Player* plr);
      void HandleTreadLightlyAbility(Player* Plr);
 
+     bool HasEnoughMana(Player* plr, int cost);
+     void HandleSpellCurePoison(Player* plr, bool dontinvert);
+     void HandleSpellForceField(Player* plr, bool dontinvert);
+     void HandleSpellHaste(Player* plr, bool dontinvert);
+     void HandleSpellInfravision(Player* plr, bool dontinvert);
+     void HandleSpellLesserHeal(Player* plr, bool dontinvert);
+     void HandleSpellProtectFromFire(Player* plr, bool dontinvert);
+     void HandleSpellProtectFromElectricity(Player* plr, bool dontinvert);
+     void HandleSpellProtectFromPoison(Player* plr, bool dontinvert);
+     void HandleSpellVampirism(Player* plr, bool dontinvert);
 	SpellTableMap spellTable;
 	AbilityTableMap abilityTable;
 private:

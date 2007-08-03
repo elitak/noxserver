@@ -45,6 +45,7 @@ ObjectMgr::ObjectMgr()
 
 	// Build Collide Table
 	collideTable[ COLLIDE_DAMAGE ]	= CollideHandler( &CollisionResponse::DamageCollideCallback );
+     collideTable[ COLLIDE_MANADRAIN ]  = CollideHandler( &CollisionResponse::ManaDrainCollideCallback );
 
 	// Build Update Table
 	updateTable[ UPDATE_ONESECONDDIE ] = UpdateHandler( &Object::OneSecondDieUpdate );

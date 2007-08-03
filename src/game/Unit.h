@@ -214,7 +214,7 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
 		Unit(uint16 type, GridPair pos, int16 extent);
 		virtual ~Unit ( );
 		virtual void Update( uint32 time );
-          virtual void Poison( byte poisoned );
+          virtual void Poison( byte poisoned, uint16 poisoner );
 		virtual void MoveToward( uint16 x, uint16 y, float speed );
 		virtual bool SetActionAnim( UnitActionType anim, uint32 frames );
 		virtual void ResetActionAnim()
@@ -245,6 +245,7 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
 		void _BuildDequipPacket(WorldPacket& packet, bool armor, uint32 slot);
 		void _BuildEnchantsPacket(WorldPacket& packet);
 		static uint32 ObjectToUnitArmor(Object* obj);
+          static int ConvertToNoXSpeed(int speed) { return (int)((speed*206)+.5)-2; }
 	
 		void SetAngle (uint8 angle) 
 		{ 
@@ -262,6 +263,14 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
 		time_t m_animTimer;
 
           byte m_poison;
+          float m_poisoncycle; //every 30 frames damage by 1. NoX style poison.
+          uint16 m_poisoner;
+
+	     uint16 m_weight;
+	     uint16 m_speed;
+          uint16 m_max_speed;
+	     uint16 m_strength;
+
 		uint8 m_angle;
 		uint32 m_auras; // UnitEnchantType
 		int16 m_aura_times[32];

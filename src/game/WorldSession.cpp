@@ -544,11 +544,11 @@ void WorldSession::HandlePlayerInputOpcode(WorldPacket &recvPacket)
                  _player->Laugh();
                  break;
             case 0x31:
-                 sLog.outDebug("Player pointed");
+                 sLog.outDebug("Player pointed.");
                  _player->Point();
                  break;
             case 0x2F:
-                 sLog.outDebug("Player taunted");
+                 sLog.outDebug("Player taunted.");
                  _player->Taunt();
                  break;
 			default:
@@ -570,7 +570,7 @@ void WorldSession::HandlePlayerInputOpcode(WorldPacket &recvPacket)
                switch(recvPacket.read<uint32>())
                {
                     case 0x07:
-                         sLog.outDebug("Player did a running job.");
+                         sLog.outDebug("Player did a running jump.");
                          break;
                }
 			recvPacket.read<uint8>();
@@ -861,9 +861,10 @@ void WorldSession::HandleTrySpellOpcode(WorldPacket& recv_data)
 	uint8 spellId = recv_data.read<uint8>();
 
 	recv_data.rpos(recv_data.rpos() + 19);
-	uint8 invert = recv_data.read<uint8>();
+	uint8 dontinvert = recv_data.read<uint8>();
 
-	ExecuteSpell(spellId, (bool)invert);
+     //inversion was backwards.
+	ExecuteSpell(spellId, (bool)dontinvert)
 
 	//				(sp. id)													(invert)
 	//summon ghost: 55 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00

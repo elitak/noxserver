@@ -88,6 +88,12 @@ void Player::Update(uint32 time)
 		m_combined_health = 0;
 	}
 
+     if(m_mana)
+     {
+          _BuildManaPacket(packet);
+          objacc.SendPacketToAll(&packet);
+     }
+
 	// Update ability delays
 	if(plrInfo.pclass == PLAYER_CLASS_WARRIOR)
 	{
@@ -240,10 +246,6 @@ bool Player::Pickup(WorldObject* obj, uint32 max_dist)
 		packet << (uint32)0xFFFFFFFF;
 
 		m_session->SendPacket(&packet);
-          
-	     uint32 slot = obj->GetObjectInfo()->subclass;//get which slot it is in
-          if(!m_equipment[slot])
-               Equip(obj);
 
 		return true;
 	}
@@ -356,11 +358,11 @@ void Player::UpdateView()
 		m_oldposition = pos;	
 }
 
-void Player::Poison( byte poisoned )
+void Player::Poison( byte poisoned, uint16 poisoner )
 {
-    Unit::Poison(poisoned);
+    Unit::Poison(poisoned, poisoner);
     WorldPacket packet;
-    packet.Initialize(MSG_REPORT_OBJECT_POISON);
+    packet.Initialize(MSG_REPORT_POISON);
     packet << GetExtent();
 	packet << m_poison;
 	m_session->SendPacket(&packet);
@@ -389,31 +391,44 @@ void Player::_BuildTotalHealthPacket(WorldPacket &packet)
 	packet << (uint16)m_health;
 	packet << (uint16)m_max_health;
 }
+void Player::_BuildManaPacket(WorldPacket &packet)
+{
+     packet.Initialize(MSG_REPORT_MANA);
+     packet << GetExtent();
+     packet << (uint16)(m_mana);
+}
+void Player::_BuildTotalManaPacket(WorldPacket &packet)
+{
+     packet.Initialize(MSG_REPORT_TOTAL_MANA);
+     packet << GetExtent();
+     packet << (uint16)m_mana;
+     packet << (uint16)m_max_mana;
+}
 void Player::_BuildStatsPacket(WorldPacket &packet)
 {
 	packet.Initialize(MSG_REPORT_STATS);
 	packet << GetExtent();
 	packet << (uint16)m_health;
-	packet << (uint16)0; //mana
-	packet << (uint16)3000; //weight
-	packet << (uint16)4200; //speed
-	packet << (uint16)125; //strength
+	packet << (uint16)m_mana; //mana
+	packet << (uint16)m_weight; //weight
+	packet << (uint16)m_speed; //speed
+	packet << (uint16)m_strength; //strength
 	packet << (uint8)10; //level
 }
 void Player::RunTowards(uint16 x, uint16 y)
 {
 	if(SetActionAnim(ACTION_RUN, 3))
-		MoveToward(x, y, 0.21);
+		MoveToward(x, y, m_speed*.00001);
 }
 void Player::WalkTowards(uint16 x, uint16 y)
 {
 	if(SetActionAnim(ACTION_WALK, 3))
-		MoveToward(x, y, 0.105);
+		MoveToward(x, y, m_speed*.000005);
 }
 void Player::TreadTowards(uint16 x, uint16 y)
 {
      if(SetActionAnim(ACTION_SNEAK, 3))
-          MoveToward(x, y, 0.105);
+          MoveToward(x, y, m_speed*.000005);
 }
 void Player::MoveTowards(uint16 x, uint16 y)
 {
@@ -439,24 +454,39 @@ void Player::Respawn()
 	switch(plrInfo.pclass)
 	{
 	case PLAYER_CLASS_WARRIOR:
-		{
+          {
 					ResetAbilityDelays();
 					m_health = sGameConfig.GetFloatDefault("WarriorMaxHealth",150);
-					uint16 type = sThingBin.Thing.Object.GetIndex("Longsword");
-					if(type)
-						Equip(NewPickup(type));
-		}		
+                         m_mana = sGameConfig.GetFloatDefault("WarriorMaxMana",0);
+					m_speed = sGameConfig.GetFloatDefault("WarriorMaxSpeed",21000);
+                         m_strength = sGameConfig.GetFloatDefault("WarriorMaxStrength",125);
+                         m_weight = 3000;
+
+                         uint16 type = sThingBin.Thing.Object.GetIndex("Longsword");
+                         if(type)
+                              Equip(NewPickup(type));
 					break;
+          }
 
 	case PLAYER_CLASS_CONJURER: 
 					m_health = sGameConfig.GetFloatDefault("ConjurerMaxHealth",100);
+                         m_mana = sGameConfig.GetFloatDefault("ConjurerMaxMana",150);
+					m_speed = sGameConfig.GetFloatDefault("ConjurerMaxSpeed",18500);
+                         m_strength = sGameConfig.GetFloatDefault("ConjurerMaxStrength",125);
+                         m_weight = 3000;
 					break;
 
 	case PLAYER_CLASS_WIZARD: 
 					m_health = sGameConfig.GetFloatDefault("WizardMaxHealth",75);
+                         m_mana = sGameConfig.GetFloatDefault("WizardMaxMana",125);
+					m_speed = sGameConfig.GetFloatDefault("WizardMaxSpeed",17500);
+                         m_strength = sGameConfig.GetFloatDefault("WizardMaxStrength",125);
+                         m_weight = 3000;
 					break;
 	default:break;
 	}
+     m_max_speed = m_speed;
+     m_max_mana = m_mana;
 	m_max_health = m_health;
 
 	// Get a random spawn point and set position to that
@@ -470,6 +500,8 @@ void Player::Respawn()
 	WorldPacket packet;
 	_BuildTotalHealthPacket(packet);
 	ObjectAccessor::Instance().SendPacketToAll(&packet);
+     _BuildTotalManaPacket(packet);
+     ObjectAccessor::Instance().SendPacketToAll(&packet);
 	_BuildStatsPacket(packet);
 	ObjectAccessor::Instance().SendPacketToAll(&packet);
 

@@ -37,3 +37,18 @@ void CollisionResponse::DamageCollideCallback(Flatland::ContactList &contacts)
 
 	player->Damage(damage/3, NULL);
 }
+void CollisionResponse::ManaDrainCollideCallback(Flatland::ContactList &contacts)
+{
+     
+	Object* me, *other;
+	if( !(me = (Object*)contacts.Self()->GetUserPointer()) || !( other = (Object*)contacts.Other()->GetUserPointer()))
+		return;
+	if( other->GetType() != 0x2C9)
+		return;
+	Player* player = (Player*)other;
+
+	float damage = atoi(me->GetObjectInfo()->collide_args[0]);
+	// damagetype = me->GetObjectInfo()->collide_args[1] // convert from string to enum?
+
+	player->ManaDrain(damage/3);
+}

@@ -35,7 +35,7 @@ SpellMgr::~SpellMgr()
 
 }
 
-bool WorldSession::ExecuteSpell(uint8 spellId, bool invert)
+bool WorldSession::ExecuteSpell(uint8 spellId, bool dontinvert)
 {
 	SpellTableMap::const_iterator iter = spellmgr.spellTable.find( spellId );
 	if(iter == spellmgr.spellTable.end())
@@ -46,7 +46,7 @@ bool WorldSession::ExecuteSpell(uint8 spellId, bool invert)
 	}
 	else
 	{
-	    (spellmgr.*iter->second.handler)(GetPlayer(), invert);
+	    (spellmgr.*iter->second.handler)(GetPlayer(), dontinvert);
 	}
 
 	return true;
@@ -87,7 +87,7 @@ void SpellMgr::FillSpellHandlerHashTable()
 	spellTable[ SPELL_CLEANSING_MANA_FLAME ]	= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
 	spellTable[ SPELL_CONFUSE ]				= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
 	spellTable[ SPELL_COUNTERSPELL ]			= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
-	spellTable[ SPELL_CURE_POISON ]			= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_CURE_POISON ]			= SpellHandler( 0, &SpellMgr::HandleSpellCurePoison );
 	spellTable[ SPELL_DEATH ]					= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
 	spellTable[ SPELL_DEATH_RAY ]				= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
 	spellTable[ SPELL_DETECT_MAGIC ]			= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
@@ -103,18 +103,18 @@ void SpellMgr::FillSpellHandlerHashTable()
 	spellTable[ SPELL_FIREBALL ]				= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
 	spellTable[ SPELL_FIREWALK ]				= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
 	spellTable[ SPELL_FIST ]					= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
-	spellTable[ SPELL_FORCE_FIELD ]			= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_FORCE_FIELD ]			= SpellHandler( 0, &SpellMgr::HandleSpellForceField );
 	spellTable[ SPELL_FORCE_OF_NATURE ]		= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
 	spellTable[ SPELL_FREEZE ]					= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
 	spellTable[ SPELL_FUMBLE ]					= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
 	spellTable[ SPELL_GLYPH ]					= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
 	spellTable[ SPELL_GREATER_HEAL ]			= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
-	spellTable[ SPELL_HASTE ]					= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
-	spellTable[ SPELL_INFRAVISION ]			= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_HASTE ]					= SpellHandler( 0, &SpellMgr::HandleSpellHaste );
+	spellTable[ SPELL_INFRAVISION ]			= SpellHandler( 0, &SpellMgr::HandleSpellInfravision );
 	spellTable[ SPELL_INVERSION ]				= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
 	spellTable[ SPELL_INVISIBILITY ]			= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
 	spellTable[ SPELL_INVULNERABILITY ]		= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
-	spellTable[ SPELL_LESSER_HEAL ]			= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_LESSER_HEAL ]			= SpellHandler( 0, &SpellMgr::HandleSpellLesserHeal );
 	spellTable[ SPELL_LIGHT ]					= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
 	spellTable[ SPELL_CHAIN_LIGHTNING ]		= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
 	spellTable[ SPELL_LOCK ]					= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
@@ -134,10 +134,10 @@ void SpellMgr::FillSpellHandlerHashTable()
 	spellTable[ SPELL_PIXIE_SWARM ]			= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
 	spellTable[ SPELL_PLASMA ]					= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
 	spellTable[ SPELL_POISON ]					= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
-	spellTable[ SPELL_PROTECTION_FROM_ELECTRICITY ]	= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
-	spellTable[ SPELL_PROTECTION_FROM_FIRE ]	= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_PROTECTION_FROM_ELECTRICITY ]	= SpellHandler( 0, &SpellMgr::HandleSpellProtectFromElectricity );
+	spellTable[ SPELL_PROTECTION_FROM_FIRE ]	= SpellHandler( 0, &SpellMgr::HandleSpellProtectFromFire );
 	spellTable[ SPELL_PROTECTION_FROM_MAGIC ]	= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
-	spellTable[ SPELL_PROTECTION_FROM_POISON ]	= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_PROTECTION_FROM_POISON ]	= SpellHandler( 0, &SpellMgr::HandleSpellProtectFromPoison );
 	spellTable[ SPELL_PULL ]					= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
 	spellTable[ SPELL_PUSH ]					= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
 	spellTable[ SPELL_OVAL_SHIELD ]			= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
@@ -203,7 +203,7 @@ void SpellMgr::FillSpellHandlerHashTable()
 	spellTable[ SPELL_TELEKINESIS ]			= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
 	spellTable[ SPELL_TOXIC_CLOUD ]			= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
 	spellTable[ SPELL_TRIGGER_GLYPH ]			= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
-	spellTable[ SPELL_VAMPIRISM ]				= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_VAMPIRISM ]				= SpellHandler( 0, &SpellMgr::HandleSpellVampirism );
 	spellTable[ SPELL_VILLAIN ]				= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
 	spellTable[ SPELL_WALL ]					= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
 	spellTable[ SPELL_WINK ]					= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
@@ -221,9 +221,15 @@ void SpellMgr::FillAbilityHandlerHashTable()
 	abilityTable[ ABILITY_TREAD_LIGHTLY ]		= AbilityHandler( &SpellMgr::HandleTreadLightlyAbility );
 	abilityTable[ ABILITY_EYE_OF_THE_WOLF ]	= AbilityHandler( &SpellMgr::HandleEyeOfWolfAbility );
 }
+/***********************************************
+*    Abilities    Abilities    Abilities    Abilities
+*    Abilities    Abilities    Abilities    Abilities
+*    Abilities    Abilities    Abilities    Abilities
+*    Abilities    Abilities    Abilities    Abilities
+*    Abilities    Abilities    Abilities    Abilities
+***********************************************/
 void SpellMgr::HandleBerserkerChargeAbility(Player *plr)
 {
-     plr->UnsetEnchant(ENCHANT_SNEAK);
 	GridPair cursor = plr->GetSession()->GetCursor();
      int duration = sGameConfig.GetFloatDefault("BerserkerChargeDuration",90);
 	plr->SetActionAnim(ACTION_BERSERKER_CHARGE, duration); //frames is from gamedata.bin
@@ -247,7 +253,132 @@ void SpellMgr::HandleEyeOfWolfAbility(Player *plr)
 	int delay = sGameConfig.GetFloatDefault("EyeOfTheWolfDelay",600);
      plr->SetAbilityDelay(ABILITY_EYE_OF_THE_WOLF, delay);
 }
+/***********************************************
+*    Spells    Spells    Spells    Spells
+*    Spells    Spells    Spells    Spells
+*    Spells    Spells    Spells    Spells
+*    Spells    Spells    Spells    Spells
+************************************************/
+bool SpellMgr::HasEnoughMana(Player *plr, int cost)
+{
+      if(plr->GetMana()>=cost)
+      {
+           return true;
+      }
+      //code to say "Don't have enough mana for that spell. don't forget the noise
+      return false;
+}
+void SpellMgr::HandleSpellCurePoison(Player *plr, bool dontinvert)
+{
+     int cost = 30;
+     if(!HasEnoughMana(plr,cost))
+          return;
+     if(dontinvert)
+     {
+          plr->Poison(0,0);
+     }
+}
+void SpellMgr::HandleSpellForceField(Player *plr, bool dontinvert)
+{
+     int cost = 80;
+     if(!HasEnoughMana(plr,cost))
+          return;
+     if(dontinvert)
+     {
+          int duration = 1200;
+          plr->SetEnchant(ENCHANT_SHIELD,duration);
+          plr->ManaDrain(cost);
+     }
+}
 
+void SpellMgr::HandleSpellHaste(Player *plr, bool dontinvert)
+{
+     //will still need to handle hasting other players.
+     //for now, too bad so sad.
+     int cost = 10;
+     if(!HasEnoughMana(plr,cost))
+          return;
+     if(dontinvert)
+     {
+          int duration = sGameConfig.GetFloatDefault("HasteEnchantDuration",600);
+          plr->SetEnchant(ENCHANT_HASTED,duration);
+          plr->ManaDrain(cost);
+          //25 for spell power 3. power of haste is loaded in thing.bin
+          //Where can mana cost be found? (other than the spellbook)
+     }
+}
+void SpellMgr::HandleSpellInfravision(Player *plr, bool dontinvert)
+{
+     int cost = 30;
+     if(!HasEnoughMana(plr,cost))
+          return;
+     if(dontinvert)
+     {
+          int duration = sGameConfig.GetFloatDefault("InfravisionEnchantDuration",900);
+          plr->SetEnchant(ENCHANT_INFRAVISION,duration);
+          plr->ManaDrain(cost);
+     }
+}
+void SpellMgr::HandleSpellLesserHeal(Player *plr, bool dontinvert)
+{
+     int cost = 30;
+     if(!HasEnoughMana(plr,cost))
+          return;
+     if(dontinvert)
+     {
+          sGameConfig.GetFloatDefault("LesserHealAmount", 15);
+          plr->Heal(amount);
+     }
+}
+void SpellMgr::HandleSpellProtectFromFire(Player *plr, bool dontinvert)
+{
+     int cost = 30;
+     if(!HasEnoughMana(plr,cost))
+          return;
+     if(dontinvert)
+     {
+          int duration = sGameConfig.GetFloatDefault("ProtectFireEnchantDuration",1800);
+          plr->SetEnchant(ENCHANT_PROTECT_FROM_FIRE,duration);
+          plr->ManaDrain(cost);
+     }
+}
+void SpellMgr::HandleSpellProtectFromElectricity(Player *plr, bool dontinvert)
+{
+     int cost = 30;
+     if(!HasEnoughMana(plr,cost))
+          return;
+     if(dontinvert)
+     {
+          int duration = sGameConfig.GetFloatDefault("ProtectElectricityEnchantDuration",1800);
+          plr->SetEnchant(ENCHANT_PROTECT_FROM_ELECTRICITY,duration);
+          plr->ManaDrain(cost);
+     }
+}
+void SpellMgr::HandleSpellProtectFromPoison(Player *plr, bool dontinvert)
+{
+     int cost = 30;
+     if(!HasEnoughMana(plr,cost))
+          return;
+     if(dontinvert)
+     {
+          int duration = sGameConfig.GetFloatDefault("ProtectPoisonEnchantDuration",1800);
+          plr->SetEnchant(ENCHANT_PROTECT_FROM_POISON,duration);
+          plr->ManaDrain(cost);
+     }
+}
+
+void SpellMgr::HandleSpellVampirism(Player *plr, bool dontinvert)
+{
+     int cost = 20;
+     if(!HasEnoughMana(plr,cost))
+          return;
+     if(dontinvert)
+     {
+          int duration = sGameConfig.GetFloatDefault("VampirismDuration",900);
+          plr->SetEnchant(ENCHANT_VAMPIRISM,duration);
+          plr->ManaDrain(cost);
+     }
+}
 const char *g_spellNames[] =
 {
 	"SPELL_INVALID",

@@ -48,6 +48,7 @@ void Unit::InitRespawn()
 	m_action_time = 0;
 	m_angle = 0;
      m_poison = 0;
+     m_poisoncycle = 0;
 	
 	memset(m_equipment, 0, SLOT_SIZE * sizeof(Object*));
 	ResetEnchants();
@@ -77,7 +78,7 @@ void Unit::Update( uint32 p_time )
 		m_action = ACTION_DEAD;
 		m_health = 0;
 	}
-	else if(m_action != ACTION_IDLE || m_action != ACTION_RAISE_SHIELD)
+	else if(m_action || m_action != ACTION_RAISE_SHIELD)
 	{
 		if(p_time > m_action_time)
 		{
@@ -96,10 +97,26 @@ void Unit::Update( uint32 p_time )
 			m_action_time -= p_time;
 	}
 
-     if(m_poison == 1)
+     //poison damage
+     if(m_poisoncycle != 30)
+          m_poisoncycle++;
+     else if(m_poison)
      {
-          Damage(.03, 0);
+          Damage(1, 0);
+          m_poisoncycle = 0;
      }
+     if(HasEnchant(ENCHANT_PROTECT_FROM_POISON))
+          m_poisoncycle -= .5; //gamedata.bin
+
+     //Mana regeneration. About 1 mana per 2 seconds
+     if(m_max_mana)
+          ManaDrain(-.0167); // 1 divided by 60
+
+     //Speed
+     if(HasEnchant(ENCHANT_HASTED))
+          m_speed = m_max_speed + ConvertToNoXSpeed(25);
+     if(HasEnchant(ENCHANT_SLOWED))
+          m_speed = m_max_speed + ConvertToNoXSpeed(-30);//just a guess.
 
 	//Update Enchants
 	for(int i = 0; i < ENCHANT_SIZE; i++)
@@ -135,9 +152,12 @@ void Unit::Update( uint32 p_time )
 
 }
 
-void Unit::Poison( byte poisoned )
+void Unit::Poison( byte poisoned, uint16 poisoner )
 {
      m_poison = poisoned;
+     if(m_poison!=0)
+          m_poisoner = poisoner;
+     //else - just curing poison so do nothing
 }
 void Unit::MoveToward(uint16 _x, uint16 _y, float speed)
 {

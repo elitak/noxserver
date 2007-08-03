@@ -180,7 +180,7 @@ void Object::Die()
 	DropAll();
 	m_health = 0;
 }
-void Object::DropAll()
+inline void Object::DropAll()
 {
 	GridPair pos = GetPosition();
 	for(InventoryType::iterator iter = m_inventory.begin(); iter != m_inventory.end();)
@@ -194,6 +194,14 @@ void Object::Damage(float damage, Object* cause)
 {
 	if(!IsDead())
 		m_delta_health -= damage;
+}
+void Object::ManaDrain(float damage)
+{
+     m_mana -= damage;
+     if(m_mana<0)
+          m_mana = 0;
+     else if(m_mana>m_max_mana)
+          m_mana = m_max_mana;
 }
 void Object::Heal(float heal)
 {
@@ -308,7 +316,7 @@ void WorldObject::ConsumeConfuseUse(Player *plr)
 }
 void WorldObject::MushroomUse(Player *plr)
 {
-     plr->Poison( 0 );
+     plr->Poison( 0, 0 );
      plr->SetEnchant(ENCHANT_CONFUSED,90);
      plr->RemoveFromInventory(this, GridPair(5880, 5880));
      objacc.AddObjectToRemoveList(this);

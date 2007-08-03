@@ -138,8 +138,10 @@ class MANGOS_DLL_SPEC Object
 
 		virtual void Damage( float damage, Object* cause );
 		virtual void Heal( float heal );
+		virtual void ManaDrain( float damage );
 		virtual bool IsDead() { return m_health <= 0; }
 		virtual int16 GetHealth() { return m_health; }
+          virtual int16 GetMana() { return m_mana; }
 		virtual void DropAll();
 
 		/// Collisions
@@ -166,6 +168,8 @@ class MANGOS_DLL_SPEC Object
 		float m_health;
 		float m_delta_health;
 		float m_combined_health;
+          float m_max_mana;
+          float m_mana;
 
 		/// Update Handlers
 		uint32 m_update_timer;

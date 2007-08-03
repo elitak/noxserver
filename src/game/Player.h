@@ -150,7 +150,7 @@ class MANGOS_DLL_SPEC Player : public Unit
 		void Respawn();
 
 		void SetEnchant(UnitEnchantType enchant, int16 frames = 0);
-        virtual void Poison( byte poisoned );
+          virtual void Poison( byte poisoned, uint16 poisoner );
 		virtual void _BuildHealthPacket(WorldPacket& packet);
 
 		static void PlayerCollideCallback(Flatland::ContactList &contacts);
@@ -170,6 +170,8 @@ class MANGOS_DLL_SPEC Player : public Unit
 		virtual void _BuildClientStatusPacket(WorldPacket& packet);
 		virtual void _BuildMyHealthPacket(WorldPacket& packet);
 		virtual void _BuildTotalHealthPacket(WorldPacket& packet);
+          virtual void _BuildManaPacket(WorldPacket& packet);
+          virtual void _BuildTotalManaPacket(WorldPacket& packet);
 		virtual void _BuildStatsPacket(WorldPacket& packet);
 		virtual void _BuildResetAbilityPacket(WorldPacket& packet, uint8 ability);
 		virtual void _BuildAbilityStatePacket(WorldPacket& packet, uint8 ability);

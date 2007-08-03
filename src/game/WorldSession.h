@@ -113,15 +113,15 @@ class MANGOS_DLL_SPEC WorldSession
     protected:
 
 		// Spells
-		bool ExecuteSpell(const char* name, bool invert)
+		bool ExecuteSpell(const char* name, bool dontinvert)
 		{
 			uint8 id = LookupId(name, g_spellNames);
 			if(id == INVALID_ID)
 				return false;
 			else
-				return ExecuteSpell(id, invert);
+				return ExecuteSpell(id, dontinvert);
 		}
-		bool ExecuteSpell(uint8 spellId, bool invert);
+		bool ExecuteSpell(uint8 spellId, bool dontinvert);
 		// Abilities
 		bool ExecuteAbility(const char* name)
 		{
