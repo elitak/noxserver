@@ -32,6 +32,10 @@ using namespace std;
    {
 	   unsigned char ValueLen;
 	   char Value[255]; // Changed to 255 to save memory
+	   Property()
+	   {
+			memset((void*)this,0x00,sizeof(*this));
+	   }
    };
 
 //
