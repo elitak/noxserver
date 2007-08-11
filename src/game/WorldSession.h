@@ -191,6 +191,7 @@ class MANGOS_DLL_SPEC WorldSession
 		void _SendClientStatusOpcode();
 		void _SendMapSendStart();
 		void _SendMapSendPacket();
+        void _SendAudioPlayerEvent( uint16 sound, uint8 unk1 = 100, uint8 unk2 = 0 );
 
 		void _SendPacket(WorldPacket* packet);
 

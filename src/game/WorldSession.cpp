@@ -1204,3 +1204,10 @@ void WorldSession::_SendMapSendPacket()
 	if((m_playerDownloading - 1) * PACKET_SIZE > sWorld.GetMap()->GetNxzSize())
 		m_playerDownloading = 0;
 }
+void WorldSession::_SendAudioPlayerEvent( uint16 sound, uint8 unk1, uint8 unk2 )
+{
+   	WorldPacket packet(MSG_AUDIO_PLAYER_EVENT, 0x00, _client, 3);
+	packet << (uint8)unk2;
+    packet << (uint16) ( (unk1 << 0x9) | (sound & 0x3FF) ) ;
+	SendPacket(&packet);
+}
