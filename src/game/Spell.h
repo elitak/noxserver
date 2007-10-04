@@ -28,10 +28,10 @@ class SpellMgr;
 struct SpellHandler
 {
     SpellHandler() : classFlag(0), handler(NULL) {};
-    SpellHandler( uint8 _classFlag, void (SpellMgr::*_handler)(Player* plr, bool invert) ) : classFlag(_classFlag), handler(_handler) {};
+    SpellHandler( uint8 _classFlag, void (SpellMgr::*_handler)(Player* caster, Player* target) ) : classFlag(_classFlag), handler(_handler) {};
 
 	uint8 classFlag;
-    void (SpellMgr::*handler)(Player* plr, bool dontinvert);
+    void (SpellMgr::*handler)(Player* caster, Player* target);
 };
 
 typedef HM_NAMESPACE::hash_map< uint8 , SpellHandler > SpellTableMap;
@@ -205,7 +205,7 @@ public:
 	SpellMgr();
 	~SpellMgr();
 
-	void HandleSpellUnknown(Player* plr, bool dontinvert) {};
+	void HandleSpellUnknown(Player* caster, Player* target) {};
 	void HandleAbilityUnknown(Player* plr) {};
 	void HandleBerserkerChargeAbility(Player* plr);
      void HandleEyeOfWolfAbility(Player* plr);
@@ -213,22 +213,37 @@ public:
 
      void HandleSpellGiveMana(Player* plr, int cost);
      bool HasEnoughMana(Player* plr, int cost);
-     void HandleSpellCurePoison(Player* plr, bool dontinvert);
-     void HandleSpellForceField(Player* plr, bool dontinvert);
-     void HandleSpellHaste(Player* plr, bool dontinvert);
-     void HandleSpellInfravision(Player* plr, bool dontinvert);
-     void HandleSpellLesserHeal(Player* plr, bool dontinvert);
-     void HandleSpellProtectFromFire(Player* plr, bool dontinvert);
-     void HandleSpellProtectFromElectricity(Player* plr, bool dontinvert);
-     void HandleSpellProtectFromPoison(Player* plr, bool dontinvert);
-     void HandleSpellShock(Player* plr, bool dontinvert);
-     void HandleSpellTeleportToTarget(Player* plr, bool dontinvert);
-     void HandleSpellVampirism(Player* plr, bool dontinvert);
+     void HandleSpellCurePoison(Player* caster, Player* target);
+     void HandleSpellForceField(Player* caster, Player* target);
+     void HandleSpellHaste(Player* caster, Player* target);
+     void HandleSpellInfravision(Player* caster, Player* target);
+     void HandleSpellLesserHeal(Player* caster, Player* target);
+     void HandleSpellProtectFromFire(Player* caster, Player* target);
+     void HandleSpellProtectFromElectricity(Player* caster, Player* target);
+     void HandleSpellProtectFromPoison(Player* caster, Player* target);
+     void HandleSpellVampirism(Player* caster, Player* target);
+     void HandleSpellShock(Player* caster, Player* target);
+     void HandleSpellTeleportToTarget(Player* caster, Player* target);
+	void DoSpellEffect(uint8 spellId, Player* caster, Player* target);
+	void DoSpellProjectile(uint8 spellId, Player* caster, bool friendly);
+
 	SpellTableMap spellTable;
 	AbilityTableMap abilityTable;
 private:
 	void FillSpellHandlerHashTable();
 	void FillAbilityHandlerHashTable();
+};
+
+class Magic : public WorldObject
+{
+public:
+	Magic(uint8 spell, Player* owner, bool friendly);
+	void Collide(Player* player);
+	void Update(uint32 time);
+private:
+	uint8 m_spell;
+	Player* m_owner;
+	bool m_friendly;
 };
 
 #define spellmgr MaNGOS::Singleton<SpellMgr>::Instance()

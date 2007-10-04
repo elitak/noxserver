@@ -1,20 +1,59 @@
 /* 
- * Copyright (C) 2007 NoxForum.net <http://www.noxforum.net/>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- */
+* Copyright (C) 2007 NoxForum.net <http://www.noxforum.net/>
+*00 05 27 72 36 A4 94 DE 05 26 12 50 00    00 30 7B 06 F3 12 20 06 00 00 00       39 A5 81 09 // before try spell
+00 05 27 73 36 A4 94 DE 05 26 12 50 00    00 30 80 06 ED 12 20 06 00 00 00       39 A5 81 09 
+00 05 27 74 36 A4 94 DE 05 26 12 D0 00 15 00 30 85 06 E7 12 20 06 00 00 00 70 33 39 A5 81 08 A6 14 13 71 // spell start 33
+00 05 27 76 36 A4 94 DE 05 28 12 D0 00 15 00 30 8F 06 DA 12 20 06 00 00 00       39 A5 81 07
+00 05 27 77 36 A4 94 DE 05 28 12 D0 01 15 00 30 94 06 D3 12 20 06 00 FF 98 12 C9 02 92 0A 57 09 20 06 00 00 00 D7 94 08 DA 00 39 A5 81 07 5E 98 12 00
+00 05 27 78 36 A4 94 DE 05 28 12 D0 01 15 00 30 99 06 CD 12 20 06 00 00 00       39 A5 81 06 
+00 05 27 79 36 A4 94 DE 05 28 12 D0 01 15 00 30 9E 06 C6 12 20 06 00 00 00       39 A5 81 06 
+00 05 27 7E 36 A4 94 DE 05 28 12 D0 03 15 00 30 BB 06 A9 12 40 06 00 00 00       39 A5 81 03 
+00 05 27 7F 36 A4 94 DE 05 28 12 D0 03 15 00 30 BD 06 A8 12 40 06 00 FF 0B 12 C9 02 B8 0B 5F 0E 10 06 00 00 00                39 A5 81 03 5E 0B 12 00 AA CC EC 00 07 5A 0B 12 00 20 80 00 // enchantment
+00 05 27 80 36 A4 94 DE 05 28 12 D0 04 15 00 30 C0 06 A8 12 40 06 00 00 00       39 A5 81 02 A6 1B 13 71 
+00 05 27 81 36 A4 94 DE 05 28 12 D0 04 15 00 30 C4 06 A6 12 40 06 00 00 00       39 A5 81 02 5E 30 0D 0C 
+00 05 27 82 36 A4 94 DE 05 28 12 30 04    00 30 CA 06 A4 12 40 06 00 00 00       39 A5 81 01 5E 30 0D 0A 
+// ??
+00 05 27 8C 36 A4 94 B0 05 0C 12 00 06    00 30 DE 06 9F 12 C0 00 28 00 00 00 | A9 01 33 00 00 00 | A7 00 81 C4 | A7 00 81 C4 | AA | 45 94 08 3D 00 | CC ED 00 07 | 5A 94 08 00 00 80 04 // enchantment // inform spell cast success // report mana
+
+
+// duration spell example
+00 05 27 0B 60 A4 94 A2 0B AE 07 70 00 00 00 00 AA CC 83 0B 07 //9E 07 00 37 02 F7 03 //
+// couple packets later
+00 05 27 0E 60 A4 94 A2 0B AE 07 70 00 00 00 00 AA CC 88 0B 07 //9E 0E 00 37 02 F7 03 //
+// start again
+00 05 27 34 60 A4 94 A2 0B AE 07 50 00 00 00 00 AA CC 8D 0B 07 //9E 07 00 30 0D 7F 04 //
+//
+00 05 27 5C 60 A4 94 A2 0B AE 07 30 00 00 00 00 A9 0E 37 02 00 00 30 0D 02 00 02 AA CC 90 0B 07 //9E 0E 00 30 0D 7F 04// CC 91 0B 0B 4E 37 02 0A 00 
+
+
+//blink
+00 05 27 61 36 A4 94 48 0B 12 0B 50 06 00 02 52 0B B9 0B 40 00 00                               98 F1 08 24 0B 20 06 00 00 00  //before
+00 05 27 62 36 A4 94 42 0B 14 0B 50 06 00 02 52 0B B9 0B 40 00 00 FF 76 0E D4 03 D0 0B FB 0C 00 98 F5 08 20 0B 20 04 00 00 00 
+00 05 27 63 36 A4 94 3C 0B 18 0B 50 06 00 02 52 0B B9 0B 40 00 00                               98 F8 08 1D 0B 20 06 00 00 00 
+00 05 27 64 36 A4 94 38 0B 1A 0B 50 04 00 02 52 0B B9 0B 40 00 00 FF FF 0A 77 04 9F 0A C9 0C 00 98 FC 08 19 0B 20 06 00 00 00 | 70 04 // spell start 04
+00 05 27 65 36 A4 94 34 0B 1C 0B 50 06 00 02 52 0B B9 0B 40 00 00                               98 01 09 14 0B 20 06 00 00 00 | A7 00 0D C9 
+00 05 27 66 36 A4 94 30 0B 1E 0B 50 06 00 02 52 0B B9 0B 40 00 00                               98 05 09 0F 0B 20 06 00 00 00 | 39 C8 80 0F 
+00 05 27 67 36 A4 94 2A 0B 22 0B 50 06 00 02 52 0B B9 0B 40 00 00 FF 57 0F 93 04 B0 0A B2 0C 00 98 09 09 0A 0B 20 06 00 FF 17 0C C9 02 04 02 93 12 60 00 00 00 00 | D7 EA 0E 27 00 39 C8 80 0F 5E 17 0C 00 
+00 05 27 68 36 A4 94 24 0B 24 0B 50 06 00 02 52 0B B9 0B 40 00 00                               98 0E 09 05 0B 20 06 00 00 00                                     |                39 C8 80 0E A7 00 42 C9 
+00 05 27 69 36 A4 94 1E 0B 28 0B 50 06 00 02 52 0B B9 0B 40 00 00                               98 13 09 00 0B 20 06 00 00 00                                     |                39 C8 80 0E 
+00 05 27 6A 36 A4 94 18 0B 2A 0B 50 06 00 02 52 0B B9 0B 40 00 00                               98 17 09 FB 0A 20 06 00 00 00 39 C8 80 0D 
+00 05 27 6B 36 A4 94 12 0B 2E 0B 50 00 00 02 52 0B B9 0B 40 00 00                               98 1C 09 F5 0A 20 06 00 00 00 5E 94 08 00 39 C8 80 0D 
+00 05 27 6C 36 A4 94 0E 0B 30 0B 50 00 00 FF 02 00 C9 02 52 0B B9 0B 40 00 00 98 20 09 F0 0A 20 06 00 00 00 39 C8 80 0C 
+00 05 27 6D 36 A4 94 E2 05 26 12 50 00 00 00 00 A9 01 04 00 00 00                                                             89 0B 0B 32 0B | 89 0B 0B 32 0B | 89 E2 05 26 12 | A7 00 07 C8 | AA CC E4 00 05 | EA 6D 36 96 01 | DF 04 00 00 00 0F | 45 94 08 8C 00 
+* This program is free software; you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation; either version 2 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the Free Software
+* Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
 
 
 #include "Policies/SingletonImp.h"
@@ -37,19 +76,38 @@ SpellMgr::~SpellMgr()
 
 bool WorldSession::ExecuteSpell(uint8 spellId, bool dontinvert)
 {
+
+	if(spellmgr.HasEnoughMana(GetPlayer(), 30)) // change this to represent the actual mana for spell
+	{
+		if(dontinvert) // execute spell now, also check if the spell should be on others only, maybe change this to an xor
+			spellmgr.DoSpellEffect(spellId, GetPlayer(), NULL);
+		else
+			spellmgr.DoSpellProjectile(spellId, GetPlayer(), false); // last argument should be whether to target friendlies
+		GetPlayer()->ManaDrain(30); // again replace with actual mana
+	}
+	else
+		return false;
+
+	return true;
+}
+
+void SpellMgr::DoSpellEffect(uint8 spellId, Player* caster, Player* target)
+{
 	SpellTableMap::const_iterator iter = spellmgr.spellTable.find( spellId );
 	if(iter == spellmgr.spellTable.end())
 	{
 		sLog.outError( "SESSION: received unhandled spell (0x%.2X)",
 			spellId);
-		return false;
 	}
 	else
 	{
-	    (spellmgr.*iter->second.handler)(GetPlayer(), dontinvert);
+		(spellmgr.*iter->second.handler)(caster, target);
 	}
+}
 
-	return true;
+void SpellMgr::DoSpellProjectile(uint8 spellId, Player* caster, bool friendly)
+{
+	Magic* projectile = new Magic(spellId, caster, friendly);
 }
 
 bool WorldSession::ExecuteAbility(uint8 abilityId)
@@ -63,7 +121,7 @@ bool WorldSession::ExecuteAbility(uint8 abilityId)
 	}
 	else
 	{
-	    (spellmgr.*iter->second.handler)(GetPlayer());
+		(spellmgr.*iter->second.handler)(GetPlayer());
 	}
 
 	return true;
@@ -231,27 +289,27 @@ void SpellMgr::FillAbilityHandlerHashTable()
 void SpellMgr::HandleBerserkerChargeAbility(Player *plr)
 {
 	GridPair cursor = plr->GetSession()->GetCursor();
-     int duration = sGameConfig.GetFloatDefault("BerserkerChargeDuration",90);
+	int duration = sGameConfig.GetFloatDefault("BerserkerChargeDuration",90);
 	plr->SetActionAnim(ACTION_BERSERKER_CHARGE, duration); //frames is from gamedata.bin
 	plr->MoveToward(cursor.x_coord, cursor.y_coord, 0.42);
-     int delay = sGameConfig.GetFloatDefault("BerserkerChargeDelay",300);
+	int delay = sGameConfig.GetFloatDefault("BerserkerChargeDelay",300);
 	plr->SetAbilityDelay(ABILITY_BERSERKER_CHARGE, delay);	
-	
+
 }
 void SpellMgr::HandleTreadLightlyAbility(Player *plr)
 {
-     int duration = sGameConfig.GetFloatDefault("TreadLightlyDuration",99999);
-     plr->SetEnchant(ENCHANT_SNEAK,duration);
-     int delay = sGameConfig.GetFloatDefault("TreadLightlyDelay",30);
-     plr->SetAbilityDelay(ABILITY_TREAD_LIGHTLY,delay);
+	int duration = sGameConfig.GetFloatDefault("TreadLightlyDuration",99999);
+	plr->SetEnchant(ENCHANT_SNEAK,duration);
+	int delay = sGameConfig.GetFloatDefault("TreadLightlyDelay",30);
+	plr->SetAbilityDelay(ABILITY_TREAD_LIGHTLY,delay);
 }
 
 void SpellMgr::HandleEyeOfWolfAbility(Player *plr)
 {
-     int duration = sGameConfig.GetFloatDefault("EyeOfTheWolfDuration",300);
-     plr->SetEnchant(ENCHANT_INFRAVISION,duration);
+	int duration = sGameConfig.GetFloatDefault("EyeOfTheWolfDuration",300);
+	plr->SetEnchant(ENCHANT_INFRAVISION,duration);
 	int delay = sGameConfig.GetFloatDefault("EyeOfTheWolfDelay",600);
-     plr->SetAbilityDelay(ABILITY_EYE_OF_THE_WOLF, delay);
+	plr->SetAbilityDelay(ABILITY_EYE_OF_THE_WOLF, delay);
 }
 /***********************************************
 *    Spells    Spells    Spells    Spells
@@ -262,153 +320,120 @@ void SpellMgr::HandleEyeOfWolfAbility(Player *plr)
 
 bool SpellMgr::HasEnoughMana(Player *plr, int cost)
 {
-      if(plr->GetMana()>=cost)
-      {
-           return true;
-      }
-      //code to say "Don't have enough mana for that spell. don't forget the noise
-      return false;
+	if(plr->GetMana()>=cost)
+	{
+		return true;
+	}
+	//code to say "Don't have enough mana for that spell. don't forget the noise
+	return false;
 }
-void SpellMgr::HandleSpellCurePoison(Player *plr, bool dontinvert)
+void SpellMgr::HandleSpellCurePoison(Player* caster, Player* target)
 {
-     int cost = 30;
-     if(!HasEnoughMana(plr,cost))
-          return;
-     if(dontinvert)
-     {
-          plr->Poison(0,0);
-     }
+	if(target == NULL)
+		target = caster;
+	target->Poison(0,0);
 }
-void SpellMgr::HandleSpellForceField(Player *plr, bool dontinvert)
+void SpellMgr::HandleSpellForceField(Player* caster, Player* target)
 {
-     int cost = 80;
-     if(!HasEnoughMana(plr,cost))
-          return;
-     if(dontinvert)
-     {
-          int duration = 1200;
-          plr->SetEnchant(ENCHANT_SHIELD,duration);
-          plr->ManaDrain(cost);
-     }
+	if(target == NULL)
+		target = caster;
+	int duration = 1200;
+	target->SetEnchant(ENCHANT_SHIELD,duration);
 }
 
-void SpellMgr::HandleSpellHaste(Player *plr, bool dontinvert)
+void SpellMgr::HandleSpellHaste(Player* caster, Player* target)
 {
-     //will still need to handle hasting other players.
-     //for now, too bad so sad.
-     int cost = 10;
-     if(!HasEnoughMana(plr,cost))
-          return;
-     if(dontinvert)
-     {
-          int duration = sGameConfig.GetFloatDefault("HasteEnchantDuration",600);
-          plr->SetEnchant(ENCHANT_HASTED,duration);
-          plr->ManaDrain(cost);
-          //25 for spell power 3. power of haste is loaded in thing.bin
-          //Where can mana cost be found? (other than the spellbook)
-     }
+	if(target == NULL)
+		target = caster;
+	int duration = sGameConfig.GetFloatDefault("HasteEnchantDuration",600);
+	target->SetEnchant(ENCHANT_HASTED,duration);
+
+	//25 for spell power 3. power of haste is loaded in thing.bin
+	//Where can mana cost be found? (other than the spellbook)
 }
-void SpellMgr::HandleSpellInfravision(Player *plr, bool dontinvert)
+void SpellMgr::HandleSpellInfravision(Player* caster, Player* target)
 {
-     int cost = 30;
-     if(!HasEnoughMana(plr,cost))
-          return;
-     if(dontinvert)
-     {
-          int duration = sGameConfig.GetFloatDefault("InfravisionEnchantDuration",900);
-          plr->SetEnchant(ENCHANT_INFRAVISION,duration);
-          plr->ManaDrain(cost);
-     }
+	if(target == NULL)
+		target = caster;
+	int duration = sGameConfig.GetFloatDefault("InfravisionEnchantDuration",900);
+	target->SetEnchant(ENCHANT_INFRAVISION,duration);
+
+
 }
-void SpellMgr::HandleSpellLesserHeal(Player *plr, bool dontinvert)
+void SpellMgr::HandleSpellLesserHeal(Player* caster, Player* target)
 {
-     int cost = 30;
-     if(!HasEnoughMana(plr,cost))
-          return;
-     if(dontinvert)
-     {
-          int amount = sGameConfig.GetFloatDefault("LesserHealAmount", 15);
-          plr->Heal(amount);
-          plr->ManaDrain(cost);
-     }
+	if(target == NULL)
+		target = caster;
+	float amount = sGameConfig.GetFloatDefault("LesserHealAmount", 15);
+	target->Heal(amount);
 }
-void SpellMgr::HandleSpellProtectFromFire(Player *plr, bool dontinvert)
+void SpellMgr::HandleSpellProtectFromFire(Player* caster, Player* target)
 {
-     int cost = 30;
-     if(!HasEnoughMana(plr,cost))
-          return;
-     if(dontinvert)
-     {
-          int duration = sGameConfig.GetFloatDefault("ProtectFireEnchantDuration",1800);
-          plr->SetEnchant(ENCHANT_PROTECT_FROM_FIRE,duration);
-          plr->ManaDrain(cost);
-     }
+	if(target == NULL)
+		target = caster;
+	int duration = sGameConfig.GetFloatDefault("ProtectFireEnchantDuration",1800);
+	target->SetEnchant(ENCHANT_PROTECT_FROM_FIRE,duration);
+
 }
-void SpellMgr::HandleSpellProtectFromElectricity(Player *plr, bool dontinvert)
+void SpellMgr::HandleSpellProtectFromElectricity(Player* caster, Player* target)
 {
-     int cost = 30;
-     if(!HasEnoughMana(plr,cost))
-          return;
-     if(dontinvert)
-     {
-          int duration = sGameConfig.GetFloatDefault("ProtectElectricityEnchantDuration",1800);
-          plr->SetEnchant(ENCHANT_PROTECT_FROM_ELECTRICITY,duration);
-          plr->ManaDrain(cost);
-     }
+	if(target == NULL)
+		target = caster;
+	int duration = sGameConfig.GetFloatDefault("ProtectElectricityEnchantDuration",1800);
+	target->SetEnchant(ENCHANT_PROTECT_FROM_ELECTRICITY,duration);
+
+
 }
-void SpellMgr::HandleSpellProtectFromPoison(Player *plr, bool dontinvert)
+void SpellMgr::HandleSpellProtectFromPoison(Player* caster, Player* target)
 {
-     int cost = 30;
-     if(!HasEnoughMana(plr,cost))
-          return;
-     if(dontinvert)
-     {
-          int duration = sGameConfig.GetFloatDefault("ProtectPoisonEnchantDuration",1800);
-          plr->SetEnchant(ENCHANT_PROTECT_FROM_POISON,duration);
-          plr->ManaDrain(cost);
-          plr->GetSession()->_SendAudioPlayerEvent(SOUND_PROTECTIONFROMELECTRICITYEFFECT);
-     }
+	if(target == NULL)
+		target = caster;
+	int duration = sGameConfig.GetFloatDefault("ProtectPoisonEnchantDuration",1800);
+	target->SetEnchant(ENCHANT_PROTECT_FROM_POISON,duration);
+    target->GetSession()->_SendAudioPlayerEvent(SOUND_PROTECTIONFROMELECTRICITYEFFECT);
 }
-void SpellMgr::HandleSpellShock(Player* plr, bool dontinvert)
+void SpellMgr::HandleSpellShock(Player* caster, Player* target)
 {
-     int cost = 30;
-     if(!HasEnoughMana(plr,cost))
-          return;
-     if(dontinvert)
-     {
-          int duration = sGameConfig.GetFloatDefault("ShockPoisonEnchantDuration",1800);
-          plr->SetEnchant(ENCHANT_SHOCK,duration);
-          plr->ManaDrain(cost);
-     }
+	if(target == NULL)
+		target = caster;
+	int duration = sGameConfig.GetFloatDefault("ShockPoisonEnchantDuration",1800);
+	target->SetEnchant(ENCHANT_SHOCK,duration);
 }
 
-void SpellMgr::HandleSpellTeleportToTarget(Player* plr, bool dontinvert)
+void SpellMgr::HandleSpellTeleportToTarget(Player* caster, Player* target)
 {
-     int cost = 20;
-     if(!HasEnoughMana(plr,cost))
-          return;
-     if(dontinvert)
-     {
-          GridPair mouse = plr->GetSession()->GetCursor();
-          if(plr->CanSeePoint((uint16)(mouse.x_coord),(uint16)(mouse.y_coord),0))
-          {
-               plr->SetPosition(mouse);
-               plr->ManaDrain(cost);
-          }
-     }
+	if(target == NULL)
+		target = caster;
+	GridPair mouse = target->GetSession()->GetCursor();
+	if(target->CanSeePoint((uint16)(mouse.x_coord),(uint16)(mouse.y_coord),0))
+	{
+	   target->SetPosition(mouse);
+	}
 }
-void SpellMgr::HandleSpellVampirism(Player *plr, bool dontinvert)
+void SpellMgr::HandleSpellVampirism(Player* caster, Player* target)
 {
-     int cost = 20;
-     if(!HasEnoughMana(plr,cost))
-          return;
-     if(dontinvert)
-     {
-          int duration = sGameConfig.GetFloatDefault("VampirismDuration",900);
-          plr->SetEnchant(ENCHANT_VAMPIRISM,duration);
-          plr->ManaDrain(cost);
-     }
+	if(target == NULL)
+		target = caster;
+	int duration = sGameConfig.GetFloatDefault("VampirismDuration",900);
+	target->SetEnchant(ENCHANT_VAMPIRISM,duration);
 }
+
+Magic::Magic(uint8 spell, Player* owner, bool friendly) : WorldObject(0x3BB, owner->GetPosition(), -1), m_spell (spell), m_owner (owner), m_friendly (friendly)
+{
+	//uint16 type = sThingBin.Thing.Object.GetIndex("Magic");
+}
+
+// Magic object has just hit player
+void Magic::Collide(Player* player)
+{
+	spellmgr.DoSpellEffect(m_spell, m_owner, player);
+}
+
+void Magic::Update(uint32 time)
+{
+	SetPosition(GetPosition());
+}
+
 const char *g_spellNames[] =
 {
 	"SPELL_INVALID",
@@ -553,9 +578,9 @@ const char *g_spellNames[] =
 const char* g_abilityNames[] =
 {
 	"ABILITY_INVALID",
-    "ABILITY_BERSERKER_CHARGE",
-    "ABILITY_WARCRY",
-    "ABILITY_HARPOON",
-    "ABILITY_TREAD_LIGHTLY",
-    "ABILITY_EYE_OF_THE_WOLF"
+	"ABILITY_BERSERKER_CHARGE",
+	"ABILITY_WARCRY",
+	"ABILITY_HARPOON",
+	"ABILITY_TREAD_LIGHTLY",
+	"ABILITY_EYE_OF_THE_WOLF"
 };

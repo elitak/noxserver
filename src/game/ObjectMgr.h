@@ -178,11 +178,11 @@ class ObjectMgr
 		}
 		uint16 RequestExtent()
 		{
-			uint32* ptr;
+			uint32* ptr = (uint32*)objectExtents;
 			do {
-			ptr = (uint32*)memchr(objectExtents+1, 0, MAX_EXTENT);
-			} while(ptr != NULL && *ptr != 0);
-			if(ptr == NULL)
+				ptr++;
+			} while(ptr < (uint32*)(objectExtents+MAX_EXTENT+1) && *ptr != 0);
+			if(ptr >= (uint32*)(objectExtents+MAX_EXTENT+1))
 				return INVALID_EXTENT;
 			
 			uint16 extent = (uint16)((ptr - (uint32*)objectExtents));

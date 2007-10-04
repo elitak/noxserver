@@ -40,7 +40,7 @@
 
 #include <cmath>
 
-#define TIMEOUT_MS 5000
+#define TIMEOUT_MS 30000
 
 /// WorldSession constructor
 WorldSession::WorldSession(uint32 id, WorldSocket *sock, uint32 sec) : _player(NULL), _socket(sock),
@@ -709,14 +709,9 @@ void WorldSession::HandleClientReadyOpcode(WorldPacket &recvPacket)
 
 void WorldSession::HandleNewAliasOpcode(WorldPacket &recvPacket)
 {
-	// Not sure what this packet is for
-	// A5 E8 E8 03 C9 02 FF FF FF FF
 	try
     {
-		recvPacket.read<uint8>();
-		recvPacket.read<uint16>(); //extent
-		recvPacket.read<uint16>(); //type
-		recvPacket.read<uint32>();
+		SetAlias(recvPacket.read<uint8>(), recvPacket.read<uint16>(), recvPacket.read<uint16>(), recvPacket.read<uint32>());
     }
     catch(ByteBuffer::error &)
     {
@@ -858,15 +853,14 @@ void WorldSession::HandleTryCreatureCommandOpcode(WorldPacket& recv_data)
 }
 void WorldSession::HandleTrySpellOpcode(WorldPacket& recv_data)
 {
-    sLog.outDebug("New Unknown Opcode %u", recv_data.GetOpcode());
-    recv_data.hexlike();
 	uint8 spellId = recv_data.read<uint8>();
-
 	recv_data.rpos(recv_data.rpos() + 19);
 	uint8 dontinvert = recv_data.read<uint8>();
 
      //inversion was backwards.
-	ExecuteSpell(spellId, (bool)dontinvert);
+	if( ExecuteSpell(spellId, (bool)dontinvert) ) //if spell cast succeeded
+        _SendReportSpellStart(spellId);
+    _SendFxDurationSpell(7, GetPlayer()->GetPositionX(), GetPlayer()->GetPositionY());
 
 	//				(sp. id)													(invert)
 	//summon ghost: 55 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
@@ -1023,6 +1017,24 @@ void WorldSession::KickPlayer()
     // player will be  logout and session will removed in next update tick
     _socket->SetCloseAndDelete(true);
     _socket = NULL;
+}
+
+void WorldSession::SetAlias(uint8 id, uint16 extent, uint16 type, uint32 other)
+{
+	if(id > 0xFE) // 0xFF is reserved
+		return;
+	//m_aliases[id].extent = extent;
+	//m_aliases[id].type = type;
+	//m_aliases[id].other = other;
+}
+
+uint8 WorldSession::GetAlias(uint16 extent, uint16 type)
+{
+	uint8 index = 0;
+	//for(;index < 0xFF; index++)
+	//	if(m_aliases[index].extent == extent && m_aliases[index].type == type)
+	//		break;
+	return index;
 }
 
 /// Cancel channeling handler
@@ -1213,5 +1225,19 @@ void WorldSession::_SendAudioPlayerEvent( uint16 sound, uint8 volume, uint8 unk2
    	WorldPacket packet(MSG_AUDIO_PLAYER_EVENT, 0x00, _client, 3);
 	packet << (uint8)unk2;
     packet << (uint16) ( (volume << 0x9) | (sound & 0x3FF) ) ;
+	SendPacket(&packet);
+}
+void WorldSession::_SendReportSpellStart( uint8 spell )
+{
+    WorldPacket packet(MSG_REPORT_SPELL_START, 0x00, _client, 1);
+	packet << (uint8)spell;
+	SendPacket(&packet);
+}
+void WorldSession::_SendFxDurationSpell( uint16 type, uint16 x, uint16 y )
+{
+    WorldPacket packet(MSG_FX_DURATION_SPELL, 0x00, _client, 6);
+	packet << type;
+    packet << x;
+    packet << y;
 	SendPacket(&packet);
 }

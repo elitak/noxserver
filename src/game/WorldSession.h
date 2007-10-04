@@ -41,6 +41,14 @@ class WorldSession;
 
 #define CHECK_PACKET_SIZE(P,S) if((P).size() < (S)) return SizeError((P),(S));
 
+struct Alias
+{
+public: 
+	uint16 extent;
+	uint16 type;
+	uint32 other;
+};
+
 /// Player session in the World
 class MANGOS_DLL_SPEC WorldSession
 {
@@ -112,6 +120,8 @@ class MANGOS_DLL_SPEC WorldSession
 			m_playerObserving = state;
 			_SendClientStatusOpcode();
 		}
+		uint8 GetAlias( uint16 extent, uint16 type );
+		void SetAlias( uint8 id, uint16 extent, uint16 type, uint32 other );
     protected:
 
 		// Spells
@@ -193,6 +203,9 @@ class MANGOS_DLL_SPEC WorldSession
 		void _SendClientStatusOpcode();
 		void _SendMapSendStart();
 		void _SendMapSendPacket();
+        void _SendReportSpellStart( uint8 spell );
+        void _SendFxDurationSpell( uint16 type, uint16 x, uint16 y );
+
 		void _SendPacket(WorldPacket* packet);
 
     private:
@@ -217,6 +230,7 @@ class MANGOS_DLL_SPEC WorldSession
 		uint32 m_timestamp;
 		uint8 m_unk;
 		uint8 m_unk2;
+		//struct Alias m_aliases[254];
 
         void FillOpcodeHandlerHashTable();
 

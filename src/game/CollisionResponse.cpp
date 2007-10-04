@@ -52,3 +52,16 @@ void CollisionResponse::ManaDrainCollideCallback(Flatland::ContactList &contacts
 
 	player->ManaDrain(damage/3);
 }
+void CollisionResponse::SpellProjectileCollideCallback(Flatland::ContactList &contacts)
+{
+     
+	Object* me, *other;
+	if( !(me = (Object*)contacts.Self()->GetUserPointer()) || !( other = (Object*)contacts.Other()->GetUserPointer()))
+		return;
+	if( other->GetType() != 0x2C9)
+		return;
+	Player* player = (Player*)other;
+	Magic* magic = (Magic*)me; // This better be a magic projectile
+	magic->Collide(player);
+//	magic->Destroy();
+}

@@ -45,7 +45,8 @@ ObjectMgr::ObjectMgr()
 
 	// Build Collide Table
 	collideTable[ COLLIDE_DAMAGE ]	= CollideHandler( &CollisionResponse::DamageCollideCallback );
-     collideTable[ COLLIDE_MANADRAIN ]  = CollideHandler( &CollisionResponse::ManaDrainCollideCallback );
+    collideTable[ COLLIDE_MANADRAIN ]  = CollideHandler( &CollisionResponse::ManaDrainCollideCallback );
+	collideTable[ COLLIDE_SPELLPROJECTILE ] = CollideHandler( &CollisionResponse::SpellProjectileCollideCallback );
      collideTable[ COLLIDE_PLAYER ]     = CollideHandler( &Player::PlayerCollideCallback );
 
 	// Build Update Table
@@ -615,7 +616,6 @@ int ObjectMgr::GlyphXferHandler(Object* obj, NoxBuffer* rdr)
 
 int ObjectMgr::InvisibleLightXferHandler(Object* obj, NoxBuffer* rdr)
 {
-	char buffer[256];
 	int inventory = DefaultXferHandler(obj, rdr);
 
 	rdr->read<uint32>();

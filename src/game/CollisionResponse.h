@@ -29,6 +29,7 @@ class CollisionResponse
 public:
 	static void DamageCollideCallback(Flatland::ContactList &contacts);
      static void ManaDrainCollideCallback(Flatland::ContactList &contacts);
+	 static void SpellProjectileCollideCallback(Flatland::ContactList &contacts);
 protected:
 };
 
