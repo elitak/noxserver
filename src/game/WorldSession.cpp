@@ -538,9 +538,10 @@ void WorldSession::HandlePlayerInputOpcode(WorldPacket &recvPacket)
 			case 0x07:
 				//jumped
 				sLog.outDebug("Player jumped.");
+                    _player->Jump();
 				break;
             case 0x30:
-                 sLog.outDebug("Player laughed.");
+                 sLog.outDebug("%s laughed.");
                  _player->Laugh();
                  break;
             case 0x31:
@@ -571,6 +572,7 @@ void WorldSession::HandlePlayerInputOpcode(WorldPacket &recvPacket)
                {
                     case 0x07:
                          sLog.outDebug("Player did a running jump.");
+                         _player->RunningJump();
                          break;
                }
 			recvPacket.read<uint8>();
@@ -785,7 +787,7 @@ void WorldSession::HandleTryAbilityOpcode(WorldPacket& recv_data)
 	try
     {
 		uint8 ability = recv_data.read<uint8>();
-		sLog.outDebug("TryAbility: 0x%2X", ability);
+		sLog.outDebug("Player TryAbility: 0x%2X", ability);
 
 		if(GetPlayer()->IsAbilityReady(ability))
 			ExecuteAbility(ability);
@@ -827,8 +829,8 @@ void WorldSession::HandleTryGetOpcode(WorldPacket& recv_data)
 }
 void WorldSession::HandleTryUseOpcode(WorldPacket& recv_data)
 {
-    sLog.outDebug("New Unknown Opcode %u", recv_data.GetOpcode());
-    recv_data.hexlike();
+    //sLog.outDebug("New Unknown Opcode %u", recv_data.GetOpcode());
+    //recv_data.hexlike();
 	WorldObject* obj = objmgr.GetObj(recv_data.read<uint16>());
 	if(obj)
 		obj->Use(GetPlayer());
@@ -864,7 +866,7 @@ void WorldSession::HandleTrySpellOpcode(WorldPacket& recv_data)
 	uint8 dontinvert = recv_data.read<uint8>();
 
      //inversion was backwards.
-	ExecuteSpell(spellId, (bool)dontinvert)
+	ExecuteSpell(spellId, (bool)dontinvert);
 
 	//				(sp. id)													(invert)
 	//summon ghost: 55 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
@@ -1204,10 +1206,12 @@ void WorldSession::_SendMapSendPacket()
 	if((m_playerDownloading - 1) * PACKET_SIZE > sWorld.GetMap()->GetNxzSize())
 		m_playerDownloading = 0;
 }
-void WorldSession::_SendAudioPlayerEvent( uint16 sound, uint8 unk1, uint8 unk2 )
+//ONLY PLAYER CAN HEAR IT. Used in things such as flag capture, flag return
+//lesson limit, etc.
+void WorldSession::_SendAudioPlayerEvent( uint16 sound, uint8 volume, uint8 unk2 )
 {
    	WorldPacket packet(MSG_AUDIO_PLAYER_EVENT, 0x00, _client, 3);
 	packet << (uint8)unk2;
-    packet << (uint16) ( (unk1 << 0x9) | (sound & 0x3FF) ) ;
+    packet << (uint16) ( (volume << 0x9) | (sound & 0x3FF) ) ;
 	SendPacket(&packet);
 }

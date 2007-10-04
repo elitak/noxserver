@@ -117,6 +117,7 @@ class MANGOS_DLL_SPEC Player : public Unit
         explicit Player (WorldSession *session);
         ~Player ( );
 		wchar_t* const GetName() { return plrInfo.name; }
+          char* const GetLogin() { return plrInfo.username; }
 		void SetName( const wchar_t* name );
 		WorldSession* GetSession() { return m_session; }
 
@@ -125,6 +126,7 @@ class MANGOS_DLL_SPEC Player : public Unit
 		void AddUpdateObject(WorldObject* obj) { updateQueue.insert(obj); }
 		void RemoveUpdateObject(WorldObject* obj) { }
 
+          bool CanMove( );
 		void RunTowards( uint16 x, uint16 y);
 		void WalkTowards( uint16 x, uint16 y);
           void TreadTowards( uint16 x, uint16 y);
@@ -133,6 +135,8 @@ class MANGOS_DLL_SPEC Player : public Unit
 		void Point();
 		void Taunt();
 		void Attack();
+          void Jump();
+          void RunningJump();
 
 		void ForceUpdateAll() { updateAll = true; };
 		void UpdateView();
@@ -160,6 +164,7 @@ class MANGOS_DLL_SPEC Player : public Unit
 		
 		bool updateAll;
 		GridPair m_oldposition;
+          GridPair m_treadposition;//For radius to cancel tread lightly
 		uint16 m_ability_delays[5]; //may want to change this to a struct to store the delays, level awarded, etc.
 		
 		UpdateQueueType updateQueue;

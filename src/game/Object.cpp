@@ -125,9 +125,10 @@ bool Object::Drop(WorldObject* obj, uint32 max_dist, GridPair newPos)
 }
 WorldObject* Object::NewPickup(uint16 type, uint16 extent, uint32 modifier)
 {
-	WorldObject* obj = new WorldObject(type, GridPair(0, 0), extent == 0 ? -1 : extent);
+	WorldObject* obj = new WorldObject(type, GridPair(1, 1), extent == 0 ? -1 : extent);
 	if(!Pickup(obj, 0))
 	{
+          RemoveFromInventory(obj,GridPair(0,0));
 		delete obj;
 		obj = NULL;
 	}
@@ -187,7 +188,7 @@ inline void Object::DropAll()
 	{
 		WorldObject* obj = *iter;
 		++iter;
-		RemoveFromInventory(obj, pos);
+	     RemoveFromInventory(obj, pos);
 	}
 }
 void Object::Damage(float damage, Object* cause)
@@ -282,13 +283,86 @@ bool WorldObject::InAnInventory()
 	//return !objmgr.ContainsObject(this);
 }
 
+bool WorldObject::Pickmeup(Player* plr)
+{
+     PickupTableMap::iterator iter = objmgr.pickupTable.find(GetObjectInfo()->pickup);
+     if(iter != objmgr.pickupTable.end())
+          return ((this->*iter->second.handler)(plr));
+     return false;
+}
+
+bool WorldObject::FoodPickup(Player* plr)
+{
+     int amt = atoi(GetObjectInfo()->use_args[0]);
+     if(plr->GetMaxHealth()-plr->GetHealth() > amt && !(GetObjectInfo()->subclass & SUBCLASS_MUSHROOM))
+     {
+          Use(plr);
+          return false;
+     }
+     else if(GetObjectInfo()->subclass & SUBCLASS_MUSHROOM && plr->IsPoisoned())
+     {
+          Use(plr);
+          return false;
+     }
+     //Play a sound (pickup sound)
+     return true;//keep the item
+}
+bool WorldObject::ArmorPickup(Player* plr)
+{
+     WorldObject** equipment = plr->GetEquipment();
+     
+	uint32 slot = this->GetObjectInfo()->subclass;
+
+     if(equipment[slot])
+          return true;
+
+	equipment[slot] = this;
+
+     WorldPacket packet;
+	plr->_BuildEquipPacket(packet, true, Unit::ObjectToUnitArmor(this), 0xFFFFFFFF);
+	objacc.SendPacketToAll(&packet);
+
+     WorldPacket packet2(MSG_REPORT_EQUIP);
+	packet2 << (uint16)GetExtent();
+	plr->GetSession()->SendPacket(&packet2);
+
+     //play a sound
+     return true;
+}
+
+bool WorldObject::WeaponPickup(Player* plr)
+{
+     WorldObject** equipment = plr->GetEquipment();
+	uint32 slot = this->GetObjectInfo()->subclass;
+
+	if(slot == SUBCLASS_QUIVER)
+		slot = SLOT_QUIVER;
+	else if(slot == SUBCLASS_FLAG)
+		slot = SLOT_FLAG;
+	else
+		slot = SLOT_WEP_PRIMARY;
+     
+     if(equipment[slot])
+          return true;
+     
+	equipment[slot] = this;
+
+     WorldPacket packet;
+     plr->_BuildEquipPacket(packet, false, 1 << (this->GetObjectInfo()->subclass & 0x1F), 0xFFFFFFFF);
+     objacc.SendPacketToAll(&packet);
+
+     WorldPacket packet2(MSG_REPORT_EQUIP);
+	packet2 << (uint16)GetExtent();
+	plr->GetSession()->SendPacket(&packet2);
+     //Play a sound
+     return true;
+}
 
 void WorldObject::Use(Player* plr)
 {
 	UseTableMap::iterator iter = objmgr.useTable.find(GetObjectInfo()->use);
 	if(iter != objmgr.useTable.end())
 		(this->*iter->second.handler)(plr);
-	
 }
 
 /// Use Handlers

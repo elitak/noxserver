@@ -46,6 +46,7 @@ ObjectMgr::ObjectMgr()
 	// Build Collide Table
 	collideTable[ COLLIDE_DAMAGE ]	= CollideHandler( &CollisionResponse::DamageCollideCallback );
      collideTable[ COLLIDE_MANADRAIN ]  = CollideHandler( &CollisionResponse::ManaDrainCollideCallback );
+     collideTable[ COLLIDE_PLAYER ]     = CollideHandler( &Player::PlayerCollideCallback );
 
 	// Build Update Table
 	updateTable[ UPDATE_ONESECONDDIE ] = UpdateHandler( &Object::OneSecondDieUpdate );
@@ -89,6 +90,11 @@ ObjectMgr::ObjectMgr()
 	useTable[ USE_CONSUME ] = UseHandler( &WorldObject::ConsumeUse );
 	useTable[ USE_CONSUMECONFUSE ] = UseHandler( &WorldObject::ConsumeConfuseUse );
 	useTable[ USE_MUSHROOM ] = UseHandler( &WorldObject::MushroomUse );
+
+     //Build Pickup Table
+     pickupTable[ PICKUP_FOOD ] = PickupHandler( &WorldObject::FoodPickup );
+     pickupTable[ PICKUP_ARMOR ] = PickupHandler( &WorldObject::ArmorPickup );
+     pickupTable[ PICKUP_WEAPON ] = PickupHandler( &WorldObject::WeaponPickup );
 
 	// Build Xfer Table
 	xferTable[ XFER_DEFAULT ] = XferHandler( &ObjectMgr::DefaultXferHandler );

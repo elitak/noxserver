@@ -111,7 +111,6 @@ enum UnitSlotType
 	SLOT_WEP_SECONDARY,// however, everything with &0x40 is a weapon
 	SLOT_SIZE //this works since enum goes 0, 1, ...
 };
-
 enum UnitArmorType
 {
 	STREET_SNEAKERS = 0x00000001,
@@ -207,6 +206,28 @@ enum UnitEnchantType
 	ENCHANT_SNEAK,
 	ENCHANT_SIZE
 };
+enum UnitDamageType
+{
+     DAMAGE_BLADE,
+     DAMAGE_FLAME,
+     DAMAGE_CRUSH,
+     DAMAGE_IMPALE,
+     DAMAGE_DRAIN,
+     DAMAGE_POISON,
+     DAMAGE_DISPEL_UNDEAD,
+     DAMAGE_EXPLOSION,
+     DAMAGE_BITE,
+     DAMAGE_ELECTRIC,
+     DAMAGE_CLAW,
+     DAMAGE_IMPACT,
+     DAMAGE_LAVA,
+     DAMAGE_DEATH_MAGIC,
+     DAMAGE_PLASMA,
+     DAMAGE_MANA_BOMB,
+     DAMAGE_ZAP_RAY,
+     DAMAGE_AIRBORNE_ELECTRIC
+};
+
 
 class MANGOS_DLL_SPEC Unit : public WorldObject
 {
@@ -214,7 +235,12 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
 		Unit(uint16 type, GridPair pos, int16 extent);
 		virtual ~Unit ( );
 		virtual void Update( uint32 time );
+
           virtual void Poison( byte poisoned, uint16 poisoner );
+          virtual bool IsPoisoned( ) { return (bool)m_poison; }
+
+          virtual bool CanMove( );
+
 		virtual void MoveToward( uint16 x, uint16 y, float speed );
 		virtual bool SetActionAnim( UnitActionType anim, uint32 frames );
 		virtual void ResetActionAnim()
@@ -254,6 +280,7 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
 				m_angle = rot_data[(uint8)floor((double)angle / 0x20 + 0.5) & 0x7]; 
 		}
 		uint8 GetAngle () { return m_angle; }
+          WorldObject** GetEquipment() { return m_equipment; }
     protected:
 		Unit ( WorldObject *instantiator );
 		void InitRespawn();
@@ -265,6 +292,8 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
           byte m_poison;
           float m_poisoncycle; //every 30 frames damage by 1. NoX style poison.
           uint16 m_poisoner;
+
+          bool m_oneshotdeath;
 
 	     uint16 m_weight;
 	     uint16 m_speed;

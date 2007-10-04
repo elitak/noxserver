@@ -211,6 +211,7 @@ public:
      void HandleEyeOfWolfAbility(Player* plr);
      void HandleTreadLightlyAbility(Player* Plr);
 
+     void HandleSpellGiveMana(Player* plr, int cost);
      bool HasEnoughMana(Player* plr, int cost);
      void HandleSpellCurePoison(Player* plr, bool dontinvert);
      void HandleSpellForceField(Player* plr, bool dontinvert);
@@ -220,6 +221,8 @@ public:
      void HandleSpellProtectFromFire(Player* plr, bool dontinvert);
      void HandleSpellProtectFromElectricity(Player* plr, bool dontinvert);
      void HandleSpellProtectFromPoison(Player* plr, bool dontinvert);
+     void HandleSpellShock(Player* plr, bool dontinvert);
+     void HandleSpellTeleportToTarget(Player* plr, bool dontinvert);
      void HandleSpellVampirism(Player* plr, bool dontinvert);
 	SpellTableMap spellTable;
 	AbilityTableMap abilityTable;

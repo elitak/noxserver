@@ -110,17 +110,23 @@ class MANGOS_DLL_SPEC Object
 		uint16 GetType() { return m_objectType; }
 		GridPair GetPosition() 
 		{ 
-			Flatland::vec2 oldPos = body->GetGeometry().Center();
-			return GridPair(oldPos.x, oldPos.y);
+               if(!body)
+                    return GridPair(0,0);
+
+               Flatland::vec2 oldPos = body->GetGeometry().Center();
+		     return GridPair(oldPos.x, oldPos.y);
 		}
 		uint16 GetPositionX() { return body->GetGeometry().Center().x; }
 		uint16 GetPositionY() { return body->GetGeometry().Center().y; }
+          bool CanSeePoint(uint16 x, uint16 y, uint32 size);
+
 		GNHT* GetObjectInfo() 
 		{ 
 			return sThingBin.Thing.Object.Objects.Get(GetType()-1); 
 		}
 
 		virtual bool IsImmobile() { return (GetObjectInfo()->classes)&CLASS_IMMOBILE; }
+          //inventory
 		bool AddToInventory(WorldObject* obj);
 		bool InMyInventory(WorldObject* obj)
 		{
@@ -131,18 +137,21 @@ class MANGOS_DLL_SPEC Object
 		virtual bool Pickup(WorldObject* obj, uint32 max_dist = 0);
 		virtual bool Drop(WorldObject* obj, uint32 max_dist, GridPair newPos);
 		WorldObject* NewPickup(uint16 type, uint16 extent = 0, uint32 modifier = 0xFFFFFFFF);
+		virtual void DropAll();
 
 		virtual void _BuildHealthPacket(WorldPacket& packet);
 		virtual void _BuildDeltaHealthPacket(WorldPacket& packet);
 		virtual void _BuildUpdatePacket(WorldPacket& packet);
 
+          //health/mana related
 		virtual void Damage( float damage, Object* cause );
 		virtual void Heal( float heal );
 		virtual void ManaDrain( float damage );
 		virtual bool IsDead() { return m_health <= 0; }
 		virtual int16 GetHealth() { return m_health; }
+          virtual int16 GetMaxHealth() { return m_max_health; }
           virtual int16 GetMana() { return m_mana; }
-		virtual void DropAll();
+          virtual int16 GetMaxMana() { return m_max_mana; }
 
 		/// Collisions
 		int joint;
@@ -160,7 +169,7 @@ class MANGOS_DLL_SPEC Object
 		uint32 m_worth; //perhaps this should be in worldobject, related to thing.bin worth entry, also use it for gold/treasure value
 		//GridPair m_position; /// this can only be initialized for static objects
 
-		bool CanSeePoint(uint16 x, uint16 y, uint32 size);
+
 		Flatland::Object* body;
 
 		virtual void Die();
@@ -197,6 +206,13 @@ class MANGOS_DLL_SPEC WorldObject : public Object
 		void SetPosition(GridPair position);
 		uint8 GetTeam() { return m_teamId; }
 		void SetTeam(uint8 team) { m_teamId = team; }
+
+          virtual bool Pickmeup(Player* plr);
+
+          virtual bool FoodPickup(Player* plr);
+          virtual bool ArmorPickup(Player* plr);
+          virtual bool WeaponPickup(Player* plr);
+
 		void Use(Player* plr);
 		bool InAnInventory();
 

@@ -108,7 +108,6 @@ void Player::Update(uint32 time)
 
 	Unit::Update(time);
 }
-
 void Player::_BuildUpdatePacket(WorldPacket& packet)
 {
 	packet.SetOpcode(MSG_UPDATE_STREAM);
@@ -210,6 +209,22 @@ void Player::Attack()
 	if(IsDead())
 		Respawn();
 }
+void Player::Jump()
+{
+     if(!(m_action==ACTION_IDLE||m_action==ACTION_WALK||m_action==ACTION_RUN||m_action==ACTION_SNEAK))
+          return;
+     GridPair cursor = GetSession()->GetCursor();
+     SetActionAnim(ACTION_JUMP, 8);
+	MoveToward(cursor.x_coord, cursor.y_coord, 0.42);
+}
+void Player::RunningJump()
+{
+     if(!(m_action==ACTION_IDLE||m_action==ACTION_WALK||m_action==ACTION_RUN||m_action==ACTION_SNEAK))
+          return;
+     GridPair cursor = GetSession()->GetCursor();
+     SetActionAnim(ACTION_JUMP, 8);
+	MoveToward(cursor.x_coord, cursor.y_coord, 0.42);
+}
 bool Player::Equip(WorldObject* obj)
 {
 	if(Unit::Equip(obj))
@@ -247,8 +262,8 @@ bool Player::Pickup(WorldObject* obj, uint32 max_dist)
 
 		m_session->SendPacket(&packet);
 
-		return true;
-	}
+          return obj->Pickmeup((Player*)this);
+     }
 	else
 		return false;
 }
@@ -327,6 +342,11 @@ void Player::PlayerCollideCallback(Flatland::ContactList &contacts)
 			((Player*)obj)->Damage(100, plr);
 		}
 	}
+     if(plr->HasEnchant(ENCHANT_SHOCK)&&obj->GetType() == 0x2C9)
+     {
+          obj->Damage(45, plr);
+          plr->UnsetEnchant(ENCHANT_SHOCK);
+     }
 }
 void Player::UpdateView()
 {
@@ -415,6 +435,12 @@ void Player::_BuildStatsPacket(WorldPacket &packet)
 	packet << (uint16)m_strength; //strength
 	packet << (uint8)10; //level
 }
+bool Player::CanMove( )
+{
+     if(Unit::CanMove())
+          return GetSession()->IsObserving();
+     return false;
+}
 void Player::RunTowards(uint16 x, uint16 y)
 {
 	if(SetActionAnim(ACTION_RUN, 3))
@@ -451,6 +477,7 @@ void Player::MoveTowards(uint16 x, uint16 y)
 void Player::Respawn()
 {
 	// Set respawn states for the player
+     uint16 type;
 	switch(plrInfo.pclass)
 	{
 	case PLAYER_CLASS_WARRIOR:
@@ -462,9 +489,8 @@ void Player::Respawn()
                          m_strength = sGameConfig.GetFloatDefault("WarriorMaxStrength",125);
                          m_weight = 3000;
 
-                         uint16 type = sThingBin.Thing.Object.GetIndex("Longsword");
-                         if(type)
-                              Equip(NewPickup(type));
+                         type = sThingBin.Thing.Object.GetIndex("Longsword");
+                         Pickup(NewPickup(type));
 					break;
           }
 
@@ -474,6 +500,8 @@ void Player::Respawn()
 					m_speed = sGameConfig.GetFloatDefault("ConjurerMaxSpeed",18500);
                          m_strength = sGameConfig.GetFloatDefault("ConjurerMaxStrength",125);
                          m_weight = 3000;
+                         type = sThingBin.Thing.Object.GetIndex("StreetShirt");
+                         Pickup(NewPickup(type));
 					break;
 
 	case PLAYER_CLASS_WIZARD: 
@@ -482,9 +510,22 @@ void Player::Respawn()
 					m_speed = sGameConfig.GetFloatDefault("WizardMaxSpeed",17500);
                          m_strength = sGameConfig.GetFloatDefault("WizardMaxStrength",125);
                          m_weight = 3000;
+
+                         type = sThingBin.Thing.Object.GetIndex("StreetShirt");
+                         if(type)
+                              Pickup(NewPickup(type));
+                         type = sThingBin.Thing.Object.GetIndex("WizardRobe");
+                         if(type)
+                              Pickup(NewPickup(type));
 					break;
 	default:break;
 	}
+     type = sThingBin.Thing.Object.GetIndex("StreetPants");
+     if(type)
+          Pickup(NewPickup(type));
+     type = sThingBin.Thing.Object.GetIndex("StreetSneakers");
+     if(type)
+          Pickup(NewPickup(type));
      m_max_speed = m_speed;
      m_max_mana = m_mana;
 	m_max_health = m_health;

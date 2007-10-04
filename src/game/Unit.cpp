@@ -159,6 +159,10 @@ void Unit::Poison( byte poisoned, uint16 poisoner )
           m_poisoner = poisoner;
      //else - just curing poison so do nothing
 }
+bool Unit::CanMove()
+{
+     return !(HasEnchant(ENCHANT_HELD)||HasEnchant(ENCHANT_FREEZE));
+}
 void Unit::MoveToward(uint16 _x, uint16 _y, float speed)
 {
 	if(IsDead())
@@ -250,7 +254,6 @@ bool Unit::Dequip(WorldObject *obj)
 	}
 	return false;
 }
-
 void Unit::_BuildEquipPacket(WorldPacket& packet, bool armor, uint32 slot, uint32 modifier)
 {
 	uint8 opcode = 0;

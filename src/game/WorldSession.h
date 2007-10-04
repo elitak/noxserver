@@ -51,6 +51,8 @@ class MANGOS_DLL_SPEC WorldSession
 
         bool PlayerLoading() { return m_playerLoading; }
 
+        void _SendAudioPlayerEvent( uint16 sound, uint8 volume = 100, uint8 unk2 = 0 );
+
         void SizeError(WorldPacket const& packet, uint32 size) const;
 
         void SendPacket(WorldPacket* packet, bool ifReady = true, bool changeUnk = true);
@@ -72,7 +74,7 @@ class MANGOS_DLL_SPEC WorldSession
 		GridPair GetCursor() { return _mouse; }
 
         /// Is the user engaged in a log out process?
-        bool isLogingOut() const
+        bool isLoggingOut() const
         {
             if (_logoutTime) return true;
             else return false;
@@ -191,8 +193,6 @@ class MANGOS_DLL_SPEC WorldSession
 		void _SendClientStatusOpcode();
 		void _SendMapSendStart();
 		void _SendMapSendPacket();
-        void _SendAudioPlayerEvent( uint16 sound, uint8 unk1 = 100, uint8 unk2 = 0 );
-
 		void _SendPacket(WorldPacket* packet);
 
     private:

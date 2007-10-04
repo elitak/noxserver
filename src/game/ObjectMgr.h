@@ -74,6 +74,13 @@ struct UseHandler
 
 	void (WorldObject::*handler)(Player* plr);
 };
+struct PickupHandler
+{
+	PickupHandler() : handler(NULL) {};
+	PickupHandler( bool (WorldObject::*_handler)(Player* plr) ) : handler(_handler) {};
+
+	bool (WorldObject::*handler)(Player* plr);
+};
 struct XferHandler
 {
 	XferHandler() : handler(NULL) {};
@@ -98,6 +105,7 @@ typedef HM_NAMESPACE::hash_map< uint16 , CollideHandler > CollideTableMap;
 typedef HM_NAMESPACE::hash_map< uint16 , UpdateHandler > UpdateTableMap;
 typedef HM_NAMESPACE::hash_map< uint16 , UseHandler > UseTableMap;
 typedef HM_NAMESPACE::hash_map< uint16 , XferHandler > XferTableMap;
+typedef HM_NAMESPACE::hash_map< uint16 , PickupHandler > PickupTableMap;
 typedef HM_NAMESPACE::hash_map< uint32 , EnchantEntry > EnchantTableMap;
 typedef std::set< Object* > ObjectTableMap;
 
@@ -212,6 +220,7 @@ class ObjectMgr
 		UpdateTableMap updateTable;
 		EnchantTableMap enchantTable;
 		UseTableMap useTable;
+          PickupTableMap pickupTable;
 		XferTableMap xferTable;
     protected:
         //template<class T> HM_NAMESPACE::hash_map<uint32,T*>& _GetContainer();

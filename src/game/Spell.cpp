@@ -124,7 +124,7 @@ void SpellMgr::FillSpellHandlerHashTable()
 	spellTable[ SPELL_MARK_3 ]					= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
 	spellTable[ SPELL_MARK_4 ]					= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
 	spellTable[ SPELL_MAGIC_MISSILE ]			= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
-	spellTable[ SPELL_SHIELD ]					= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_SHIELD ]					= SpellHandler( 0, &SpellMgr::HandleSpellForceField );
 	spellTable[ SPELL_METEOR ]					= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
 	spellTable[ SPELL_METEOR_SHOWER ]			= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
 	spellTable[ SPELL_MOONGLOW ]				= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
@@ -199,7 +199,7 @@ void SpellMgr::FillSpellHandlerHashTable()
 	spellTable[ SPELL_TELEPORT_TO_MARK_2 ]		= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
 	spellTable[ SPELL_TELEPORT_TO_MARK_3 ]		= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
 	spellTable[ SPELL_TELEPORT_TO_MARK_4 ]		= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
-	spellTable[ SPELL_TELEPORT_TO_TARGET ]		= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
+	spellTable[ SPELL_TELEPORT_TO_TARGET ]		= SpellHandler( 0, &SpellMgr::HandleSpellTeleportToTarget );
 	spellTable[ SPELL_TELEKINESIS ]			= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
 	spellTable[ SPELL_TOXIC_CLOUD ]			= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
 	spellTable[ SPELL_TRIGGER_GLYPH ]			= SpellHandler( 0, &SpellMgr::HandleSpellUnknown );
@@ -259,6 +259,7 @@ void SpellMgr::HandleEyeOfWolfAbility(Player *plr)
 *    Spells    Spells    Spells    Spells
 *    Spells    Spells    Spells    Spells
 ************************************************/
+
 bool SpellMgr::HasEnoughMana(Player *plr, int cost)
 {
       if(plr->GetMana()>=cost)
@@ -326,8 +327,9 @@ void SpellMgr::HandleSpellLesserHeal(Player *plr, bool dontinvert)
           return;
      if(dontinvert)
      {
-          sGameConfig.GetFloatDefault("LesserHealAmount", 15);
+          int amount = sGameConfig.GetFloatDefault("LesserHealAmount", 15);
           plr->Heal(amount);
+          plr->ManaDrain(cost);
      }
 }
 void SpellMgr::HandleSpellProtectFromFire(Player *plr, bool dontinvert)
@@ -364,9 +366,37 @@ void SpellMgr::HandleSpellProtectFromPoison(Player *plr, bool dontinvert)
           int duration = sGameConfig.GetFloatDefault("ProtectPoisonEnchantDuration",1800);
           plr->SetEnchant(ENCHANT_PROTECT_FROM_POISON,duration);
           plr->ManaDrain(cost);
+          plr->GetSession()->_SendAudioPlayerEvent(SOUND_PROTECTIONFROMELECTRICITYEFFECT);
+     }
+}
+void SpellMgr::HandleSpellShock(Player* plr, bool dontinvert)
+{
+     int cost = 30;
+     if(!HasEnoughMana(plr,cost))
+          return;
+     if(dontinvert)
+     {
+          int duration = sGameConfig.GetFloatDefault("ShockPoisonEnchantDuration",1800);
+          plr->SetEnchant(ENCHANT_SHOCK,duration);
+          plr->ManaDrain(cost);
      }
 }
 
+void SpellMgr::HandleSpellTeleportToTarget(Player* plr, bool dontinvert)
+{
+     int cost = 20;
+     if(!HasEnoughMana(plr,cost))
+          return;
+     if(dontinvert)
+     {
+          GridPair mouse = plr->GetSession()->GetCursor();
+          if(plr->CanSeePoint((uint16)(mouse.x_coord),(uint16)(mouse.y_coord),0))
+          {
+               plr->SetPosition(mouse);
+               plr->ManaDrain(cost);
+          }
+     }
+}
 void SpellMgr::HandleSpellVampirism(Player *plr, bool dontinvert)
 {
      int cost = 20;
