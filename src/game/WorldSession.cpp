@@ -1218,8 +1218,7 @@ void WorldSession::_SendMapSendPacket()
 	if((m_playerDownloading - 1) * PACKET_SIZE > sWorld.GetMap()->GetNxzSize())
 		m_playerDownloading = 0;
 }
-//ONLY PLAYER CAN HEAR IT. Used in things such as flag capture, flag return
-//lesson limit, etc.
+//sound ID, volume, L-R balance.
 void WorldSession::_SendAudioPlayerEvent( uint16 sound, uint8 volume, uint8 unk2 )
 {
    	WorldPacket packet(MSG_AUDIO_PLAYER_EVENT, 0x00, _client, 3);
