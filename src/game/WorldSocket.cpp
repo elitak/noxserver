@@ -399,4 +399,3 @@ void WorldSocket::CryptData(uint8 xor, uint8* data, uint32 datalen)
 		*(data+itr) = *(data+itr) ^ xor;
 	return;
 }
-

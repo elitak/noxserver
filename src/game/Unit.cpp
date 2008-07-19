@@ -176,19 +176,29 @@ void Unit::MoveToward(uint16 _x, uint16 _y, float speed)
 
 	dBodySetLinearVel(body->GetBody(), unit_x*speed, unit_y*speed, 0.0f);	
 }
-
+bool Unit::Drop(WorldObject* obj, uint32 max_dist, GridPair newPos)
+{
+	 if(obj->GetPosition().distance(GetPosition())>max_dist)
+		 newPos = GridPair(
+			this->GetPositionX()*cos((double)this->GetAngle()),
+			this->GetPositionY()*sin((double)this->GetAngle()));
+	 return Object::Drop(obj,max_dist,newPos);
+}
 void Unit::Laugh()
 {
      SetActionAnim(ACTION_LAUGH, 40);
+	 EmitSound(SOUND_TAUNTLAUGH);
 }
 void Unit::Point()
 {
      SetActionAnim(ACTION_POINT, 40);
+	 EmitSound(SOUND_TAUNTPOINT);
 }
 
 void Unit::Taunt()
 {
      SetActionAnim(ACTION_TAUNT, 40);
+	 EmitSound(SOUND_TAUNTSHAKEFIST);
 }
 
 void Unit::Attack()

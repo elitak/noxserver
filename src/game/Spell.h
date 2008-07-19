@@ -198,7 +198,6 @@ enum SpellType
     SPELL_TELEPORT_TO_MARKER
 };
 
-
 class SpellMgr
 {
 public:

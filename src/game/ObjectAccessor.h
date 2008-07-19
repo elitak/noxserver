@@ -71,6 +71,7 @@ class MANGOS_DLL_DECL ObjectAccessor : public MaNGOS::Singleton<ObjectAccessor, 
 		void SendTextMessageToAll(wchar_t* message, uint16 x, uint16 y);
 		void SendPacketToTeam(WorldPacket* packet, uint8 teamId);
 		void SendPlayerInfo(WorldSession* session);
+		void EmitSoundEvent(uint16 soundevent, Object* object);
 
         static void UpdateObject(Object* obj, Player* exceptPlayer);
         static void _buildUpdateObject(Object *, UpdateDataMapType &);

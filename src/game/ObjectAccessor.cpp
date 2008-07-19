@@ -330,6 +330,7 @@ ObjectAccessor::SendPacketToAll(WorldPacket* packet)
 	for(PlayersMapType::iterator iter = i_players.begin();iter != i_players.end();++iter)
 		iter->second->GetSession()->SendPacket(packet);
 }
+
 void
 ObjectAccessor::SendPacketToTeam(WorldPacket* packet, uint8 teamId)
 {
@@ -362,4 +363,26 @@ ObjectAccessor::SendPlayerInfo(WorldSession* session)
 			session->SendPacket(&packet);
 		}
     }
+}
+
+void
+ObjectAccessor::EmitSoundEvent(uint16 soundevent, Object* object)
+{
+	Guard guard(i_playerGuard);
+	
+	for(PlayersMapType::iterator iter = i_players.begin();iter != i_players.end();++iter)
+	{
+		Player* play = iter->second;
+		int distance = sqrt(
+				(pow((double)object->GetPositionX(),2)
+				-pow((double)play->GetPositionX(),2))
+				+(pow((double)play->GetPositionY(),2)
+				-pow((double)object->GetPositionY(),2))
+								);//950 can't hear after that.
+		distance = 100-distance*.25;
+		if(distance<0)
+			distance = 0;
+		uint8 balance = play->GetPositionX()-object->GetPositionX();
+		iter->second->GetSession()->_SendAudioPlayerEvent(soundevent, distance, 0);
+	}
 }

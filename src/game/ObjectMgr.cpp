@@ -47,7 +47,7 @@ ObjectMgr::ObjectMgr()
 	collideTable[ COLLIDE_DAMAGE ]	= CollideHandler( &CollisionResponse::DamageCollideCallback );
     collideTable[ COLLIDE_MANADRAIN ]  = CollideHandler( &CollisionResponse::ManaDrainCollideCallback );
 	collideTable[ COLLIDE_SPELLPROJECTILE ] = CollideHandler( &CollisionResponse::SpellProjectileCollideCallback );
-     collideTable[ COLLIDE_PLAYER ]     = CollideHandler( &Player::PlayerCollideCallback );
+	collideTable[ COLLIDE_PLAYER ]     = CollideHandler( &Player::PlayerCollideCallback );
 
 	// Build Update Table
 	updateTable[ UPDATE_ONESECONDDIE ] = UpdateHandler( &Object::OneSecondDieUpdate );

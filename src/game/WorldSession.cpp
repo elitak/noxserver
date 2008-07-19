@@ -541,7 +541,7 @@ void WorldSession::HandlePlayerInputOpcode(WorldPacket &recvPacket)
                     _player->Jump();
 				break;
             case 0x30:
-                 sLog.outDebug("%s laughed.");
+                 sLog.outDebug("Player laughed.");
                  _player->Laugh();
                  break;
             case 0x31:
@@ -786,6 +786,8 @@ void WorldSession::HandleTryAbilityOpcode(WorldPacket& recv_data)
 
 		if(GetPlayer()->IsAbilityReady(ability))
 			ExecuteAbility(ability);
+		else
+			_SendAudioPlayerEvent(SOUND_MANAEMPTY,100,0);
     }
     catch(ByteBuffer::error &)
     {
@@ -1218,11 +1220,11 @@ void WorldSession::_SendMapSendPacket()
 	if((m_playerDownloading - 1) * PACKET_SIZE > sWorld.GetMap()->GetNxzSize())
 		m_playerDownloading = 0;
 }
-//sound ID, volume, L-R balance.
-void WorldSession::_SendAudioPlayerEvent( uint16 sound, uint8 volume, uint8 unk2 )
+//sound ID, volume, L-R balance. Balance==0 then it's in the middle
+void WorldSession::_SendAudioPlayerEvent( uint16 sound, uint8 volume, uint8 balance )
 {
    	WorldPacket packet(MSG_AUDIO_PLAYER_EVENT, 0x00, _client, 3);
-	packet << (uint8)unk2;
+	packet << (uint8)balance;
     packet << (uint16) ( (volume << 0x9) | (sound & 0x3FF) ) ;
 	SendPacket(&packet);
 }

@@ -120,6 +120,8 @@ class MANGOS_DLL_SPEC Object
 		uint16 GetPositionY() { return body->GetGeometry().Center().y; }
           bool CanSeePoint(uint16 x, uint16 y, uint32 size);
 
+		void EmitSound(uint16 soundevent);
+
 		GNHT* GetObjectInfo() 
 		{ 
 			return sThingBin.Thing.Object.Objects.Get(GetType()-1); 
@@ -207,7 +209,7 @@ class MANGOS_DLL_SPEC WorldObject : public Object
 		uint8 GetTeam() { return m_teamId; }
 		void SetTeam(uint8 team) { m_teamId = team; }
 
-          virtual bool Pickmeup(Player* plr);
+          virtual bool HandlePickup(Player* plr);
 
           virtual bool FoodPickup(Player* plr);
           virtual bool ArmorPickup(Player* plr);

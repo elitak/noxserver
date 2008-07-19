@@ -37,6 +37,7 @@
 
 using namespace std;
 
+// TODO: Make an "emitsound" function.
 Object::Object(uint16 type, GridPair pos, int16 extent) : m_objectType(type), m_extent(extent), m_update_timer(0), m_health(0), m_max_health(0), m_delta_health(0), m_combined_health(0)
 {
 	Flatland::Geometry* g;
@@ -138,6 +139,11 @@ bool Object::CanSeePoint(uint16 x, uint16 y, uint32 size)
 {
 	GridPair m_position = GetPosition();
 	return GridPair(x, y).in(GridPair(m_position.x_coord - 300, m_position.y_coord - 300), GridPair(m_position.x_coord + 300, m_position.y_coord + 300));
+}
+
+void Object::EmitSound(uint16 soundevent)
+{
+	objacc.EmitSoundEvent(soundevent,this);
 }
 
 void Object::_BuildUpdatePacket(WorldPacket& packet)
@@ -283,7 +289,7 @@ bool WorldObject::InAnInventory()
 	//return !objmgr.ContainsObject(this);
 }
 
-bool WorldObject::Pickmeup(Player* plr)
+bool WorldObject::HandlePickup(Player* plr)
 {
      PickupTableMap::iterator iter = objmgr.pickupTable.find(GetObjectInfo()->pickup);
      if(iter != objmgr.pickupTable.end())
@@ -332,7 +338,7 @@ bool WorldObject::ArmorPickup(Player* plr)
 
 bool WorldObject::WeaponPickup(Player* plr)
 {
-     WorldObject** equipment = plr->GetEquipment();
+    WorldObject** equipment = plr->GetEquipment();
 	uint32 slot = this->GetObjectInfo()->subclass;
 
 	if(slot == SUBCLASS_QUIVER)

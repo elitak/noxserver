@@ -265,6 +265,7 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
 		virtual bool Equip( WorldObject* obj, uint32 slot );
 		virtual bool Dequip( WorldObject* obj );
 
+		virtual bool Drop(WorldObject* obj, uint32 max_dist, GridPair newPos);
 		//virtual bool HitDamage( float damage,	
 
 		void _BuildEquipPacket(WorldPacket& packet, bool armor, uint32 slot, uint32 modifier = 0);
@@ -289,16 +290,16 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
 		int16 m_animFrames;
 		time_t m_animTimer;
 
-          byte m_poison;
-          float m_poisoncycle; //every 30 frames damage by 1. NoX style poison.
-          uint16 m_poisoner;
+		byte m_poison;
+		float m_poisoncycle; //every 30 frames damage by 1. NoX style poison.
+		uint16 m_poisoner;
 
-          bool m_oneshotdeath;
+		bool m_oneshotdeath;
 
-	     uint16 m_weight;
-	     uint16 m_speed;
-          uint16 m_max_speed;
-	     uint16 m_strength;
+		uint16 m_weight;
+		uint16 m_speed;
+		uint16 m_max_speed;
+		uint16 m_strength;
 
 		uint8 m_angle;
 		uint32 m_auras; // UnitEnchantType

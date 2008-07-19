@@ -71,9 +71,8 @@ SpellMgr::SpellMgr()
 
 SpellMgr::~SpellMgr()
 {
-
 }
-
+// TODO: Make a manacost table
 bool WorldSession::ExecuteSpell(uint8 spellId, bool dontinvert)
 {
 
@@ -294,6 +293,7 @@ void SpellMgr::HandleBerserkerChargeAbility(Player *plr)
 	plr->MoveToward(cursor.x_coord, cursor.y_coord, 0.42);
 	int delay = sGameConfig.GetFloatDefault("BerserkerChargeDelay",300);
 	plr->SetAbilityDelay(ABILITY_BERSERKER_CHARGE, delay);	
+	plr->EmitSound(SOUND_BERSERKERCHARGEINVOKE);
 
 }
 void SpellMgr::HandleTreadLightlyAbility(Player *plr)
@@ -301,7 +301,8 @@ void SpellMgr::HandleTreadLightlyAbility(Player *plr)
 	int duration = sGameConfig.GetFloatDefault("TreadLightlyDuration",99999);
 	plr->SetEnchant(ENCHANT_SNEAK,duration);
 	int delay = sGameConfig.GetFloatDefault("TreadLightlyDelay",30);
-	plr->SetAbilityDelay(ABILITY_TREAD_LIGHTLY,delay);
+	plr->SetAbilityDelay(ABILITY_TREAD_LIGHTLY,delay);	
+	plr->EmitSound(SOUND_TREADLIGHTLYINVOKE);
 }
 
 void SpellMgr::HandleEyeOfWolfAbility(Player *plr)
@@ -309,7 +310,8 @@ void SpellMgr::HandleEyeOfWolfAbility(Player *plr)
 	int duration = sGameConfig.GetFloatDefault("EyeOfTheWolfDuration",300);
 	plr->SetEnchant(ENCHANT_INFRAVISION,duration);
 	int delay = sGameConfig.GetFloatDefault("EyeOfTheWolfDelay",600);
-	plr->SetAbilityDelay(ABILITY_EYE_OF_THE_WOLF, delay);
+	plr->SetAbilityDelay(ABILITY_EYE_OF_THE_WOLF, delay);	
+	plr->EmitSound(SOUND_TROLLDIE);
 }
 /***********************************************
 *    Spells    Spells    Spells    Spells
@@ -324,7 +326,8 @@ bool SpellMgr::HasEnoughMana(Player *plr, int cost)
 	{
 		return true;
 	}
-	//code to say "Don't have enough mana for that spell. don't forget the noise
+	//code to say "Don't have enough mana for that spell
+	_SendAudioPlayerEvent(SOUND_MANAEMPTY,100,0);
 	return false;
 }
 void SpellMgr::HandleSpellCurePoison(Player* caster, Player* target)

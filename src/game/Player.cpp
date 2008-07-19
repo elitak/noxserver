@@ -262,7 +262,7 @@ bool Player::Pickup(WorldObject* obj, uint32 max_dist)
 
 		m_session->SendPacket(&packet);
 
-          return obj->Pickmeup((Player*)this);
+        return obj->HandlePickup((Player*)this);
      }
 	else
 		return false;
