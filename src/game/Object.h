@@ -148,7 +148,7 @@ class MANGOS_DLL_SPEC Object
           //health/mana related
 		virtual void Damage( float damage, Object* cause );
 		virtual void Heal( float heal );
-		virtual void ManaDrain( float damage );
+		virtual bool ManaDrain( float damage );
 		virtual bool IsDead() { return m_health <= 0; }
 		virtual int16 GetHealth() { return m_health; }
           virtual int16 GetMaxHealth() { return m_max_health; }

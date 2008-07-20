@@ -178,10 +178,23 @@ void Unit::MoveToward(uint16 _x, uint16 _y, float speed)
 }
 bool Unit::Drop(WorldObject* obj, uint32 max_dist, GridPair newPos)
 {
-	 if(obj->GetPosition().distance(GetPosition())>max_dist)
-		 newPos = GridPair(
-			this->GetPositionX()*cos((double)this->GetAngle()),
-			this->GetPositionY()*sin((double)this->GetAngle()));
+	 if(newPos.distance(GetPosition())>max_dist)
+	 {
+		 //This is funky
+		 //cos and sin are radian functions, getangle is degrees. 1 rad = degree * pi/180
+		 double rads = (double)GetAngle()*(M_PI/180);
+		 uint32 x = max_dist*cos(rads);
+		 uint32 y = max_dist*sin(rads);
+		 if(newPos.x_coord<GetPositionX())
+			 x = GetPositionX()-x;
+		 else
+			 x += GetPositionX();
+		 if(newPos.y_coord<GetPositionY())
+			 y = GetPositionY()-y;
+		 else
+			 y += GetPositionY();
+		 newPos = GridPair(x,y);
+	 }
 	 return Object::Drop(obj,max_dist,newPos);
 }
 void Unit::Laugh()

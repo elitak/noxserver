@@ -787,7 +787,7 @@ void WorldSession::HandleTryAbilityOpcode(WorldPacket& recv_data)
 		if(GetPlayer()->IsAbilityReady(ability))
 			ExecuteAbility(ability);
 		else
-			_SendAudioPlayerEvent(SOUND_MANAEMPTY,100,0);
+			_SendAudioPlayerEvent(SOUND_PERMANENTFIZZLE,100,0);
     }
     catch(ByteBuffer::error &)
     {

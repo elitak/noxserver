@@ -329,6 +329,7 @@ void Player::PlayerCollideCallback(Flatland::ContactList &contacts)
 			//plr->SetActionAnim(ACTION_RECOIL, 60);
 			plr->Damage(plr->GetHealth() * 0.2, NULL);
 			plr->SetEnchant( ENCHANT_HELD, 45 );
+			plr->EmitSound(SOUND_BERSERKERCRASH);
 		}
 	}
 	else if(obj->GetType() == 0x2C9)
@@ -346,6 +347,7 @@ void Player::PlayerCollideCallback(Flatland::ContactList &contacts)
      {
           obj->Damage(45, plr);
           plr->UnsetEnchant(ENCHANT_SHOCK);
+		  plr->EmitSound(SOUND_SHOCKED);
      }
 }
 void Player::UpdateView()

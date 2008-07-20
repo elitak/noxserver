@@ -202,13 +202,16 @@ void Object::Damage(float damage, Object* cause)
 	if(!IsDead())
 		m_delta_health -= damage;
 }
-void Object::ManaDrain(float damage)
+bool Object::ManaDrain(float damage)
 {
+	if(m_max_mana<=0)
+		return false;
      m_mana -= damage;
      if(m_mana<0)
           m_mana = 0;
      else if(m_mana>m_max_mana)
           m_mana = m_max_mana;
+	 return true;
 }
 void Object::Heal(float heal)
 {

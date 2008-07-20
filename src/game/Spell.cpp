@@ -311,7 +311,7 @@ void SpellMgr::HandleEyeOfWolfAbility(Player *plr)
 	plr->SetEnchant(ENCHANT_INFRAVISION,duration);
 	int delay = sGameConfig.GetFloatDefault("EyeOfTheWolfDelay",600);
 	plr->SetAbilityDelay(ABILITY_EYE_OF_THE_WOLF, delay);	
-	plr->EmitSound(SOUND_TROLLDIE);
+	plr->EmitSound(SOUND_TROLLFLATUS);
 }
 /***********************************************
 *    Spells    Spells    Spells    Spells
@@ -327,7 +327,7 @@ bool SpellMgr::HasEnoughMana(Player *plr, int cost)
 		return true;
 	}
 	//code to say "Don't have enough mana for that spell
-	_SendAudioPlayerEvent(SOUND_MANAEMPTY,100,0);
+	plr->GetSession()->_SendAudioPlayerEvent(SOUND_MANAEMPTY,100,0);
 	return false;
 }
 void SpellMgr::HandleSpellCurePoison(Player* caster, Player* target)

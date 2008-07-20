@@ -50,7 +50,8 @@ void CollisionResponse::ManaDrainCollideCallback(Flatland::ContactList &contacts
 	float damage = atoi(me->GetObjectInfo()->collide_args[0]);
 	// damagetype = me->GetObjectInfo()->collide_args[1] // convert from string to enum?
 
-	player->ManaDrain(damage/3);
+	if(player->ManaDrain(damage/3))
+		me->EmitSound(SOUND_BLUEFIREDAMAGE);
 }
 void CollisionResponse::SpellProjectileCollideCallback(Flatland::ContactList &contacts)
 {
