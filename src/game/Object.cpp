@@ -303,7 +303,7 @@ bool WorldObject::HandlePickup(Player* plr)
 bool WorldObject::FoodPickup(Player* plr)
 {
      int amt = atoi(GetObjectInfo()->use_args[0]);
-     if(plr->GetMaxHealth()-plr->GetHealth() > amt && !(GetObjectInfo()->subclass & SUBCLASS_MUSHROOM))
+     if((plr->GetMaxHealth())-(plr->GetHealth()) > amt && !(GetObjectInfo()->subclass & SUBCLASS_MUSHROOM))
      {
           Use(plr);
           return false;
@@ -377,8 +377,72 @@ void WorldObject::Use(Player* plr)
 /// Use Handlers
 void WorldObject::PotionUse(Player *plr)
 {
-	int amt = atoi(GetObjectInfo()->use_args[0]);
-	plr->Heal( amt );
+    
+	uint32 type = GetObjectInfo()->subclass;
+	if(type & SUBCLASS_MANA_POTION) //this can only be true for mana potions
+    {
+        if(plr->GetMaxMana()==0)
+        {
+	        int amt = atoi(GetObjectInfo()->use_args[0]);
+            plr->ManaDrain(0-amt);
+            plr->GetSession()->_SendAudioPlayerEvent(SOUND_RESTOREMANA,100,0);
+        }
+        else
+            return;
+    }
+    else if(type & SUBCLASS_HEALTH_POTION)
+    {
+	    int amt = atoi(GetObjectInfo()->use_args[0]);
+        plr->Heal(0-amt);
+        plr->GetSession()->_SendAudioPlayerEvent(SOUND_RESTOREHEALTH,100,0);
+    }
+    else if(type & SUBCLASS_CURE_POISON_POTION)
+    {
+        if(plr->IsPoisoned())
+        {   
+            plr->Poison(0, 0);
+            plr->GetSession()->_SendAudioPlayerEvent(SOUND_CUREPOISONEFFECT, 100, 0);
+        }
+        else
+            return;
+    }
+    else if(type & SUBCLASS_HASTE_POTION)
+    {
+        plr->SetEnchant(ENCHANT_HASTED);
+    }
+    else if(type & SUBCLASS_INVISIBILITY_POTION)
+    {
+        plr->SetEnchant(ENCHANT_INVISIBLE);
+    }
+    else if(type & SUBCLASS_SHIELD_POTION)
+    {
+        plr->SetEnchant(ENCHANT_SHIELD);
+    }
+    else if(type & SUBCLASS_FIRE_PROTECT_POTION)
+    {
+        plr->SetEnchant(ENCHANT_PROTECT_FROM_FIRE);
+    }
+    else if(type & SUBCLASS_SHOCK_PROTECT_POTION)
+    {
+        plr->SetEnchant(ENCHANT_PROTECT_FROM_ELECTRICITY);
+    }
+    else if(type & SUBCLASS_POISON_PROTECT_POTION)
+    {
+        plr->SetEnchant(ENCHANT_PROTECT_FROM_POISON);
+    }
+    else if(type & SUBCLASS_INVULNERABILITY_POTION)
+    {
+        plr->SetEnchant(ENCHANT_INVULNERABLE);
+    }
+    else if(type & SUBCLASS_INFRAVISION_POTION)
+    {
+        plr->SetEnchant(ENCHANT_DETECTING);
+    }
+    else if(type & SUBCLASS_VAMPIRISM_POTION)
+    {
+        plr->SetEnchant(ENCHANT_VAMPIRISM);
+    }
+    plr->EmitSound(SOUND_POTIONUSE);
 	plr->RemoveFromInventory(this, GridPair(5880, 5880));
 	objacc.AddObjectToRemoveList(this);
 }

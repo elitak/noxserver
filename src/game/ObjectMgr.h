@@ -90,11 +90,13 @@ struct XferHandler
 };
 struct EnchantEntry
 {
-	EnchantEntry() : name(NULL), frames(0) {};
-	EnchantEntry( char* _name, int16 _frames = 0 ) : name(_name), frames(_frames) {};
+	EnchantEntry() : name(NULL), frames(0), enchantsoundon(0), enchantsoundoff(0) {};
+	EnchantEntry( char* _name, int16 _frames = 0, int8 _enchantsoundon = 0, int8 _enchantsoundoff = 0 ) : name(_name), frames(_frames), enchantsoundon(_enchantsoundon), enchantsoundoff(_enchantsoundoff) {};
 
 	char* name;
 	int16 frames;
+	int8 enchantsoundon;
+	int8 enchantsoundoff;
 };
 
 #define INVALID_EXTENT	0x0000

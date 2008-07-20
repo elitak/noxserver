@@ -122,6 +122,7 @@ class MANGOS_DLL_SPEC WorldSession
 		}
 		uint8 GetAlias( uint16 extent, uint16 type );
 		void SetAlias( uint8 id, uint16 extent, uint16 type, uint32 other );
+        void _SendFxDeathRaySpell( uint16 x, uint16 y, uint16 x2, uint16 y2 );
     protected:
 
 		// Spells
@@ -205,6 +206,7 @@ class MANGOS_DLL_SPEC WorldSession
 		void _SendMapSendPacket();
         void _SendReportSpellStart( uint8 spell );
         void _SendFxDurationSpell( uint16 type, uint16 x, uint16 y );
+        //void _SendFxDeathRaySpell( uint16 x, uint16 y, uint16 x2, uint16 y2 );
 
 		void _SendPacket(WorldPacket* packet);
 

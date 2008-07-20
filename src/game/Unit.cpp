@@ -182,7 +182,8 @@ bool Unit::Drop(WorldObject* obj, uint32 max_dist, GridPair newPos)
 	 {
 		 //This is funky
 		 //cos and sin are radian functions, getangle is degrees. 1 rad = degree * pi/180
-		 double rads = (double)GetAngle()*(M_PI/180);
+		 //360 seems to be behaving better
+		 double rads = (double)GetAngle()*(M_PI/360);
 		 uint32 x = max_dist*cos(rads);
 		 uint32 y = max_dist*sin(rads);
 		 if(newPos.x_coord<GetPositionX())
@@ -199,18 +200,18 @@ bool Unit::Drop(WorldObject* obj, uint32 max_dist, GridPair newPos)
 }
 void Unit::Laugh()
 {
-     SetActionAnim(ACTION_LAUGH, 40);
+     SetActionAnim(ACTION_LAUGH, 30);
 	 EmitSound(SOUND_TAUNTLAUGH);
 }
 void Unit::Point()
 {
-     SetActionAnim(ACTION_POINT, 40);
+     SetActionAnim(ACTION_POINT, 29);
 	 EmitSound(SOUND_TAUNTPOINT);
 }
 
 void Unit::Taunt()
 {
-     SetActionAnim(ACTION_TAUNT, 40);
+     SetActionAnim(ACTION_TAUNT, 27);
 	 EmitSound(SOUND_TAUNTSHAKEFIST);
 }
 
@@ -370,6 +371,10 @@ void Unit::UnsetEnchant( UnitEnchantType enchant )
 	m_aura_times[enchant] = 0;
 
 	m_updateMask |= MASK_ENCHANTMENTS;
+    
+	EnchantTableMap::iterator iter = objmgr.enchantTable.find(enchant);
+	if(iter != objmgr.enchantTable.end())
+        EmitSound(iter->second.enchantsoundoff);
 }
 void Unit::SetEnchant( UnitEnchantType enchant, int16 frames )
 {
@@ -385,6 +390,11 @@ void Unit::SetEnchant( UnitEnchantType enchant, int16 frames )
 			m_aura_times[enchant] = 300;
 	}
 	m_updateMask |= MASK_ENCHANTMENTS;
+
+    
+	EnchantTableMap::iterator iter = objmgr.enchantTable.find(enchant);
+	if(iter != objmgr.enchantTable.end())
+        EmitSound(iter->second.enchantsoundon);
 }
 void Unit::ResetEnchants()
 {

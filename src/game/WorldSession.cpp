@@ -859,7 +859,6 @@ void WorldSession::HandleTrySpellOpcode(WorldPacket& recv_data)
 	recv_data.rpos(recv_data.rpos() + 19);
 	uint8 dontinvert = recv_data.read<uint8>();
 
-     //inversion was backwards.
 	if( ExecuteSpell(spellId, (bool)dontinvert) ) //if spell cast succeeded
         _SendReportSpellStart(spellId);
     _SendFxDurationSpell(7, GetPlayer()->GetPositionX(), GetPlayer()->GetPositionY());
@@ -1220,7 +1219,7 @@ void WorldSession::_SendMapSendPacket()
 	if((m_playerDownloading - 1) * PACKET_SIZE > sWorld.GetMap()->GetNxzSize())
 		m_playerDownloading = 0;
 }
-//sound ID, volume, L-R balance. Balance==0 then it's in the middle
+//sound ID, volume, L-R balance. Balance=0=middle
 void WorldSession::_SendAudioPlayerEvent( uint16 sound, uint8 volume, uint8 balance )
 {
    	WorldPacket packet(MSG_AUDIO_PLAYER_EVENT, 0x00, _client, 3);
@@ -1241,4 +1240,14 @@ void WorldSession::_SendFxDurationSpell( uint16 type, uint16 x, uint16 y )
     packet << x;
     packet << y;
 	SendPacket(&packet);
+}
+void WorldSession::_SendFxDeathRaySpell( uint16 x, uint16 y, uint16 x2, uint16 y2 )
+{
+    WorldPacket packet(MSG_FX_DEATH_RAY, 0x00, _client, 6);
+    packet << x;
+    packet << y;
+    packet << x2;
+    packet << y2;
+	SendPacket(&packet);
+
 }

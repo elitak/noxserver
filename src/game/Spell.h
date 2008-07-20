@@ -207,12 +207,14 @@ public:
 	void HandleSpellUnknown(Player* caster, Player* target) {};
 	void HandleAbilityUnknown(Player* plr) {};
 	void HandleBerserkerChargeAbility(Player* plr);
+	void HandleWarcryAbility(Player* plr);
      void HandleEyeOfWolfAbility(Player* plr);
      void HandleTreadLightlyAbility(Player* Plr);
 
      void HandleSpellGiveMana(Player* plr, int cost);
      bool HasEnoughMana(Player* plr, int cost);
      void HandleSpellCurePoison(Player* caster, Player* target);
+     void HandleSpellDeathRay(Player* caster, Player* target);
      void HandleSpellForceField(Player* caster, Player* target);
      void HandleSpellHaste(Player* caster, Player* target);
      void HandleSpellInfravision(Player* caster, Player* target);

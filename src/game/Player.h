@@ -150,6 +150,7 @@ class MANGOS_DLL_SPEC Player : public Unit
 		void ObjectDestroyed(WorldObject* obj);
 		void ResetAbilityDelays();
 		void SetAbilityDelay(uint8 ability, uint16 frames);
+		void SetTreadLightlyMarker(GridPair position);
 		bool IsAbilityReady(uint8 ability);
 		void Respawn();
 

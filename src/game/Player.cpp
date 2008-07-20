@@ -214,7 +214,7 @@ void Player::Jump()
      if(!(m_action==ACTION_IDLE||m_action==ACTION_WALK||m_action==ACTION_RUN||m_action==ACTION_SNEAK))
           return;
      GridPair cursor = GetSession()->GetCursor();
-     SetActionAnim(ACTION_JUMP, 8);
+     SetActionAnim(ACTION_JUMP, 12);
 	MoveToward(cursor.x_coord, cursor.y_coord, 0.42);
 }
 void Player::RunningJump()
@@ -222,7 +222,7 @@ void Player::RunningJump()
      if(!(m_action==ACTION_IDLE||m_action==ACTION_WALK||m_action==ACTION_RUN||m_action==ACTION_SNEAK))
           return;
      GridPair cursor = GetSession()->GetCursor();
-     SetActionAnim(ACTION_JUMP, 8);
+     SetActionAnim(ACTION_JUMP, 12);
 	MoveToward(cursor.x_coord, cursor.y_coord, 0.42);
 }
 bool Player::Equip(WorldObject* obj)
@@ -330,6 +330,7 @@ void Player::PlayerCollideCallback(Flatland::ContactList &contacts)
 			plr->Damage(plr->GetHealth() * 0.2, NULL);
 			plr->SetEnchant( ENCHANT_HELD, 45 );
 			plr->EmitSound(SOUND_BERSERKERCRASH);
+			plr->EmitSound(SOUND_BERSERKERCHARGEOFF);
 		}
 	}
 	else if(obj->GetType() == 0x2C9)
@@ -341,6 +342,7 @@ void Player::PlayerCollideCallback(Flatland::ContactList &contacts)
 			if(obj->GetHealth() <= 100)
 				plr->SetAbilityDelay(ABILITY_BERSERKER_CHARGE, 0);
 			((Player*)obj)->Damage(100, plr);
+			plr->EmitSound(SOUND_BERSERKERCHARGEOFF);
 		}
 	}
      if(plr->HasEnchant(ENCHANT_SHOCK)&&obj->GetType() == 0x2C9)
@@ -467,11 +469,14 @@ void Player::MoveTowards(uint16 x, uint16 y)
 	int _x = pos.x_coord - x;
 	int _y = pos.y_coord - y;
 	int sqlength = (_x*_x) + (_y*_y);
-     if(HasEnchant(ENCHANT_SNEAK))
+	int distance = (int)sGameConfig.GetFloatDefault("TreadLightlyRadiusInPixels",230);
+	if(GetPosition().distance(m_treadposition)>distance)
+		UnsetEnchant(ENCHANT_SNEAK);
+    if(HasEnchant(ENCHANT_SNEAK) && !HasEnchant(ENCHANT_RUN))
           TreadTowards(x, y);
-	else if(sqlength < 1600)
+	else if(sqlength < 1600 && !HasEnchant(ENCHANT_RUN))
 		WalkTowards(x, y);
-	else if(sqlength < 2500 && m_action == ACTION_WALK)
+	else if(sqlength < 2500 && m_action == ACTION_WALK && !HasEnchant(ENCHANT_RUN))
 		WalkTowards(x, y);
 	else
 		RunTowards(x, y);
@@ -484,15 +489,15 @@ void Player::Respawn()
 	{
 	case PLAYER_CLASS_WARRIOR:
           {
-					ResetAbilityDelays();
-					m_health = sGameConfig.GetFloatDefault("WarriorMaxHealth",150);
-                         m_mana = sGameConfig.GetFloatDefault("WarriorMaxMana",0);
-					m_speed = sGameConfig.GetFloatDefault("WarriorMaxSpeed",21000);
-                         m_strength = sGameConfig.GetFloatDefault("WarriorMaxStrength",125);
-                         m_weight = 3000;
+		        ResetAbilityDelays();
+				    m_health = sGameConfig.GetFloatDefault("WarriorMaxHealth",150);
+                    m_mana = sGameConfig.GetFloatDefault("WarriorMaxMana",0);
+				    m_speed = sGameConfig.GetFloatDefault("WarriorMaxSpeed",21000);
+                    m_strength = sGameConfig.GetFloatDefault("WarriorMaxStrength",125);
+                    m_weight = 3000;
 
-                         type = sThingBin.Thing.Object.GetIndex("Longsword");
-                         Pickup(NewPickup(type));
+                    type = sThingBin.Thing.Object.GetIndex("Longsword");
+                    Pickup(NewPickup(type));
 					break;
           }
 
@@ -584,6 +589,10 @@ void Player::SetAbilityDelay(uint8 ability, uint16 frames)
 		_BuildResetAbilityPacket(packet, ability);
 		GetSession()->SendPacket(&packet);
 	}
+}
+void Player::SetTreadLightlyMarker (GridPair pos)
+{
+	m_treadposition = pos;
 }
 void Player::SetEnchant(UnitEnchantType enchant, int16 frames)
 {

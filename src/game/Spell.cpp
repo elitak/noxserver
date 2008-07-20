@@ -75,7 +75,7 @@ SpellMgr::~SpellMgr()
 // TODO: Make a manacost table
 bool WorldSession::ExecuteSpell(uint8 spellId, bool dontinvert)
 {
-
+    //We need to calculate wait time by counting phenomes
 	if(spellmgr.HasEnoughMana(GetPlayer(), 30)) // change this to represent the actual mana for spell
 	{
 		if(dontinvert) // execute spell now, also check if the spell should be on others only, maybe change this to an xor
@@ -273,7 +273,7 @@ void SpellMgr::FillAbilityHandlerHashTable()
 		return;
 
 	abilityTable[ ABILITY_BERSERKER_CHARGE ]	= AbilityHandler( &SpellMgr::HandleBerserkerChargeAbility );
-	abilityTable[ ABILITY_WARCRY ]				= AbilityHandler( &SpellMgr::HandleAbilityUnknown );
+	abilityTable[ ABILITY_WARCRY ]				= AbilityHandler( &SpellMgr::HandleWarcryAbility );
 	abilityTable[ ABILITY_HARPOON ]			= AbilityHandler( &SpellMgr::HandleAbilityUnknown );
 	abilityTable[ ABILITY_TREAD_LIGHTLY ]		= AbilityHandler( &SpellMgr::HandleTreadLightlyAbility );
 	abilityTable[ ABILITY_EYE_OF_THE_WOLF ]	= AbilityHandler( &SpellMgr::HandleEyeOfWolfAbility );
@@ -294,6 +294,7 @@ void SpellMgr::HandleBerserkerChargeAbility(Player *plr)
 	int delay = sGameConfig.GetFloatDefault("BerserkerChargeDelay",300);
 	plr->SetAbilityDelay(ABILITY_BERSERKER_CHARGE, delay);	
 	plr->EmitSound(SOUND_BERSERKERCHARGEINVOKE);
+	plr->EmitSound(SOUND_BERSERKERCHARGEON);
 
 }
 void SpellMgr::HandleTreadLightlyAbility(Player *plr)
@@ -302,7 +303,19 @@ void SpellMgr::HandleTreadLightlyAbility(Player *plr)
 	plr->SetEnchant(ENCHANT_SNEAK,duration);
 	int delay = sGameConfig.GetFloatDefault("TreadLightlyDelay",30);
 	plr->SetAbilityDelay(ABILITY_TREAD_LIGHTLY,delay);	
+	plr->SetTreadLightlyMarker(plr->GetPosition());
 	plr->EmitSound(SOUND_TREADLIGHTLYINVOKE);
+	plr->EmitSound(SOUND_TREADLIGHTLYON);
+}
+
+void SpellMgr::HandleWarcryAbility(Player *plr)
+{
+	int duration = sGameConfig.GetFloatDefault("WarcryDuration",120);
+	int delay = sGameConfig.GetFloatDefault("WarcryDelay",300);
+	plr->SetAbilityDelay(ABILITY_WARCRY,delay);	
+	plr->SetActionAnim(ACTION_WARCRY, 15);
+	plr->EmitSound(SOUND_WARCRYINVOKE);
+	plr->EmitSound(SOUND_WARCRYON);
 }
 
 void SpellMgr::HandleEyeOfWolfAbility(Player *plr)
@@ -312,6 +325,7 @@ void SpellMgr::HandleEyeOfWolfAbility(Player *plr)
 	int delay = sGameConfig.GetFloatDefault("EyeOfTheWolfDelay",600);
 	plr->SetAbilityDelay(ABILITY_EYE_OF_THE_WOLF, delay);	
 	plr->EmitSound(SOUND_TROLLFLATUS);
+    //SOUND_EYEOFTHEWOLFINVOKE
 }
 /***********************************************
 *    Spells    Spells    Spells    Spells
@@ -327,6 +341,8 @@ bool SpellMgr::HasEnoughMana(Player *plr, int cost)
 		return true;
 	}
 	//code to say "Don't have enough mana for that spell
+    //This makes it so it only sends the audio event to the player, and not
+    //the whole server, like EmitSound does
 	plr->GetSession()->_SendAudioPlayerEvent(SOUND_MANAEMPTY,100,0);
 	return false;
 }
@@ -335,6 +351,25 @@ void SpellMgr::HandleSpellCurePoison(Player* caster, Player* target)
 	if(target == NULL)
 		target = caster;
 	target->Poison(0,0);
+}
+void SpellMgr::HandleSpellDeathRay(Player* caster, Player* target)
+{
+    //Doesn't work due to spell projectiles at the moment.
+    if(target == NULL)
+		target = caster;
+	GridPair mouse = target->GetSession()->GetCursor();
+	if(target->CanSeePoint((uint16)(mouse.x_coord),(uint16)(mouse.y_coord),0))
+	{
+        /*DeathRayOutRadius = 15;
+        DeathRayInRadius = 10;
+        SOLO DeathRayDamage = 90;
+        ARENA DeathRayDamage = 100;*/
+        caster->GetSession()->_SendFxDeathRaySpell(caster->GetPositionX(),
+                                                    caster->GetPositionY(),
+                                                    mouse.x_coord,
+                                                    mouse.y_coord);
+        caster->EmitSound(SOUND_DEATHRAYCAST);
+	}
 }
 void SpellMgr::HandleSpellForceField(Player* caster, Player* target)
 {
@@ -369,6 +404,7 @@ void SpellMgr::HandleSpellLesserHeal(Player* caster, Player* target)
 		target = caster;
 	float amount = sGameConfig.GetFloatDefault("LesserHealAmount", 15);
 	target->Heal(amount);
+    target->EmitSound(SOUND_LESSERHEALEFFECT);
 }
 void SpellMgr::HandleSpellProtectFromFire(Player* caster, Player* target)
 {
@@ -393,7 +429,6 @@ void SpellMgr::HandleSpellProtectFromPoison(Player* caster, Player* target)
 		target = caster;
 	int duration = sGameConfig.GetFloatDefault("ProtectPoisonEnchantDuration",1800);
 	target->SetEnchant(ENCHANT_PROTECT_FROM_POISON,duration);
-    target->GetSession()->_SendAudioPlayerEvent(SOUND_PROTECTIONFROMELECTRICITYEFFECT);
 }
 void SpellMgr::HandleSpellShock(Player* caster, Player* target)
 {
