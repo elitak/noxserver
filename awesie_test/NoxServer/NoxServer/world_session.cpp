@@ -12,6 +12,13 @@ m_status(STATUS_AUTHED), m_player_downloading(0), m_player_observing(true)
 {
 }
 
+world_session::~world_session()
+{
+	if(m_player)
+		logout();
+
+	world::instance->return_free_id(m_player_id);
+}
 void world_session::queue_packet(world_packet& packet)
 {
 	m_receive_queue.push(new world_packet(packet)); // push a copy of the packet onto the queue
@@ -45,6 +52,15 @@ uint8 world_session::get_alias(uint16 extent, uint16 type)
 	return 0;
 }
 
+void world_session::logout()
+{
+	if(m_player)
+	{
+		world::instance->remove_player(m_player);
+		delete m_player;
+		m_player = NULL;
+	}
+}
 void world_session::send_packet(world_packet& packet, bool ifReady, bool changeUnk)
 {
 	if (!ifReady || !is_player_loading())
@@ -525,7 +541,9 @@ void world_session::HandleClientReadyOpcode(world_packet &recvPacket)
 	//	m_player->SendUpdatePacket();
 		_SendFadeBeginOpcode();
 		m_player->respawn();
-	//	objectAccessor::Instance().SendPlayerInfo(this);
+
+		world_packet packet(0, 0, m_endpoint);
+		world::instance->send_player_info(this, packet);
 	}
 }
 

@@ -23,6 +23,7 @@ class world_session
 {
 public:
 	world_session(uint8 id, boost::asio::ip::udp::endpoint endpoint);
+	~world_session();
 
 	void queue_packet(world_packet& packet);
 
@@ -30,6 +31,7 @@ public:
 	void set_xor_key(uint8 xor) { m_xor = xor; }
 
 	player* get_player() { return m_player; }
+	uint8 get_player_id() { return m_player_id; }
 
 	void update(uint32 diff);
 	bool is_player_loading() { return m_player_loading; }

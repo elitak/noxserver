@@ -55,7 +55,10 @@ public:
 	void move_towards(float x, float y);
 	void running_jump();
 
+	world_session& get_session() { return _session; }
+
 protected:
+
 	world_session& _session;
 	player_info m_player_info;
 

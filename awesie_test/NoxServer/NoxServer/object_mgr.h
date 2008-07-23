@@ -110,7 +110,18 @@ public:
 	}
 
 	object* create_object_from_file(NoxBuffer* rdr, NoxObjectTOC* toc);
+
+	// physics
+	b2Body* get_static_body();
+	b2Body* get_walls_body();
 protected:
+	std::set<object*> m_objects;
+	object* m_extents[MAX_EXTENT+1];
+
+	// physics
+	b2Body* m_wall_body;
+	b2Body* m_static_body;
+
 	OpcodeTableMap opcodeTable;
 	CollideTableMap collideTable;
 	UpdateTableMap updateTable;
@@ -145,7 +156,4 @@ protected:
 	int WeaponXferHandler(object* obj, NoxBuffer* rdr);
 	int ArmorXferHandler(object* obj, NoxBuffer* rdr);
 	int TeamXferHandler(object* obj, NoxBuffer* rdr);
-private:
-	std::set<object*> m_objects;
-	object* m_extents[MAX_EXTENT+1];
 };

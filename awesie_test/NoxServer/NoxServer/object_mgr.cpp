@@ -88,6 +88,14 @@ object_mgr::object_mgr(boost::restricted)
 	xferTable[ XFER_TOXICCLOUD ] = XferHandler( &object_mgr::ToxicCloudXferHandler );
 	xferTable[ XFER_MONSTERGENERATOR ] = XferHandler( &object_mgr::DefaultXferHandler );
 	xferTable[ XFER_REWARDMARKER ] = XferHandler( &object_mgr::RewardMarkerXferHandler );
+
+	// physics
+	b2BodyDef bodyDef;
+	// we set the position to zero, because we use one static body for all static objects
+	// these objects are then defined by shapes which use localPosition
+	bodyDef.position.Set(0f, 0f);
+	m_wall_body = world::instance->get_the_world().CreateBody(&bodyDef);
+	m_static_body = world::instance->get_the_world().CreateBody(&bodyDef);
 }
 
 void object_mgr::add_object(object * obj)

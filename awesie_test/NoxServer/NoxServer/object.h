@@ -20,8 +20,28 @@ public:
 
 	uint16 get_extent() { return m_extent; }
 	uint16 get_type() { return m_type; }
-	float get_position_x() { return m_body->GetPosition().x; }
-	float get_position_y() { return m_body->GetPosition().y; }
+	float get_position_x() 
+	{ 
+		if(!is_in_inventory())
+			return m_position.y;
+		else
+			return 0;
+	}
+	float get_position_y() 
+	{ 
+		if(!is_in_inventory())
+			return m_position.y;
+		else
+			return 0;
+	}
+
+	void set_position(float x, float y)
+	{
+		destroy_body();
+		create_body(x, y);
+	}
+
+	bool is_in_inventory() { return m_body == NULL; }
 
 	void use(player* plr);
 protected:
@@ -45,6 +65,13 @@ protected:
 
 	// physics
 	b2Body* m_body;
+	b2Shape* m_shape;
+
+	void create_body(float x, float y);
+	void destroy_body();
 
 	friend class object_mgr;
+private:
+	// there is no easy way to remember position for static objects
+	b2Vec2 m_position;
 };

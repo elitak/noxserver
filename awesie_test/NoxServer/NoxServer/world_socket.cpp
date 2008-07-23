@@ -305,8 +305,7 @@ void world_socket::handle_join(world_packet& recvPacket)
         return;
     }
 
-	// change 0 to a free player id
-	world_session *session = new world_session(0, recvPacket.get_endpoint());
+	world_session *session = new world_session(world::instance->get_free_id(), recvPacket.get_endpoint());
 //	sWorld.AddSession(session);
 	m_sessions[recvPacket.get_endpoint()] = session;
 

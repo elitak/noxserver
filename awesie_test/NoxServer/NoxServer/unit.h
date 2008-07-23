@@ -201,5 +201,18 @@ class unit : public world_object
 public:
 	unit(uint16 extent);
 
-	void set_angle(uint8 angle);
+	// wtf is this shit??
+	void set_angle(uint8 angle) 
+	{ 
+		const uint8 rot_data[] = { 0x40, 0x70, 0x60, 0x50, 0x30, 0x00, 0x10, 0x20 }; 
+		if(!IsDead())
+			m_angle = rot_data[(uint8)floor((double)angle / 0x20 + 0.5) & 0x7]; 
+	}
+	uint8 get_angle () { return m_angle; }
+protected:
+	uint8 m_angle;
+	uint16 m_weight;
+	uint16 m_speed;
+	uint16 m_max_speed;
+	uint16 m_strength;
 };
