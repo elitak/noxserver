@@ -24,10 +24,11 @@
 // math
 #include <boost/numeric/ublas/vector.hpp>
 
+// containers
+#include <boost/foreach.hpp>
+
 // physics
 #include "Box2D.h"
 #define SCALING_FACTOR 0.1
 
-#include "world.h"
-#include "socket_mgr.h"
 #include "opcodes.h"

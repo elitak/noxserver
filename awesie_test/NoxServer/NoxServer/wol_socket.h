@@ -11,6 +11,7 @@ public:
 	wol_socket(boost::asio::io_service& s);
 
 	void connect(std::string username, std::string password);
+	void update();
 private:
 	boost::asio::io_service& _io_service;
 	tcp::socket _socket;

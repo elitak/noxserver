@@ -1,10 +1,11 @@
+#include "world.h"
 #include "object_mgr.h"
 
 object_mgr::object_mgr(boost::restricted)
 {
 	memset(m_extents, 0, MAX_EXTENT);
 
-		// Build Collide Table
+	// Build Collide Table
 	//collideTable[ COLLIDE_DAMAGE ]	= CollideHandler( &CollisionResponse::DamageCollideCallback );
     //collideTable[ COLLIDE_MANADRAIN ]  = CollideHandler( &CollisionResponse::ManaDrainCollideCallback );
 	//collideTable[ COLLIDE_SPELLPROJECTILE ] = CollideHandler( &CollisionResponse::SpellProjectileCollideCallback );
@@ -93,9 +94,17 @@ object_mgr::object_mgr(boost::restricted)
 	b2BodyDef bodyDef;
 	// we set the position to zero, because we use one static body for all static objects
 	// these objects are then defined by shapes which use localPosition
-	bodyDef.position.Set(0f, 0f);
+	bodyDef.position.Set(0.0f, 0.0f);
 	m_wall_body = world::instance->get_the_world().CreateBody(&bodyDef);
 	m_static_body = world::instance->get_the_world().CreateBody(&bodyDef);
+}
+
+void object_mgr::update(uint32 diff)
+{
+	BOOST_FOREACH(object* o, m_objects)
+	{
+		o->update(diff);
+	}
 }
 
 void object_mgr::add_object(object * obj)
@@ -132,10 +141,10 @@ object* object_mgr::create_object_from_file(NoxBuffer *rdr, NoxObjectTOC *toc)
 	//ASSERT(type != 0);
 
 	object* obj = NULL;
-	//if(ThingBin::instance->Thing.Object.Objects.Get(type)->classes & CLASS_IMMOBILE)
+	if(ThingBin::instance->Thing.Object.Objects.Get(type)->classes & CLASS_IMMOBILE)
 		obj = new object(type);
-	//else
-	//	obj = new WorldObject(type, GridPair());
+	else
+		obj = new world_object(type);
 
 	size_t finish = rdr->read<int64>() + rdr->rpos();
 
@@ -156,10 +165,20 @@ object* object_mgr::create_object_from_file(NoxBuffer *rdr, NoxObjectTOC *toc)
 			break;
 	}
 
-	//obj->AddToWorld();
+	object_mgr::instance->add_object(obj);
 	return obj;
 }
 
+const CollideHandler* object_mgr::get_collide_handler(uint32 id)
+{
+	CollideTableMap::const_iterator iter = collideTable.find(id);
+	if(iter != collideTable.end())
+	{
+		return &iter->second;
+	}
+
+	return NULL;
+}
 int object_mgr::DefaultXferHandler(object* obj, NoxBuffer* rdr)
 {
 	char buffer[256];
@@ -172,7 +191,10 @@ int object_mgr::DefaultXferHandler(object* obj, NoxBuffer* rdr)
 
 	float x = rdr->read<float>();
 	float y = rdr->read<float>();
-	obj->m_body->SetXForm(b2Vec2(x, y), 0);
+	// since this adds this to the current world, we should save
+	// these values someplace else, then have it "respawn" when
+	// we want it to, TODO
+	obj->set_position(x, y);
 
 	if(rdr->read<uint8>() == 0xFF)
 	{

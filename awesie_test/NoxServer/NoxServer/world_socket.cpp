@@ -1,5 +1,5 @@
 #include "global.h"
-
+#include "world.h"
 #include "world_socket.h"
 #include "world_packet.h"
 #include "world_session.h"
@@ -49,32 +49,46 @@ world_socket::world_socket(io_service& s) : m_io_service(s), m_socket(m_io_servi
 
 void world_socket::listen()
 {
+	m_socket.open(udp::v4());
 	m_socket.bind(udp::endpoint(udp::v4(), GAME_PORT));
-
-	m_socket.async_receive_from(boost::asio::buffer(m_data, MAX_LEN), m_sender, boost::bind(&world_socket::handle_receive_from, this, placeholders::error, placeholders::bytes_transferred));
 }
 
 void world_socket::update()
 {
+	// receive stuff
+	//m_socket.async_receive_from(boost::asio::buffer(m_data, MAX_LEN), m_sender, 0, boost::bind(&world_socket::handle_receive_from, this, placeholders::error, placeholders::bytes_transferred));
+	while(m_socket.available())
+	{
+		boost::system::error_code ec;
+		size_t size = m_socket.receive_from(boost::asio::buffer(m_data, MAX_LEN), m_sender, 0, ec);
+		handle_receive_from(ec, size);
+	}
+
+	std::set<world_sessions::key_type> to_destroy;
+
+	// update sessions first (maybe we should move this out of world_socket)
+	BOOST_FOREACH(world_sessions::value_type p, m_sessions)
+	{
+		if(!p.second->update())
+			to_destroy.insert(p.first);
+	}
+
+	BOOST_FOREACH(world_sessions::key_type p, to_destroy)
+	{
+		delete m_sessions[p];
+		m_sessions.erase(p);
+	}
+
 	// clean out send queue
 	// we do this by asyncronously sending the first packet, if there is one
 	// then repeating in the async. handler
-	send_next_packet();
-}
-
-void world_socket::handle_send_to(const boost::system::error_code& err, size_t bytes_recvd)
-{
-	// repeat until all packets are sent
-	// alternatively, we could set a timeout in case this takes too long
-	// or put this in a different thread all together
-	send_next_packet();
+	while(!m_send_queue.empty())
+		send_next_packet();
 }
 
 void world_socket::send_next_packet()
 {
-	if(m_send_queue.empty())
-		return;
-
+	// we assume that m_send_queue is not empty, since we were called
 	world_packet* pkt = m_send_queue.front();	
 	m_send_queue.pop();
 
@@ -83,12 +97,12 @@ void world_socket::send_next_packet()
 	hdr->cmd = pkt->get_opcode();
 	hdr->unk = pkt->get_unk();
 
-	memcpy(m_send_data+sizeof(server_pkt_header), pkt->contents(), pkt->size());
+	pkt->read(m_send_data+sizeof(server_pkt_header), pkt->size());
 
 	size_t size = pkt->size() + sizeof(server_pkt_header);
 	crypt_data(pkt->get_xor(), m_send_data, size);
 
-	m_socket.async_send_to(boost::asio::buffer(m_send_data), pkt->get_endpoint(), boost::bind( &world_socket::handle_receive_from, this, placeholders::error, placeholders::bytes_transferred));
+	m_socket.send_to(boost::asio::buffer(m_send_data, size), pkt->get_endpoint());
 
 	// we can now destroy the packet
 	// we allocate this in queue_packet
@@ -131,7 +145,7 @@ void world_socket::handle_receive_from(const boost::system::error_code& err, siz
 	world_packet packet((uint8)hdr->cmd, (uint8)hdr->plr, m_sender, remaining);
 	packet.set_unk(hdr->unk);
 
-    if(remaining) memcpy((char*)packet.contents(), szBuffer, remaining);
+	if(remaining) packet.append(szBuffer, remaining);
 
     ///- If log of world packets is enable, log the incoming packet
     /*if( sWorldLog.LogWorld() )
@@ -171,8 +185,6 @@ void world_socket::handle_receive_from(const boost::system::error_code& err, siz
             break;
         }
     }
-
-	m_socket.async_receive_from(boost::asio::buffer(m_data, MAX_LEN), m_sender, boost::bind(&world_socket::handle_receive_from, this, placeholders::error, placeholders::bytes_transferred));
 }
 
 void world_socket::crypt_data(uint8 xor, uint8* data, uint32 datalen)
@@ -311,4 +323,11 @@ void world_socket::handle_join(world_packet& recvPacket)
 
 	world_packet packet( 0x14, 0, recvPacket.get_endpoint(), 0 );
 	queue_packet(packet);
+}
+void world_socket::send_to_all(world_packet& packet)
+{
+	BOOST_FOREACH(world_sessions::value_type p, m_sessions)
+	{
+		p.second->send_packet(packet);
+	}
 }

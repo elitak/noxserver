@@ -1,11 +1,73 @@
 #include "player.h"
+#include "socket_mgr.h"
+#include "world.h"
+#include "world_packet.h"
+#include "world_session.h"
 
-player::player(world_session& session) : _session(session), unit(0x2c9)
+#include <cmath>
+
+player::player(world_session& session) : _session(session), unit(0x2c9), m_moving_timer(0)
 {
+	memset(&m_player_info, 0, sizeof(m_player_info));
+	m_player_info.flag = 0x20;
 }
 
+void player::update_view()
+{
+	b2AABB aabb;
+	aabb.lowerBound.Set(m_body->GetPosition().x - 20, m_body->GetPosition().y - 20);
+	aabb.upperBound.Set(m_body->GetPosition().x + 20, m_body->GetPosition().y + 20);
+
+	const uint32 max_shapes = 255;
+	b2Shape *shapes_buffer[255];
+	uint32 actual_shapes = world::instance->get_the_world().Query(aabb, shapes_buffer, max_shapes);
+
+	for(int i = 0; i < actual_shapes; i++)
+	{
+		object* o = (object*)shapes_buffer[i]->GetUserData();
+		
+		// probably a wall
+		if(o == NULL)
+			return;
+
+		if(!o->is_static())
+		{
+			m_update_queue.insert(o);
+		}
+	}
+
+	cout << actual_shapes << "\n";
+	cout << m_update_queue.size() << "\n";
+}
+
+void player::update_player()
+{
+	// we are still moving, then we need to update seeable items
+	if(m_moving_timer > 0)
+	{
+		update_view();
+	}
+	SendUpdatePacket();
+}
+void player::update(uint32 diff)
+{
+	// update all timers
+	if(m_moving_timer > diff)
+		m_moving_timer -= diff;
+	else if(m_moving_timer > 0)
+		stop();
+}
+void player::stop()
+{
+	m_moving_timer = 0;
+
+	if(m_body)
+		m_body->SetLinearVelocity(b2Vec2(0, 0));
+}
 void player::attack()
 {
+	if(get_session().is_observing())
+		get_session().set_observing(false);
 }
 
 bool player::dequip(object *obj)
@@ -28,10 +90,6 @@ bool player::pickup(object *obj, uint32 max_dist)
 	return true;
 }
 
-void player::respawn()
-{
-}
-
 void player::jump()
 {
 }
@@ -44,8 +102,31 @@ void player::running_jump()
 {
 }
 
-void player::move_towards(float x, float y)
+void player::move_towards(float x, float y, float speed)
 {
+	if(!m_body)
+		return;
+
+	m_moving_timer = 100;
+
+	float cur_x = get_position_x();
+	float cur_y = get_position_y();
+
+	float delta_x = x - cur_x;
+	float delta_y = y - cur_y;
+
+	float magnitude = sqrt(delta_x*delta_x + delta_y*delta_y);
+
+	float unit_x = delta_x/magnitude;
+	float unit_y = delta_y/magnitude;
+
+	speed = speed * SCALING_FACTOR;
+	m_body->SetLinearVelocity(b2Vec2(unit_x * speed, unit_y * speed));
+}
+
+void player::run()
+{
+	move_towards(get_session().m_mouse_x, get_session().m_mouse_y, 120.0f);
 }
 
 void player::taunt()
@@ -60,47 +141,51 @@ void player::equip_secondary(object *obj)
 {
 }
 
-void Player::_BuildUpdatePacket(WorldPacket& packet)
+bool player::is_ability_ready(uint8 ability)
 {
-	packet.SetOpcode(MSG_UPDATE_STREAM);
+	return true;
+}
+void player::_BuildUpdatePacket(world_packet& packet)
+{
+	packet.set_opcode(MSG_UPDATE_STREAM);
 	if(packet.size()) // If we are the first in the stream, then we can't/don't need this first byte
 		packet << (uint8)0x00;  // This is going to be here until we figure a way to make efficient use of relative coords.
 	packet << (uint8)0xFF;
-	packet << (uint16)GetExtent();
-	packet << (uint16)GetType();
-	packet << (uint16)GetPositionX();
-	packet << (uint16)GetPositionY();
-	packet << (uint8)GetAngle(); // we need to OR this with 0x80 depending on the m_action
+	packet << (uint16)get_extent();
+	packet << (uint16)get_type();
+	packet << (uint16)get_position_x();
+	packet << (uint16)get_position_y();
+	packet << (uint8)get_angle(); // we need to OR this with 0x80 depending on the m_action
 	packet << (uint8)m_action;
 }
 
-void Player::_BuildNewPlayerPacket(WorldPacket& packet)
+void player::_BuildNewPlayerPacket(world_packet& packet)
 {
-	packet.Initialize(MSG_NEW_PLAYER, 0x80, 0, 0x80);
-	packet << (uint16)GetExtent();
-	packet.append((uint8*)(&plrInfo), 0x7E);
+	packet.initialize(MSG_NEW_PLAYER, 0x80, packet.get_endpoint(), 0x80);
+	packet << (uint16)get_extent();
+	packet.append((uint8*)(&m_player_info), 0x7E);
 }
-void Player::_BuildClientStatusPacket(WorldPacket& packet)
+void player::_BuildClientStatusPacket(world_packet& packet)
 {
-	packet.Initialize(MSG_REPORT_CLIENT_STATUS, 0x0, 0, 6);
-	packet << (uint16)GetExtent();
-	packet << (uint32)m_session->IsObserving();
+	packet.initialize(MSG_REPORT_CLIENT_STATUS, 0x0, packet.get_endpoint(), 6);
+	packet << (uint16)get_extent();
+	packet << (uint32)get_session().is_observing();
 }
 
-void Player::_BuildResetAbilityPacket(WorldPacket& packet, uint8 ability)
+void player::_BuildResetAbilityPacket(world_packet& packet, uint8 ability)
 {
-	packet.Initialize(MSG_RESET_ABILITIES);
+	packet.initialize(MSG_RESET_ABILITIES, 0, packet.get_endpoint());
 	packet << (uint8)ability;
 }
-void Player::_BuildAbilityStatePacket(WorldPacket& packet, uint8 ability)
+void player::_BuildAbilityStatePacket(world_packet& packet, uint8 ability)
 {
-	packet.Initialize(MSG_REPORT_ABILITY_STATE);
+	packet.initialize(MSG_REPORT_ABILITY_STATE, 0, packet.get_endpoint());
 	packet << (uint8)ability;
-	packet << (uint8)(IsAbilityReady(ability));
+	packet << (uint8)(is_ability_ready(ability));
 }
-void Player::SendUpdatePacket()
+void player::SendUpdatePacket()
 {
-	WorldPacket packet(MSG_UPDATE_STREAM);
+	world_packet packet(MSG_UPDATE_STREAM, 0, get_session().get_endpoint());
 	// every object that starts stream must have the two bytes after the x,y
 	/*packet << (uint8)0xFF;
 	packet << (uint8)0x00;
@@ -112,28 +197,28 @@ void Player::SendUpdatePacket()
 	packet << (uint8)0;
 	packet << (uint8)0;*/
 
-	updateQueue.erase(this);
+	m_update_queue.erase(this);
 	// Always update ourselves, we have to be first due to reasons above
 	_BuildUpdatePacket(packet);
 
-	for(UpdateQueueType::iterator iter = updateQueue.begin(); iter != updateQueue.end(); ++iter)
+	for(update_queue::iterator iter = m_update_queue.begin(); iter != m_update_queue.end(); ++iter)
 		if(*iter)
 			(*iter)->_BuildUpdatePacket(packet);
-	updateQueue.clear();
+	m_update_queue.clear();
 
 	// Three zeroes denotes end of MSG_UPDATE_STREAM
 	packet << (uint8)0x00;
 	packet << (uint8)0x00;
 	packet << (uint8)0x00;
 
-	GetSession()->SendPacket(&packet);
+	get_session().send_packet(packet);
 }
 
-void Player::respawn()
+void player::respawn()
 {
 	// Set respawn states for the player
      uint16 type;
-	switch(plrInfo.pclass)
+	/*switch(plrInfo.pclass)
 	{
 	case PLAYER_CLASS_WARRIOR:
           {
@@ -190,19 +275,63 @@ void Player::respawn()
 	ForceUpdateAll();
 
 	ResetEnchants();
-	SetEnchant(ENCHANT_INVULNERABLE);
+	SetEnchant(ENCHANT_INVULNERABLE);*/
 
-	GetSession()->_SendPlayerRespawnOpcode();
-	WorldPacket packet;
+	set_position(3000, 2900);
+
+	get_session()._SendPlayerRespawnOpcode();
+	world_packet packet;
 	_BuildTotalHealthPacket(packet);
-	ObjectAccessor::Instance().SendPacketToAll(&packet);
-     _BuildTotalManaPacket(packet);
-     ObjectAccessor::Instance().SendPacketToAll(&packet);
+	socket_mgr::instance->get_world_socket().send_to_all(packet);
+    _BuildTotalManaPacket(packet);
+    socket_mgr::instance->get_world_socket().send_to_all(packet);
 	_BuildStatsPacket(packet);
-	ObjectAccessor::Instance().SendPacketToAll(&packet);
+	socket_mgr::instance->get_world_socket().send_to_all(packet);
 
 	_BuildDequipPacket(packet, true, 0xFFFFFFFF);
-	GetSession()->SendPacket(&packet);
+	get_session().send_packet(packet);
 	_BuildDequipPacket(packet, false, 0xFFFFFFFF);
-	GetSession()->SendPacket(&packet);
+	get_session().send_packet(packet);
+}
+void player::_BuildHealthPacket(world_packet &packet)
+{
+	packet.initialize(MSG_REPORT_HEALTH);
+	packet << get_extent();
+	packet << (uint8)(m_health);
+}
+void player::_BuildMyHealthPacket(world_packet &packet)
+{
+	packet.initialize(MSG_REPORT_PLAYER_HEALTH);
+	packet << (uint16)m_health;
+}
+void player::_BuildTotalHealthPacket(world_packet &packet)
+{
+	packet.initialize(MSG_REPORT_TOTAL_HEALTH);
+	packet << get_extent();
+	packet << (uint16)m_health;
+	packet << (uint16)m_max_health;
+}
+void player::_BuildManaPacket(world_packet &packet)
+{
+     packet.initialize(MSG_REPORT_MANA);
+     packet << get_extent();
+     packet << (uint16)(m_mana);
+}
+void player::_BuildTotalManaPacket(world_packet &packet)
+{
+     packet.initialize(MSG_REPORT_TOTAL_MANA);
+     packet << get_extent();
+     packet << (uint16)m_mana;
+     packet << (uint16)m_max_mana;
+}
+void player::_BuildStatsPacket(world_packet &packet)
+{
+	packet.initialize(MSG_REPORT_STATS);
+	packet << get_extent();
+	packet << (uint16)m_health;
+	packet << (uint16)m_mana; //mana
+	packet << (uint16)m_weight; //weight
+	packet << (uint16)m_speed; //speed
+	packet << (uint16)m_strength; //strength
+	packet << (uint8)10; //level
 }

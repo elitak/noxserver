@@ -183,6 +183,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\contact_listener.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\main.cpp"
 				>
 			</File>
@@ -242,6 +246,10 @@
 			>
 			<File
 				RelativePath=".\cli.h"
+				>
+			</File>
+			<File
+				RelativePath=".\contact_listener.h"
 				>
 			</File>
 			<File

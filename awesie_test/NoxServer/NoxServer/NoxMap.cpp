@@ -16,6 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include "object_mgr.h"
 #include "NoxMap.h"
 
 bool NoxMap::open(char *fileName)
@@ -88,8 +89,10 @@ void NoxMap::readObjects()
 	read<uint16>(); //unknown - always 0x0001?
 	while(rpos() < size())
 	{
-		//if(objmgr.CreateObjectFromFile(this, &objectTOC) == NULL)
-		//	break;
+		// we should change this to a handler parameter/variable, so that we can make this
+		// into a library instead of part of the main code
+		if(object_mgr::instance->create_object_from_file(this, &objectTOC) == NULL)
+			break;
 	}
 }
 
@@ -208,24 +211,152 @@ NoxWallMap::NoxWallMap()
 	//body = new btRigidBody(0, new btDefaultMotionState(start), &shape);
 }
 
-NoxWall::NoxWall(NoxWallPosition position, uint8 facing, uint8 variation, uint8 minimap) : _position(position), _facing(facing), _variation(variation), _minimap(minimap)
+NoxWall::NoxWall(uint8 x, uint8 y, uint8 facing, uint8 variation, uint8 minimap) : _facing(facing), _variation(variation), _minimap(minimap)
 {
+	SetPosition(x, y);
 }
 NoxWall::NoxWall(NoxBuffer *rdr)
 {
-	SetPositionX(rdr->read<uint8>());
-	SetPositionY(rdr->read<uint8>());
+	uint8 x = rdr->read<uint8>();
+	uint8 y = rdr->read<uint8>();
 
 	_facing = rdr->read<uint8>() & 0x7F; // remove the sign bit
 	rdr->read<uint8>(); //matId (?)
 	_variation = rdr->read<uint8>();
 	_minimap = rdr->read<uint8>();
 	rdr->read<uint8>(); // always null
+
+	SetPosition(x, y);
 }
 NoxWall::NoxWall()
 {
 }
 
+void NoxWall::create_body(uint8 x, uint8 y)
+{
+	float real_x = ( (x * 23) + 15) * SCALING_FACTOR;
+	float real_y = ( (y * 23) + 15) * SCALING_FACTOR;
+
+	b2Body* body = object_mgr::instance->get_walls_body();
+	b2PolygonDef polygonDef;
+
+	const float width = 3 * SCALING_FACTOR;
+	const float height = 9 * SCALING_FACTOR;
+
+	float d = sqrt(height*height/2);
+
+//#define EAST_WALL polygonDef.SetAsBox(height, width, b2Vec2(real_x+(height/2), real_y), 0.25f*b2_pi);
+//#define WEST_WALL polygonDef.SetAsBox(height, width, b2Vec2(real_x-(height/2), real_y), 0.25f*b2_pi);
+//#define NORTH_WALL polygonDef.SetAsBox(width, height, b2Vec2(real_x, real_y-(height/2)), 0.25f*b2_pi);
+//#define SOUTH_WALL polygonDef.SetAsBox(width, height, b2Vec2(real_x, real_y+(height/2)), 0.25f*b2_pi);
+
+#define EAST_WALL polygonDef.SetAsBox(height, width, b2Vec2(real_x+d, real_y+d), 0.25f*b2_pi);
+#define WEST_WALL polygonDef.SetAsBox(height, width, b2Vec2(real_x-d, real_y-d), 0.25f*b2_pi);
+#define SOUTH_WALL polygonDef.SetAsBox(width, height, b2Vec2(real_x+d, real_y-d), 0.25f*b2_pi);
+#define NORTH_WALL polygonDef.SetAsBox(width, height, b2Vec2(real_x-d, real_y+d), 0.25f*b2_pi);
+
+	switch(_facing)
+	{
+		case WALL_CROSS:
+			//east
+			EAST_WALL
+			m_shapes.insert(body->CreateShape(&polygonDef));
+
+			//west
+			WEST_WALL
+			m_shapes.insert(body->CreateShape(&polygonDef));
+		case WALL_NORTH:
+			//north
+			NORTH_WALL
+			m_shapes.insert(body->CreateShape(&polygonDef));
+
+			//south
+			SOUTH_WALL
+			m_shapes.insert(body->CreateShape(&polygonDef));
+		break;
+
+		case WALL_WEST:
+			//east
+			EAST_WALL
+			m_shapes.insert(body->CreateShape(&polygonDef));
+
+			//west
+			WEST_WALL
+			m_shapes.insert(body->CreateShape(&polygonDef));
+		break;
+
+		case WALL_EAST_T:
+			//north
+			NORTH_WALL
+			m_shapes.insert(body->CreateShape(&polygonDef));
+		case WALL_SW_CORNER:
+			//west
+			WEST_WALL
+			m_shapes.insert(body->CreateShape(&polygonDef));
+
+			//south
+			SOUTH_WALL
+			m_shapes.insert(body->CreateShape(&polygonDef));
+		break;
+
+		case WALL_NORTH_T:
+			EAST_WALL
+			m_shapes.insert(body->CreateShape(&polygonDef));
+		case WALL_SE_CORNER:
+			//west
+			WEST_WALL
+			m_shapes.insert(body->CreateShape(&polygonDef));
+
+			//north
+			NORTH_WALL
+			m_shapes.insert(body->CreateShape(&polygonDef));
+		break;
+
+		case WALL_WEST_T:
+			SOUTH_WALL
+			m_shapes.insert(body->CreateShape(&polygonDef));
+		case WALL_NE_CORNER:
+			//north
+			NORTH_WALL
+			m_shapes.insert(body->CreateShape(&polygonDef));
+			//east
+			EAST_WALL
+			m_shapes.insert(body->CreateShape(&polygonDef));
+		break;
+
+		case WALL_SOUTH_T:
+			//west
+			WEST_WALL
+			m_shapes.insert(body->CreateShape(&polygonDef));
+		case WALL_NW_CORNER:
+			//east
+			EAST_WALL
+			m_shapes.insert(body->CreateShape(&polygonDef));
+			//south
+			SOUTH_WALL
+			m_shapes.insert(body->CreateShape(&polygonDef));
+		break;
+		default:
+			break;
+	}
+
+	b2FilterData filter;
+	filter.categoryBits = 0x0004;
+	filter.maskBits = 0xFFFF;
+	BOOST_FOREACH(b2Shape* s, m_shapes)
+	{
+		s->SetFilterData(filter);
+	}
+}
+void NoxWall::destroy_body()
+{
+	BOOST_FOREACH(b2Shape* s, m_shapes)
+	{
+		object_mgr::instance->get_walls_body()->DestroyShape(s);
+	}
+
+	m_shapes.clear();
+}
 /*void AddBoxFromFlag(uint8 flag, btCompoundShape* shape)
 {
 	btBoxShape* box;

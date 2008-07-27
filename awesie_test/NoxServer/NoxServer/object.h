@@ -7,6 +7,9 @@
 
 class object_mgr;
 class player;
+class world_packet;
+
+struct CollideHandler;
 
 class object : boost::noncopyable
 {
@@ -15,35 +18,40 @@ public:
 
 	GNHT* get_object_info() 
 	{ 
-		return ThingBin::instance->Thing.Object.GetObject(m_type);
+		return ThingBin::instance->Thing.Object.GetObject(m_type - 1);
 	}
 
 	uint16 get_extent() { return m_extent; }
 	uint16 get_type() { return m_type; }
-	float get_position_x() 
+	virtual float get_position_x() 
 	{ 
 		if(!is_in_inventory())
-			return m_position.y;
+			return m_position.x / SCALING_FACTOR;
 		else
 			return 0;
 	}
-	float get_position_y() 
+	virtual float get_position_y() 
 	{ 
 		if(!is_in_inventory())
-			return m_position.y;
+			return m_position.y / SCALING_FACTOR;
 		else
 			return 0;
 	}
 
-	void set_position(float x, float y)
+	virtual void set_position(float x, float y)
 	{
 		destroy_body();
 		create_body(x, y);
 	}
 
 	bool is_in_inventory() { return m_body == NULL; }
+	bool is_dead() { return m_health == 0; }
+	virtual bool is_static() { return true; }
+
+	virtual void update(uint32 diff);
 
 	void use(player* plr);
+	virtual void _BuildUpdatePacket(world_packet& packet) {};
 protected:
 	boost::posix_time::ptime m_start_time;
 	uint16 m_extent;
@@ -63,12 +71,14 @@ protected:
 	typedef std::set<object*> InventoryType;
 	InventoryType m_inventory;
 
+	CollideHandler* m_collide_handler;
+
 	// physics
 	b2Body* m_body;
 	b2Shape* m_shape;
 
-	void create_body(float x, float y);
-	void destroy_body();
+	virtual void create_body(float x, float y);
+	virtual void destroy_body();
 
 	friend class object_mgr;
 private:

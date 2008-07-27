@@ -21,19 +21,18 @@ enum session_status
 
 struct OpcodeHandler
 {
-    //OpcodeHandler() : status(STATUS_AUTHED), handler(NULL) {};
-    //OpcodeHandler( SessionStatus _status, void (WorldSession::*_handler)(WorldPacket& recvPacket) ) : status(_status), handler(_handler) {};
+    OpcodeHandler() : status(STATUS_AUTHED), handler(NULL) {};
+    OpcodeHandler( session_status _status, void (world_session::*_handler)(world_packet& recvPacket) ) : status(_status), handler(_handler) {};
 
-    //SessionStatus status;
-    //void (WorldSession::*handler)(WorldPacket& recvPacket);
+    session_status status;
+    void (world_session::*handler)(world_packet& recvPacket);
 };
 struct CollideHandler
 {
-	CollideHandler() : mask(0xFFFFFFFF), handler(NULL) {};
-	//CollideHandler( Flatland::Callback _handler, uint32 _mask = 0xFFFFFFFF ) : mask(_mask), handler(_handler) {};
+	CollideHandler() : handler(NULL) {};
+	CollideHandler( void (object::*_handler)(object* other) ) : handler(_handler) {};
 
-	uint32 mask;
-	int32 handler;
+	void (object::*handler)(object* other);
 };
 struct UpdateHandler
 {
@@ -72,7 +71,7 @@ struct EnchantEntry
 	int16 frames;
 };
 
-typedef std::map< uint16 , OpcodeHandler > OpcodeTableMap;
+typedef std::map< uint16 , OpcodeHandler > opcode_table_map;
 typedef std::map< uint16 , CollideHandler > CollideTableMap;
 typedef std::map< uint16 , UpdateHandler > UpdateTableMap;
 typedef std::map< uint16 , UseHandler > UseTableMap;
@@ -110,10 +109,21 @@ public:
 	}
 
 	object* create_object_from_file(NoxBuffer* rdr, NoxObjectTOC* toc);
+	opcode_table_map& get_opcode_table() { return m_opcode_table; }
+
+	void update(uint32 diff);
 
 	// physics
-	b2Body* get_static_body();
-	b2Body* get_walls_body();
+	b2Body* get_static_body()
+	{
+		return m_static_body;
+	}
+	b2Body* get_walls_body()
+	{
+		return m_wall_body;
+	}
+
+	const CollideHandler* get_collide_handler(uint32 id);
 protected:
 	std::set<object*> m_objects;
 	object* m_extents[MAX_EXTENT+1];
@@ -122,7 +132,7 @@ protected:
 	b2Body* m_wall_body;
 	b2Body* m_static_body;
 
-	OpcodeTableMap opcodeTable;
+	opcode_table_map m_opcode_table;
 	CollideTableMap collideTable;
 	UpdateTableMap updateTable;
 	EnchantTableMap enchantTable;

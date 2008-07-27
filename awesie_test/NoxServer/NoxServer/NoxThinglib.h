@@ -520,6 +520,7 @@ struct GNHT // Object Class
    uint32 pickup;
    uint32 use;
    uint32 xfer;
+   float mass;
    char use_args[5][30];
    char update_args[5][30];
    char collide_args[5][30];

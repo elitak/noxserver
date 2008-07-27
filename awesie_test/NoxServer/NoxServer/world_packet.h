@@ -7,10 +7,10 @@
 class world_packet : public ByteBuffer
 {
 public:
-	world_packet(uint8 opcode, uint8 id, boost::asio::ip::udp::endpoint endpoint, size_t res = 200) : ByteBuffer(res), m_opcode(opcode), m_accountid(id), m_endpoint(endpoint) { }
+	world_packet(uint8 opcode = 0, uint8 id = 0, boost::asio::ip::udp::endpoint endpoint = boost::asio::ip::udp::endpoint(), size_t res = 200) : ByteBuffer(res), m_opcode(opcode), m_accountid(id), m_endpoint(endpoint), m_unk(0), m_xor(0) { }
 	world_packet(const world_packet& p) : ByteBuffer(p), m_opcode(p.m_opcode), m_endpoint(p.m_endpoint), m_accountid(p.m_accountid), m_xor(p.m_xor), m_unk(p.m_unk) { }
 	
-	void initialize(uint8 opcode, uint8 id, boost::asio::ip::udp::endpoint& endpoint, size_t res = 200)
+	void initialize(uint8 opcode = 0, uint8 id = 0, boost::asio::ip::udp::endpoint& endpoint = boost::asio::ip::udp::endpoint(), size_t res = 200)
 	{
 		clear();
 		_storage.reserve(res);

@@ -99,7 +99,6 @@ public:
 		return _storage.size();
 	}
 private:
-	std::vector<uint8> _storage;
 	//boost::iostreams::stream_buffer<boost::iostreams::back_insert_device<std::vector<uint8>>> _stream;
 };
 

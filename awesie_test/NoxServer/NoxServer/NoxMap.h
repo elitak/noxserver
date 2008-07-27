@@ -22,6 +22,7 @@
 #include "global.h"
 #include "NoxBuffer.h"
 #include <map>
+#include <set>
 
 class NoxMap;
 
@@ -85,19 +86,16 @@ union NoxWallPosition
 class NoxWall
 {
 public:
-	NoxWall(NoxWallPosition position, uint8 facing, uint8 variation, uint8 minimap = 100);
+	NoxWall(uint8 x, uint8 y, uint8 facing, uint8 variation, uint8 minimap = 100);
 	NoxWall(NoxBuffer* rdr);
 
 	uint16 GetPositionKey() { return _position.key; }
-	boost::numeric::ublas::vector<uint8> GetPosition() 
+
+	void SetPosition(uint8 x, uint8 y)
 	{
-		boost::numeric::ublas::vector<uint8> v(2);
-		v[0] = _position.coords.x;
-		v[1] = _position.coords.y;
-		return v;
+		destroy_body();
+		create_body(x, y);
 	}
-	void SetPositionX(uint8 x) { _position.coords.x = x;}
-	void SetPositionY(uint8 y) { _position.coords.y = y;}
 
 	NoxWallFacingType GetFacing() { return (NoxWallFacingType)_facing; }
 protected:
@@ -106,6 +104,12 @@ protected:
 	uint8 _facing;
 	uint8 _variation; //maybe only store ptr to thing.bin
 	uint8 _minimap;
+
+	void create_body(uint8 x, uint8 y);
+	void destroy_body();
+
+	// physics
+	std::set<b2Shape*> m_shapes;
 };
 
 typedef std::pair<uint16, NoxWall*> NoxWallPair;

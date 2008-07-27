@@ -22,6 +22,7 @@ public:
 		return _world;
 	}
 
+	void update();
 	void run();
 private:
 	boost::asio::io_service _io_service;

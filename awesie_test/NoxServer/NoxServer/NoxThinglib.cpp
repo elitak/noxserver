@@ -694,6 +694,7 @@ g_noxObjectCtr++;
 
 
 memset(Type,0x00,4);
+Object.mass = 1.0f;
 while(strcmp(Type,"GNHT") && count<filelen)
 	  {
        
@@ -795,6 +796,14 @@ while(strcmp(Type,"GNHT") && count<filelen)
 				  {
 					Object.extent.radius = atoi(string);
 				  }
+			  }
+		  }
+		  else if(!strcmp(string, "MASS"))
+		  {
+			  strtok(NULL, " +"); // =
+			  if( (string = strtok(NULL, " +")) != NULL)
+			  {
+				  sscanf(string, "%f", &Object.mass);
 			  }
 		  }
 

@@ -1,15 +1,20 @@
 #include "global.h"
+#include "object_mgr.h"
+#include "socket_mgr.h"
+#include "player.h"
+#include "world.h"
 #include "world_session.h"
 #include "world_packet.h"
 #include "world_socket.h"
-#include "object_mgr.h"
-#include "player.h"
 #include "NoxMap.h"
 
 world_session::world_session(uint8 id, boost::asio::ip::udp::endpoint endpoint) : 
 m_endpoint(endpoint), m_player_id(id), m_send_packet(0, id, endpoint), m_player_loading(false),
-m_status(STATUS_AUTHED), m_player_downloading(0), m_player_observing(true)
+m_status(STATUS_AUTHED), m_player_downloading(0), m_player_observing(true), m_xor(0),
+m_timestamp(1000), m_unk(0), m_unk2(0), m_mouse_x(0), m_mouse_y(0), m_player(NULL),
+m_player_logging_out(false)
 {
+	fill_opcode_handler_table();
 }
 
 world_session::~world_session()
@@ -19,24 +24,327 @@ world_session::~world_session()
 
 	world::instance->return_free_id(m_player_id);
 }
+void world_session::fill_opcode_handler_table()
+{
+	object_mgr::lease objmgr;
+
+	//if table is already filled
+	if (!objmgr->get_opcode_table().empty())
+		return;
+
+	opcode_table_map& table = objmgr->get_opcode_table();
+
+	//fill table if empty	
+	table[ 0x06 ]							 = OpcodeHandler( STATUS_AUTHED, &world_session::HandleUnknown06Opcode	);
+	table[ 0x0A ]							 = OpcodeHandler( STATUS_AUTHED, &world_session::HandleExitingOpcode	);
+	table[ 0x1F ]							 = OpcodeHandler( STATUS_AUTHED, &world_session::HandlePlayerJoinOpcode	);
+	table[ MSG_PARTIAL_TIMESTAMP ]			 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_FULL_TIMESTAMP ]			 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_NEED_TIMESTAMP ]			 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNeedTimestampOpcode	);
+	table[ MSG_SIMULATED_TIMESTAMP ]		 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_USE_MAP ]					 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_JOIN_DATA ]					 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_NEW_PLAYER ]				 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_PLAYER_QUIT ]				 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_SIMPLE_OBJ ]				 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_COMPLEX_OBJ ]				 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_DESTROY_OBJECT ]			 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_OBJECT_OUT_OF_SIGHT ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_OBJECT_IN_SHADOWS ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_OBJECT_FRIEND_ADD ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_OBJECT_FRIEND_REMOVE ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_RESET_FRIENDS ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_ENABLE_OBJECT ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_DISABLE_OBJECT ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_DRAW_FRAME ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_DESTROY_WALL ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_OPEN_WALL ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_CLOSE_WALL ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_CHANGE_OR_ADD_WALL_MAGIC ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_REMOVE_WALL_MAGIC ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_PLAYER_INPUT ]			 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandlePlayerInputOpcode	);
+	table[ MSG_PLAYER_SET_WAYPOINT ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandlePlayerSetWaypointOpcode	);
+	table[ MSG_REPORT_HEALTH ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_REPORT_HEALTH_DELTA ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_REPORT_PLAYER_HEALTH ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_REPORT_ITEM_HEALTH ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_REPORT_MANA ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_REPORT_POISON ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_REPORT_STAMINA ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_REPORT_STATS ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_REPORT_ARMOR_VALUE ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_REPORT_GOLD ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_REPORT_PICKUP ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_REPORT_MODIFIABLE_PICKUP ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_REPORT_DROP ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_REPORT_LESSON ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_REPORT_MUNDANE_ARMOR_EQUIP ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_REPORT_MUNDANE_WEAPON_EQUIP ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_REPORT_MODIFIABLE_WEAPON_EQUIP ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_REPORT_MODIFIABLE_ARMOR_EQUIP ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_REPORT_ARMOR_DEQUIP ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_REPORT_WEAPON_DEQUIP ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_REPORT_TREASURE_COUNT ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_REPORT_FLAG_BALL_WINNER ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_REPORT_FLAG_WINNER ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_REPORT_DEATHMATCH_WINNER ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_REPORT_DEATHMATCH_TEAM_WINNER ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_REPORT_ENCHANTMENT ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_REPORT_ITEM_ENCHANTMENT ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_REPORT_LIGHT_COLOR ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_REPORT_LIGHT_INTENSITY ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_REPORT_Z_PLUS ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_REPORT_Z_MINUS ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_REPORT_EQUIP ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_REPORT_DEQUIP ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_REPORT_ACQUIRE_SPELL ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_REPORT_TARGET ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_REPORT_CHARGES ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_REPORT_X_STATUS ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_REPORT_PLAYER_STATUS ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_REPORT_MODIFIER ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_REPORT_STAT_MODIFIER ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_REPORT_NPC ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_REPORT_CLIENT_STATUS ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_REPORT_ANIMATION_FRAME ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_REPORT_ACQUIRE_CREATURE ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_REPORT_LOSE_CREATURE ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_REPORT_EXPERIENCE ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_REPORT_SPELL_AWARD ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_REPORT_SPELL_START ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_REPORT_INVENTORY_LOADED ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_TRY_DROP ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleTryDropOpcode	);
+	table[ MSG_TRY_GET ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleTryGetOpcode	);
+	table[ MSG_TRY_USE ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleTryUseOpcode	);
+	table[ MSG_TRY_EQUIP ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleTryEquipOpcode	);
+	table[ MSG_TRY_DEQUIP ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleTryDequipOpcode	);
+	table[ MSG_TRY_TARGET ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_TRY_CREATURE_COMMAND ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleTryCreatureCommandOpcode	);
+	table[ MSG_TRY_SPELL ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleTrySpellOpcode	);
+	table[ MSG_TRY_ABILITY ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleTryAbilityOpcode	);
+	table[ MSG_TRY_COLLIDE ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleTryCollideOpcode	);
+	table[ MSG_FX_PARTICLEFX ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_FX_PLASMA ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_FX_SUMMON ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_FX_SUMMON_CANCEL ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_FX_SHIELD ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_FX_BLUE_SPARKS ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_FX_YELLOW_SPARKS ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_FX_CYAN_SPARKS ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_FX_VIOLET_SPARKS ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_FX_EXPLOSION ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_FX_LESSER_EXPLOSION ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_FX_COUNTERSPELL_EXPLOSION ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_FX_THIN_EXPLOSION ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_FX_TELEPORT ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_FX_SMOKE_BLAST ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_FX_DAMAGE_POOF ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_FX_LIGHTNING ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_FX_ENERGY_BOLT ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_FX_CHAIN_LIGHTNING_BOLT ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_FX_DRAIN_MANA ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_FX_CHARM ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_FX_GREATER_HEAL ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_FX_MAGIC ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_FX_SPARK_EXPLOSION ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_FX_DEATH_RAY ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_FX_SENTRY_RAY ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_FX_RICOCHET ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_FX_JIGGLE ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_FX_GREEN_BOLT ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_FX_GREEN_EXPLOSION ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_FX_WHITE_FLASH ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_FX_GENERATING_MAP ]			 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_FX_ASSEMBLING_MAP ]			 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_FX_POPULATING_MAP ]			 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_FX_DURATION_SPELL ]			 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_FX_DELTAZ_SPELL_START ]		 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_FX_TURN_UNDEAD ]			 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_FX_ARROW_TRAP ]				 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_FX_VAMPIRISM ]				 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_FX_MANA_BOMB_CANCEL ]		 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_UPDATE_STREAM ]				 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_NEW_ALIAS ]					 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewAliasOpcode	);
+	table[ MSG_AUDIO_EVENT ]				 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_AUDIO_PLAYER_EVENT ]		 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_TEXT_MESSAGE ]				 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleTextMessageOpcode	);
+	table[ MSG_INFORM ]					 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_IMPORTANT ]					 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleImportantOpcode	);
+	table[ MSG_IMPORTANT_ACK ]				 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleImportantAckOpcode	);
+	table[ MSG_MOUSE ]						 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleMouseOpcode	);
+	table[ MSG_INCOMING_CLIENT ]			 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleIncomingClientOpcode	);
+	table[ MSG_OUTGOING_CLIENT ]			 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleOutgoingClientOpcode	);
+	table[ MSG_GAME_SETTINGS ]				 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_GAME_SETTINGS_2 ]			 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_UPDATE_GUI_GAME_SETTINGS ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_DOOR_ANGLE ]				 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_OBELISK_CHARGE ]			 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_PENTAGRAM_ACTIVATE ]		 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_CLIENT_PREDICT_LINEAR ]		 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_REQUEST_MAP ]				 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleRequestMapOpcode	);
+	table[ MSG_CANCEL_MAP ]				 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleCancelMapOpcode	);
+	table[ MSG_MAP_SEND_START ]			 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_MAP_SEND_PACKET ]			 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_MAP_SEND_ABORT ]			 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_SERVER_CMD ]				 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleServerCmdOpcode	);
+	table[ MSG_SYSOP_PW ]					 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleSysopPwOpcode	);
+	table[ MSG_SYSOP_RESULT ]				 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_KEEP_ALIVE ]				 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleKeepAliveOpcode	);
+	table[ MSG_RECEIVED_MAP ]				 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleReceivedMapOpcode	);
+	table[ MSG_CLIENT_READY ]				 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleClientReadyOpcode	);
+	table[ MSG_REQUEST_SAVE_PLAYER ]		 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleRequestSavePlayerOpcode	);
+	table[ MSG_XFER_MSG ]					 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleXferMsgOpcode	);
+	table[ MSG_PLAYER_OBJ ]				 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_TEAM_MSG ]					 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleTeamMsgOpcode	);
+	table[ MSG_KICK_NOTIFICATION ]			 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_TIMEOUT_NOTIFICATION ]		 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_SERVER_QUIT ]				 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_SERVER_QUIT_ACK ]			 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleServerQuitAckOpcode	);
+	table[ MSG_TRADE ]						 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleTradeOpcode	);
+	table[ MSG_CHAT_KILL ]					 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_MESSAGES_KILL ]				 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_SEQ_IMPORTANT ]				 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_REPORT_ABILITY_AWARD ]		 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_REPORT_ABILITY_STATE ]		 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_REPORT_ACTIVE_ABILITIES ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_DIALOG ]					 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleDialogOpcode	);
+	table[ MSG_REPORT_GUIDE_AWARD ]		 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_INTERESTING_ID ]			 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_TIMER_STATUS ]				 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_REQUEST_TIMER_STATUS ]		 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleRequestTimerStatusOpcode	);
+	table[ MSG_JOURNAL_MSG ]				 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_CHAPTER_END ]				 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_REPORT_ALL_LATENCY ]		 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_REPORT_FLAG_STATUS ]		 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_REPORT_BALL_STATUS ]		 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_REPORT_OBJECT_POISON ]		 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_REPORT_MONITOR_CREATURE ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_REPORT_UNMONITOR_CREATURE ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_REPORT_TOTAL_HEALTH ]		 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_REPORT_TOTAL_MANA ]			 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_REPORT_SPELL_STAT ]			 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_REPORT_SECONDARY_WEAPON ]	 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleReportSecondaryWeaponOpcode	);
+	table[ MSG_REPORT_LAST_QUIVER ]		 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_INFO_BOOK_DATA ]			 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleInfoBookDataOpcode	);
+	table[ MSG_SOCIAL ]					 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleSocialOpcode	);
+	table[ MSG_FADE_BEGIN ]				 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_MUSIC_EVENT ]				 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_MUSIC_PUSH_EVENT ]			 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_MUSIC_POP_EVENT ]			 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_PLAYER_DIED ]				 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_PLAYER_RESPAWN ]			 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_FORGET_DRAWABLES ]			 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_RESET_ABILITIES ]			 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_RATE_CHANGE ]				 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_REPORT_CREATURE_CMD ]		 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_VOTE ]						 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleVoteOpcode	);
+	table[ MSG_STAT_MULTIPLIERS ]			 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleNewUnknownOpcode	);
+	table[ MSG_GAUNTLET ]					 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleGauntletOpcode	);
+	table[ MSG_INVENTORY_FAIL ]			 = OpcodeHandler( STATUS_LOGGEDIN, &world_session::HandleInventoryFailOpcode	);
+}
 void world_session::queue_packet(world_packet& packet)
 {
 	m_receive_queue.push(new world_packet(packet)); // push a copy of the packet onto the queue
 }
 
-void world_session::update(uint32 diff)
+bool world_session::update()
 {
-	while(!m_receive_queue.empty())
+	world_packet* packet = NULL;
+
+	// Always send new timestamp
+	if(m_status == STATUS_LOGGEDIN)
 	{
-		world_packet* packet = m_receive_queue.front();
+		m_timestamp++;
+		_SendPartialTimestampOpcode();
+	}
+
+	if(m_receive_queue.empty())
+	{
+		// this is strange, let's resend our packets as necessary
+		world_packet sendpacket;
+		switch(m_status)
+		{
+			case STATUS_AUTHED:
+				//sendpacket.initialize(0x14, 0, m_endpoint, 0);
+				//_send_packet(sendpacket);
+				break;
+			case STATUS_CONFIRMED:
+				break;
+		}
+	}
+
+	while(!m_receive_queue.empty() || packet)
+	{
+		if(!packet)
+		{
+			packet = m_receive_queue.front();
+			m_receive_queue.pop();
+		}
 
 		// do some shit
+		try {
+			opcode_table_map::const_iterator iter = object_mgr::instance->get_opcode_table().find( packet->get_opcode() );
+			if (packet->get_opcode() == 0 && packet->get_account_id() == 0xFF) //let's assume that this will always be FF 00 00
+			{
+				switch(m_status)
+				{
+					case STATUS_AUTHED:
+						// client's port is not set in stone until now
+						m_endpoint = packet->get_endpoint();
+						HandleJoinConfirmation();
+						break;
+					case STATUS_CONFIRMED:
 
-		m_receive_queue.pop();
-
-		// we allocate this in queue_packet
-		delete packet;
+						break;
+				}
+			}
+			else if (iter == object_mgr::instance->get_opcode_table().end())
+			{
+				/*sLog.outError( "SESSION: received unhandled opcode %s (0x%.4X)",
+					LookupName(packet->GetOpcode(), g_worldOpcodeNames),
+					packet->GetOpcode());*/
+			}
+			else
+			{
+				if (iter->second.status == STATUS_LOGGEDIN && m_player)
+				{
+					(this->*iter->second.handler)(*packet);
+				}
+				else if (iter->second.status == STATUS_AUTHED)
+				{
+					//m_playerRecentlyLogout = false;
+					(this->*iter->second.handler)(*packet);
+				}
+				//if(!m_playerRecentlyLogout)
+				//{
+					/*sLog.outError( "SESSION: received unexpected opcode %s (0x%.4X)",
+						LookupName(packet->GetOpcode(), g_worldOpcodeNames),
+						packet->GetOpcode());*/
+				//}
+			}
+			
+			if(packet->rpos() == packet->size())
+			{
+				delete packet;
+				packet = NULL;
+			}
+			else
+				packet->set_opcode(packet->read<uint8>());
+		} catch(ByteBuffer::error &) {
+			delete packet;
+			packet = NULL;
+		}
 	}
+
+	// send our massive packet now
+	if(m_send_packet.size() > 0)
+		_send_packet(m_send_packet);
+
+	// this will cause the socket to destroy this session
+	if(m_player_logging_out)
+		return false;
+
+	return true;
 }
 
 void world_session::set_alias(uint8 id, uint16 extent, uint16 type, uint32 other)
@@ -56,10 +364,13 @@ void world_session::logout()
 {
 	if(m_player)
 	{
+		object_mgr::instance->remove_object(m_player);
 		world::instance->remove_player(m_player);
 		delete m_player;
 		m_player = NULL;
 	}
+
+	m_player_logging_out = true;
 }
 void world_session::send_packet(world_packet& packet, bool ifReady, bool changeUnk)
 {
@@ -137,8 +448,8 @@ void world_session::_SendGameSettingsOpcode()
 void world_session::_SendNewPlayerOpcode()
 {
 	world_packet packet(0, 0, m_endpoint);
-	//m_player->_BuildNewPlayerPacket(packet);
-	//objectAccessor::Instance().send_packetToAll(packet);
+	m_player->_BuildNewPlayerPacket(packet);
+	socket_mgr::instance->get_world_socket().send_to_all(packet);
 
 	//send_packet(packet, false); // to all won't send to the current player due to playerLoading variable, so we to do this ourselves
 }
@@ -155,7 +466,7 @@ void world_session::_SendUseMapOpcode()
 	packet << (uint16)0x0;
 	packet << (uint16)0x0;
 	packet << (uint8)0;
-	packet << (uint32)world::instance->get_map()->GetChecksum(); //checksum
+	packet << (uint32)world::instance->get_map().GetChecksum(); //checksum
 	packet << (uint32)m_timestamp;
 	send_packet(packet, false);
 }
@@ -185,13 +496,13 @@ void world_session::_SendPlayerRespawnOpcode()
 	packet << (uint32)m_timestamp;
 	packet << (uint8)0xFF;
 	packet << (uint8)0x01;
-	//objacc.send_packetToAll(packet);
+	socket_mgr::instance->get_world_socket().send_to_all(packet);
 	packet.initialize(MSG_SIMPLE_OBJ, 0, m_endpoint);
 	packet << (uint16)m_player->get_extent();
 	packet << (uint16)m_player->get_type();
 	packet << (uint16)m_player->get_position_x();
 	packet << (uint16)m_player->get_position_y();
-	//objacc.send_packetToAll(packet);
+	socket_mgr::instance->get_world_socket().send_to_all(packet);
 }
 /*void world_session::_SendUpdateStreamOpcode()
 {
@@ -214,7 +525,7 @@ void world_session::_SendClientStatusOpcode()
 	world_packet packet(MSG_REPORT_CLIENT_STATUS, 0x0, m_endpoint, 2);
 	packet << (uint16)m_player->get_extent();
 	packet << (uint32)m_player_observing;
-	//objacc.send_packetToAll(packet);
+	socket_mgr::instance->get_world_socket().send_to_all(packet);
 	
 	if(m_player_observing) //should a different function send this?
 	{
@@ -231,8 +542,8 @@ void world_session::_SendMapSendStart()
 		world_packet packet(MSG_MAP_SEND_START, 0x80, m_endpoint, 87);
 		packet << (uint8)0xF8; //unknown
 		packet << (uint16)0x0013; //unknown
-		packet << (uint32)world::instance->get_map()->GetNxzSize();
-		packet.append(world::instance->get_map()->GetNxzName(), 0x50);
+		packet << (uint32)world::instance->get_map().GetNxzSize();
+		packet.append(world::instance->get_map().GetNxzName(), 0x50);
 
 		send_packet(packet, false);
 		m_player_downloading = 1;
@@ -246,7 +557,7 @@ void world_session::_SendMapSendPacket()
 	uint8 data[0x200];
 
 	//put data in data and update size
-	PACKET_SIZE = world::instance->get_map()->ReadNxzBytes( (m_player_downloading - 1) * PACKET_SIZE, data, PACKET_SIZE);
+	PACKET_SIZE = world::instance->get_map().ReadNxzBytes( (m_player_downloading - 1) * PACKET_SIZE, data, PACKET_SIZE);
 
 	world_packet packet(MSG_MAP_SEND_PACKET, 0x80, m_endpoint, PACKET_SIZE + 0x5);
 	packet << (uint8)0xF8; //unknown/not used
@@ -257,7 +568,7 @@ void world_session::_SendMapSendPacket()
 	send_packet(packet, false, false);
 
 	m_player_downloading++;
-	if((m_player_downloading - 1) * PACKET_SIZE > world::instance->get_map()->GetNxzSize())
+	if((m_player_downloading - 1) * PACKET_SIZE > world::instance->get_map().GetNxzSize())
 		m_player_downloading = 0;
 }
 //ONLY PLAYER CAN HEAR IT. Used in things such as flag capture, flag return
@@ -301,6 +612,12 @@ void world_session::HandleJoinConfirmation()
 	m_status = STATUS_CONFIRMED;
 }
 
+void world_session::HandleExitingOpcode(world_packet &recvPacket)
+{
+	cout << "Player exiting...\n";
+	logout();
+}
+
 void world_session::HandlePlayerJoinOpcode(world_packet &recvPacket)
 {
 	uint8 data[0x20];	
@@ -326,7 +643,8 @@ void world_session::HandlePlayerJoinOpcode(world_packet &recvPacket)
     }
 	m_status = STATUS_LOGGEDIN;
 
-	//objectAccessor::Instance().InsertPlayer(m_player);
+	world::instance->add_player(m_player);
+	object_mgr::instance->add_object(m_player);
 	m_unk++;
 
 	//m_player->SetName(name);
@@ -400,7 +718,7 @@ void world_session::HandlePlayerInputOpcode(world_packet &recvPacket)
 			recvPacket.read<uint8>();
 			break;
 		case 0x0F: //move: 0F 02 00 00 00 01
-			m_player->move_towards(m_mouse_x, m_mouse_y);
+			m_player->run();
 			recvPacket.read<uint32>();
 			recvPacket.read<uint8>();
 			break;
@@ -538,12 +856,12 @@ void world_session::HandleClientReadyOpcode(world_packet &recvPacket)
 		m_player_loading = false;
 		m_timestamp++;
 		_SendPartialTimestampOpcode();
-	//	m_player->SendUpdatePacket();
+		m_player->SendUpdatePacket();
 		_SendFadeBeginOpcode();
 		m_player->respawn();
 
 		world_packet packet(0, 0, m_endpoint);
-		world::instance->send_player_info(this, packet);
+		world::instance->send_player_info(*this, packet);
 	}
 }
 
@@ -586,7 +904,7 @@ void world_session::HandleTextMessageOpcode(world_packet &recvPacket)
 		// Send out to all players
 		world_packet packet(MSG_TEXT_MESSAGE, 0, m_endpoint, pend-pstart);
 		packet.append(recvPacket.contents() + pstart, pend-pstart);
-		//objectAccessor::Instance().send_packetToAll(packet);
+		socket_mgr::instance->get_world_socket().send_to_all(packet);
     }
     catch(ByteBuffer::error &)
     {

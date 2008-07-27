@@ -33,12 +33,21 @@ public:
 	player* get_player() { return m_player; }
 	uint8 get_player_id() { return m_player_id; }
 
-	void update(uint32 diff);
+	const boost::asio::ip::udp::endpoint& get_endpoint() { return m_endpoint; }
+
+	bool update();
 	bool is_player_loading() { return m_player_loading; }
+	void set_observing(bool obs)
+	{
+		m_player_observing = obs;
+		_SendClientStatusOpcode();
+	}
+	bool is_observing() { return m_player_observing; }
 	void logout();
 
 	// we should really find a different way to do this ifReady, changeUnk thing
 	// this doesn't actually send packet, only adds it to the combined packet with some mangling
+	// BUG: packet should probably be const, but the only thing we change is unk, so it is okay for now
 	void send_packet(world_packet& packet, bool ifReady = true, bool changeUnk = true);
 
 protected:
@@ -62,6 +71,7 @@ protected:
 	bool m_player_observing;
 	uint32 m_player_downloading; // this is an int, because we send the map in multiple packets
 	player* m_player;
+	bool m_player_logging_out;
 
 	float m_mouse_x;
 	float m_mouse_y;
@@ -73,8 +83,9 @@ protected:
 	uint8 get_alias(uint16 extent, uint16 type);
 
 	// Opcodes
+	void fill_opcode_handler_table();
 	void HandleJoinConfirmation();
-	void HandleNewUnknownOpcode(world_packet& recv_data);
+	void HandleNewUnknownOpcode(world_packet& recv_data) {};
 	void HandlePlayerJoinOpcode(world_packet& recv_data);
 	void HandlePlayerInputOpcode(world_packet& recv_data);
 	void HandleMouseOpcode(world_packet& recv_data);
@@ -116,6 +127,7 @@ protected:
 	void HandleVoteOpcode(world_packet& recv_data);
 	void HandleGauntletOpcode(world_packet& recv_data);
 	void HandleInventoryFailOpcode(world_packet& recv_data);
+	void HandleExitingOpcode(world_packet& recv_data);
 
 	void _SendFullTimestampOpcode();
 	void _SendJoinDataOpcode();
@@ -133,4 +145,6 @@ protected:
 	void _SendReportSpellStart( uint8 spell );
 	void _SendFxDurationSpell( uint16 type, uint16 x, uint16 y );
 	void _SendAudioPlayerEvent( uint16 sound, uint8 volume = 100, uint8 unk2 = 0 );
+
+	friend player;
 };

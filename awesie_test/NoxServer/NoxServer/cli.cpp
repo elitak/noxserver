@@ -1,5 +1,6 @@
 #include "global.h"
 #include "cli.h"
+#include "world.h"
 
 #include <iostream>
 #include <string>

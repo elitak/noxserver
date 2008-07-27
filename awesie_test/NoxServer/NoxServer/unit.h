@@ -196,6 +196,9 @@ enum UnitDamageType
      DAMAGE_AIRBORNE_ELECTRIC
 };
 
+
+class world_packet;
+
 class unit : public world_object
 {
 public:
@@ -205,14 +208,28 @@ public:
 	void set_angle(uint8 angle) 
 	{ 
 		const uint8 rot_data[] = { 0x40, 0x70, 0x60, 0x50, 0x30, 0x00, 0x10, 0x20 }; 
-		if(!IsDead())
+		if(!is_dead())
 			m_angle = rot_data[(uint8)floor((double)angle / 0x20 + 0.5) & 0x7]; 
 	}
 	uint8 get_angle () { return m_angle; }
+
+	void _BuildEquipPacket(world_packet& packet, bool armor, uint32 slot, uint32 modifier = 0);
+	void _BuildDequipPacket(world_packet& packet, bool armor, uint32 slot);
+	void _BuildEnchantsPacket(world_packet& packet);
 protected:
 	uint8 m_angle;
 	uint16 m_weight;
 	uint16 m_speed;
 	uint16 m_max_speed;
 	uint16 m_strength;
+
+	UnitActionType m_action;
+	uint32 m_auras;
+
+	virtual void create_shape(float x, float y)
+	{
+		world_object::create_body(x, y);
+
+		m_body->SetBullet(true);
+	}
 };
