@@ -183,6 +183,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\contact_filter.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\contact_listener.cpp"
 				>
 			</File>
@@ -246,6 +250,10 @@
 			>
 			<File
 				RelativePath=".\cli.h"
+				>
+			</File>
+			<File
+				RelativePath=".\contact_filter.h"
 				>
 			</File>
 			<File

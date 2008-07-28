@@ -95,8 +95,8 @@ object_mgr::object_mgr(boost::restricted)
 	// we set the position to zero, because we use one static body for all static objects
 	// these objects are then defined by shapes which use localPosition
 	bodyDef.position.Set(0.0f, 0.0f);
-	m_wall_body = world::instance->get_the_world().CreateBody(&bodyDef);
-	m_static_body = world::instance->get_the_world().CreateBody(&bodyDef);
+	m_wall_body = world::instance->get_the_world().GetGroundBody();
+	m_static_body = world::instance->get_the_world().GetGroundBody();
 }
 
 void object_mgr::update(uint32 diff)
@@ -141,7 +141,8 @@ object* object_mgr::create_object_from_file(NoxBuffer *rdr, NoxObjectTOC *toc)
 	//ASSERT(type != 0);
 
 	object* obj = NULL;
-	if(ThingBin::instance->Thing.Object.Objects.Get(type)->classes & CLASS_IMMOBILE)
+	// thing.bin type is zero-base, where as nox type is 1-based
+	if(ThingBin::instance->Thing.Object.Objects.Get(type-1)->classes & CLASS_IMMOBILE)
 		obj = new object(type);
 	else
 		obj = new world_object(type);

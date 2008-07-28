@@ -26,7 +26,7 @@ private:
 
 	struct udp_endpoint_less
 	{
-		int operator()(const udp::endpoint& a, const udp::endpoint& b)
+		bool operator()(const udp::endpoint& a, const udp::endpoint& b) const
 		{
 			return a.address() < b.address();
 		}

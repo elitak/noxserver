@@ -240,8 +240,8 @@ void NoxWall::create_body(uint8 x, uint8 y)
 	b2Body* body = object_mgr::instance->get_walls_body();
 	b2PolygonDef polygonDef;
 
-	const float width = 3 * SCALING_FACTOR;
-	const float height = 9 * SCALING_FACTOR;
+	const float width = 2 * SCALING_FACTOR;
+	const float height = 8 * SCALING_FACTOR;
 
 	float d = sqrt(height*height/2);
 
@@ -285,7 +285,7 @@ void NoxWall::create_body(uint8 x, uint8 y)
 			m_shapes.insert(body->CreateShape(&polygonDef));
 		break;
 
-		case WALL_EAST_T:
+		case WALL_SOUTH_T:
 			//north
 			NORTH_WALL
 			m_shapes.insert(body->CreateShape(&polygonDef));
@@ -299,7 +299,7 @@ void NoxWall::create_body(uint8 x, uint8 y)
 			m_shapes.insert(body->CreateShape(&polygonDef));
 		break;
 
-		case WALL_NORTH_T:
+		case WALL_WEST_T:
 			EAST_WALL
 			m_shapes.insert(body->CreateShape(&polygonDef));
 		case WALL_SE_CORNER:
@@ -312,7 +312,8 @@ void NoxWall::create_body(uint8 x, uint8 y)
 			m_shapes.insert(body->CreateShape(&polygonDef));
 		break;
 
-		case WALL_WEST_T:
+		case WALL_NORTH_T:
+			//south
 			SOUTH_WALL
 			m_shapes.insert(body->CreateShape(&polygonDef));
 		case WALL_NE_CORNER:
@@ -324,7 +325,7 @@ void NoxWall::create_body(uint8 x, uint8 y)
 			m_shapes.insert(body->CreateShape(&polygonDef));
 		break;
 
-		case WALL_SOUTH_T:
+		case WALL_EAST_T:
 			//west
 			WEST_WALL
 			m_shapes.insert(body->CreateShape(&polygonDef));

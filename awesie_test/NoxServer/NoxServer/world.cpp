@@ -5,6 +5,7 @@
 #include "player.h"
 #include "socket_mgr.h"
 #include "contact_listener.h"
+#include "contact_filter.h"
 
 #include "NoxMap.h"
 #include "NoxThinglib.h"
@@ -35,6 +36,7 @@ world::world(boost::restricted) : m_is_quitting(false)
 	m_time_step = 1.0f / STEPS_PER_SECOND;
 
 	m_the_world->SetContactListener(&m_contact_listener);
+	m_the_world->SetContactFilter(new contact_filter());
 }
 
 void world::run()
@@ -63,15 +65,18 @@ void world::run()
 		
 		// step physics
 		m_the_world->Step( m_time_step, ITERATIONS );
-
-		// step objects
-		object_mgr::instance->update(LOOP_TIME);
-
+		
 		// step players
+		// we do this right after physics, because if we delete an object from the world
+		// it doesn't get updated until the step phase
+		// we could also just have a list of deleted objects and test
 		BOOST_FOREACH( player_map::value_type p, m_players )
 		{
 			p.second->update_player();
 		}
+
+		// step objects
+		object_mgr::instance->update(LOOP_TIME);
 
 		// step network and sessions (we might want to split this step into two)
 		socket_mgr::instance->update();

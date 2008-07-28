@@ -15,6 +15,7 @@ class object : boost::noncopyable
 {
 public:
 	object(uint16 type);
+	virtual ~object();
 
 	GNHT* get_object_info() 
 	{ 
@@ -46,9 +47,11 @@ public:
 
 	bool is_in_inventory() { return m_body == NULL; }
 	bool is_dead() { return m_health == 0; }
+	bool is_dirty() { return m_updated; }
 	virtual bool is_static() { return true; }
 
 	virtual void update(uint32 diff);
+	bool should_collide(object* other);
 
 	void use(player* plr);
 	virtual void _BuildUpdatePacket(world_packet& packet) {};
@@ -68,10 +71,11 @@ protected:
     float m_max_mana;
     float m_mana;
 
+	// tells players when this object has moved, etc.
+	bool m_updated;
+
 	typedef std::set<object*> InventoryType;
 	InventoryType m_inventory;
-
-	CollideHandler* m_collide_handler;
 
 	// physics
 	b2Body* m_body;
@@ -84,4 +88,12 @@ protected:
 private:
 	// there is no easy way to remember position for static objects
 	b2Vec2 m_position;
+
+	// function pointes would be faster, but i think we would lose OOP
+	boost::function<void (object* me, object* other)> m_collide_handler;
+
+	// collision handlers
+	void handle_default_collide(object* other);
+	void handle_pickup_collide(object* other);
+	void handle_sign_collide(object* other);
 };

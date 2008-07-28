@@ -12,15 +12,71 @@ player::player(world_session& session) : _session(session), unit(0x2c9), m_movin
 	m_player_info.flag = 0x20;
 }
 
-void player::update_view()
+void player::update_view(bool all)
 {
 	b2AABB aabb;
-	aabb.lowerBound.Set(m_body->GetPosition().x - 20, m_body->GetPosition().y - 20);
-	aabb.upperBound.Set(m_body->GetPosition().x + 20, m_body->GetPosition().y + 20);
 
-	const uint32 max_shapes = 255;
-	b2Shape *shapes_buffer[255];
-	uint32 actual_shapes = world::instance->get_the_world().Query(aabb, shapes_buffer, max_shapes);
+	if(!m_body)
+		return;
+
+	aabb.lowerBound.Set(m_body->GetPosition().x - 30, m_body->GetPosition().y - 25);
+	aabb.upperBound.Set(m_body->GetPosition().x + 30, m_body->GetPosition().y + 25);
+	
+	update_view(aabb);
+
+	// all this work for nothing...
+
+	/*if(all)
+	{
+		aabb.lowerBound.Set(m_body->GetPosition().x - 20, m_body->GetPosition().y - 20);
+		aabb.upperBound.Set(m_body->GetPosition().x + 20, m_body->GetPosition().y + 20);
+		
+		update_view(aabb);
+	}
+	else
+	{
+		if(m_position_delta.y < 0)
+		{
+			aabb.lowerBound.Set(m_body->GetPosition().x - 20, m_body->GetPosition().y - 20);
+			aabb.upperBound.Set(m_body->GetPosition().x + 20, m_body->GetPosition().y - (20 + m_position_delta.y));
+
+			update_view(aabb);
+		}
+		if(m_position_delta.y > 0)
+		{
+			aabb.lowerBound.Set(m_body->GetPosition().x - 20, m_body->GetPosition().y + (20 - m_position_delta.y));
+			aabb.upperBound.Set(m_body->GetPosition().x + 20, m_body->GetPosition().y + 20);
+
+			update_view(aabb);
+		}
+		if(m_position_delta.x < 0)
+		{
+			aabb.lowerBound.Set(m_body->GetPosition().x - 20, m_body->GetPosition().y - 20);
+			aabb.upperBound.Set(m_body->GetPosition().x - (20 + m_position_delta.x), m_body->GetPosition().y + 20);
+
+			update_view(aabb);
+		}
+		if(m_position_delta.x > 0)
+		{
+			aabb.lowerBound.Set(m_body->GetPosition().x + (20 - m_position_delta.x), m_body->GetPosition().y - 20);
+			aabb.upperBound.Set(m_body->GetPosition().x + 20, m_body->GetPosition().y + 20);
+
+			update_view(aabb);
+		}
+	}*/
+}
+void player::update_view(b2AABB& aabb)
+{
+	// basically, the whole can't see objects behind walls thing
+	// makes it so that we have to scan over the entire screen region
+	// and do a ray cast against all walls (exclude short/windows) and all
+	// objects with class obstacle
+
+	const uint32 max_shapes = 512;
+	b2Shape *shapes_buffer[512];
+	int actual_shapes = world::instance->get_the_world().Query(aabb, shapes_buffer, max_shapes);
+
+	object_map new_view;
 
 	for(int i = 0; i < actual_shapes; i++)
 	{
@@ -28,29 +84,93 @@ void player::update_view()
 		
 		// probably a wall
 		if(o == NULL)
-			return;
+			continue;
 
 		if(!o->is_static())
 		{
-			m_update_queue.insert(o);
+			bool new_object;
+			object_map::iterator iter = m_current_view.find(o->get_extent());
+
+			if(iter == m_current_view.end())
+			{
+				new_object = true;
+			}
+			else
+			{
+				// remove from current view
+				m_current_view.erase(iter);
+				// if object was updated, then put in queue
+				if(o->is_dirty())
+					new_object = true;
+				else
+					new_object = false;
+			}
+			
+			b2Segment segment;
+			segment.p1.Set(this->get_position_x(), this->get_position_y());
+			segment.p2.Set(o->get_position_x(), o->get_position_y());
+
+			bool behind_wall = false;
+
+			// now do a ray cast
+			// caution: this is close to n-squared run-time
+			for(int j = 0; j < actual_shapes; j++)
+			{
+				object* obstacle = (object*)shapes_buffer[j]->GetUserData();
+
+				// probably a wall
+				if(obstacle == NULL || obstacle->get_object_info()->classes & CLASS_OBSTACLE)
+				{
+					float lambda;
+					b2Vec2 normal;
+					if(shapes_buffer[j]->TestSegment(shapes_buffer[j]->GetBody()->GetXForm(), &lambda, &normal, segment, 1.0f))
+					{
+						behind_wall = true;
+						break;
+					}
+				}
+			}
+
+			if(!behind_wall)
+			{
+				// add to new view
+				new_view[o->get_extent()] = o;
+
+				if(new_object)
+					m_update_queue.insert(o);
+			}
 		}
 	}
 
-	cout << actual_shapes << "\n";
-	cout << m_update_queue.size() << "\n";
+	// everything that is left in m_current_view, is no longer in view
+	// and should be taken out
+	BOOST_FOREACH(object_map::value_type p, m_current_view)
+	{
+	}
+
+	// new_view is now the current view
+	new_view.swap(m_current_view);
 }
 
 void player::update_player()
 {
 	// we are still moving, then we need to update seeable items
-	if(m_moving_timer > 0)
+	/*if(m_position_delta.LengthSquared() > 0)
 	{
 		update_view();
-	}
+	}*/
+
+	// no, updating the view only when moving is too easy on us
+	// instead we need to do this every fucking time to waste some
+	// cycles. you know, to warm the house a bit.
+	update_view();
 	SendUpdatePacket();
 }
 void player::update(uint32 diff)
 {
+	// call base update
+	unit::update(diff);
+
 	// update all timers
 	if(m_moving_timer > diff)
 		m_moving_timer -= diff;

@@ -13,6 +13,20 @@ world_object::world_object(uint16 type) : object(type)
 	m_body_def->linearDamping = 1.0f;
 }
 
+void world_object::update(uint32 diff)
+{
+	object::update(diff);
+	if(m_body)
+	{
+		m_position_delta.Set(get_position_x() - m_position_old.x, get_position_y() - m_position_old.y);
+		m_position_old.Set(get_position_x(), get_position_y());
+
+		// if we moved, mark as dirty
+		if(m_position_delta.LengthSquared() > 0)
+			m_updated = true;
+	}
+}
+
 void world_object::create_body(float x, float y)
 {
 	x = x * SCALING_FACTOR;
@@ -20,7 +34,7 @@ void world_object::create_body(float x, float y)
 
 	// non-static objects only
 	m_body_def->position.Set(x, y);
-	m_body_def->angle = 0.25 * b2_pi;
+	m_body_def->angle = 0.25f * b2_pi;
 	m_body = world::instance->get_the_world().CreateBody(m_body_def);
 
 	b2PolygonDef polygonDef;
@@ -46,13 +60,21 @@ void world_object::create_body(float x, float y)
 		break;
 	}
 
-	shapeDef->filter.categoryBits = 0x0002;
 	if(get_object_info()->flags & (FLAG_ALLOW_OVERLAP | FLAG_NO_COLLIDE | FLAG_BELOW))
 	{
-		shapeDef->filter.maskBits = 0x0000;
+		shapeDef->isSensor = true;
 	}
-	else
-		shapeDef->filter.maskBits = 0xFFFF;
+
+	// somehow we need to do this better
+	switch(get_object_info()->collide)
+	{
+	case COLLIDE_NONE:
+	case COLLIDE_PICKUP:
+		shapeDef->isSensor = true;
+		break;
+	default:
+		break;
+	}
 
 	shapeDef->userData = this;
 	shapeDef->restitution = 0;

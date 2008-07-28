@@ -27,8 +27,10 @@
 // containers
 #include <boost/foreach.hpp>
 
+#include <boost/function.hpp>
+
 // physics
 #include "Box2D.h"
-#define SCALING_FACTOR 0.1
+#define SCALING_FACTOR 0.1f
 
 #include "opcodes.h"

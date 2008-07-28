@@ -3,6 +3,7 @@
 #include "global.h"
 #include "unit.h"
 
+#include <map>
 #include <set>
 
 class world;
@@ -49,7 +50,7 @@ public:
 	virtual void set_position(float x, float y)
 	{
 		unit::set_position(x, y);
-		update_view();
+		update_view(true);
 	}
 	
 	bool drop(object* obj, uint32 max_dist, float x, float y);
@@ -77,10 +78,13 @@ protected:
 	world_session& _session;
 	player_info m_player_info;
 	update_queue m_update_queue;
+	typedef std::map<uint16, object*> object_map;
+	object_map m_current_view;
 
 	uint32 m_moving_timer;
 
-	void update_view();
+	void update_view(bool all = false);
+	void update_view(b2AABB& aabb);
 
 	virtual void SendUpdatePacket();
 	virtual void _BuildUpdatePacket(world_packet& packet);

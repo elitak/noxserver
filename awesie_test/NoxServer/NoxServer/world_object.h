@@ -24,19 +24,23 @@ public:
 	}
 	virtual void set_position(float x, float y)
 	{
-		b2Vec2 pos(x, y);
+		b2Vec2 pos(x*SCALING_FACTOR, y*SCALING_FACTOR);
 		if(m_body)
 			m_body->SetXForm(pos, 0);
 		else
 			create_body(x, y);
+
+		m_position_old.Set(x, y);
 	}
 
 	
 	virtual bool is_static() { return false; }
 	virtual void _BuildUpdatePacket(world_packet& packet);
+	virtual void update(uint32 diff);
 	
 protected:
-
+	b2Vec2 m_position_delta;
+	b2Vec2 m_position_old;
 	b2BodyDef* m_body_def;
 
 	virtual void create_body(float x, float y);
