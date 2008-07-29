@@ -1,9 +1,12 @@
 #include "object.h"
 #include "object_mgr.h"
+#include "world.h"
+
+#include <algorithm>
 
 object::object(uint16 type) : m_type(type), m_shape(NULL), m_body(NULL), m_extent(0), m_flags(0), 
 m_props1(0), m_props2(0), m_worth(0), m_max_health(0), m_health(0), m_max_mana(0), m_mana(0),
-m_delta_health(0), m_combined_health(0), m_updated(true)
+m_delta_health(0), m_combined_health(0), m_updated(true), m_parent(NULL)
 {
 	// for now, let's do a switch
 	// later we may go back to the table syntax
@@ -99,6 +102,74 @@ void object::destroy_body()
 	m_body = NULL;
 }
 
+bool object::can_see_point(float x, float y, float* collision_x, float* collision_y)
+{
+	if(!m_body)
+		return true;
+
+	b2Segment segment;
+	segment.p1 = m_body->GetPosition();
+	segment.p2.Set(x*SCALING_FACTOR, y*SCALING_FACTOR);
+
+	b2AABB aabb;
+	aabb.lowerBound.Set(std::min(segment.p1.x, segment.p2.x) - 1, std::min(segment.p1.y, segment.p2.y) - 1);
+	aabb.upperBound.Set(std::max(segment.p1.x, segment.p2.x) + 1, std::max(segment.p1.y, segment.p2.y) + 1);
+
+	const int max_shapes = 512;
+	b2Shape* shapes[512];
+	int actual = world::instance->get_the_world().Query(aabb, shapes, max_shapes);
+
+	// lambda [0, 1]->[p1, p2]
+	float lambda = 1.0f;
+	b2Vec2 normal(0, 0);
+	bool collision = false;
+
+	for(int i = 0; i < actual; i++)
+	{
+		object* o = (object*)shapes[i]->GetUserData();
+		if(o == NULL || o->get_object_info()->subclass & CLASS_OBSTACLE)
+		{
+			// even if there is a collision, we have to continue testing other objects
+			// in case one of the collides earlier (lambda)
+			collision |= shapes[i]->TestSegment(shapes[i]->GetBody()->GetXForm(), &lambda, &normal, segment, lambda);
+		}
+	}
+
+	*collision_x = ((1-lambda)*segment.p1.x + lambda*segment.p2.x) / SCALING_FACTOR;
+	*collision_y = ((1-lambda)*segment.p1.y + lambda*segment.p2.y) / SCALING_FACTOR;
+	return collision;
+}
+bool object::pickup(object *obj)
+{
+	if(obj->is_in_inventory())
+		return false;
+
+	m_inventory.insert(obj);
+	obj->handle_pickup(this);
+
+	return true;
+}
+bool object::drop(object *obj, float x, float y)
+{
+	InventoryType::iterator iter = m_inventory.find(obj);
+	if(iter == m_inventory.end())
+		return false;
+
+	m_inventory.erase(iter);
+	obj->set_position(x, y);
+	obj->handle_drop(this);
+
+	return true;
+}
+void object::handle_pickup(object *parent)
+{
+	m_parent = parent;
+	this->destroy_body();
+}
+void object::handle_drop(object *parent)
+{
+	m_parent = NULL;
+}
 // Should this object collide with the other object
 // If other == null, then we hit a wall or something similar
 bool object::should_collide(object* other)

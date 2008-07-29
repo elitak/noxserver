@@ -265,8 +265,8 @@ bool world_session::update()
 		switch(m_status)
 		{
 			case STATUS_AUTHED:
-				//sendpacket.initialize(0x14, 0, m_endpoint, 0);
-				//_send_packet(sendpacket);
+				sendpacket.initialize(0x14, 0, m_endpoint, 0);
+				_send_packet(sendpacket);
 				break;
 			case STATUS_CONFIRMED:
 				break;
@@ -366,6 +366,7 @@ void world_session::logout()
 	{
 		object_mgr::instance->remove_object(m_player);
 		world::instance->remove_player(m_player);
+		m_player->destroy_body();
 		delete m_player;
 		m_player = NULL;
 	}

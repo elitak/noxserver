@@ -212,6 +212,9 @@ public:
 			m_angle = rot_data[(uint8)floor((double)angle / 0x20 + 0.5) & 0x7]; 
 	}
 	uint8 get_angle () { return m_angle; }
+	virtual bool equip(object* obj);
+	virtual bool dequip(object* obj);
+	virtual bool drop(object* obj, float x, float y);
 
 	void _BuildEquipPacket(world_packet& packet, bool armor, uint32 slot, uint32 modifier = 0);
 	void _BuildDequipPacket(world_packet& packet, bool armor, uint32 slot);
@@ -225,6 +228,7 @@ protected:
 
 	UnitActionType m_action;
 	uint32 m_auras;
+	object* m_equipment[SLOT_SIZE];
 
 	virtual void create_shape(float x, float y)
 	{

@@ -45,16 +45,21 @@ public:
 		create_body(x, y);
 	}
 
-	bool is_in_inventory() { return m_body == NULL; }
+	bool is_in_inventory() { return m_parent != NULL; }
 	bool is_dead() { return m_health == 0; }
 	bool is_dirty() { return m_updated; }
 	virtual bool is_static() { return true; }
+	object* get_parent() { return m_parent; }
+
+	// tests if this object can see pt using a ray cast
+	// if it can't, then it sets collision to the point of collision
+	bool can_see_point(float x, float y, float* collision_x, float* collision_y);
 
 	virtual void update(uint32 diff);
 	bool should_collide(object* other);
 
 	void use(player* plr);
-	virtual void _BuildUpdatePacket(world_packet& packet) {};
+	virtual void _BuildUpdatePacket(world_packet& packet) {}
 protected:
 	boost::posix_time::ptime m_start_time;
 	uint16 m_extent;
@@ -71,6 +76,9 @@ protected:
     float m_max_mana;
     float m_mana;
 
+	// the object whose inventory we are in
+	object* m_parent;
+
 	// tells players when this object has moved, etc.
 	bool m_updated;
 
@@ -80,6 +88,11 @@ protected:
 	// physics
 	b2Body* m_body;
 	b2Shape* m_shape;
+
+	virtual bool pickup(object* obj);
+	virtual bool drop(object* obj, float x, float y);
+	void handle_pickup(object* parent);
+	void handle_drop(object* parent);
 
 	virtual void create_body(float x, float y);
 	virtual void destroy_body();

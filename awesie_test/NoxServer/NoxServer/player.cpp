@@ -146,6 +146,10 @@ void player::update_view(b2AABB& aabb)
 	// and should be taken out
 	BOOST_FOREACH(object_map::value_type p, m_current_view)
 	{
+		world_packet packet(MSG_OBJECT_OUT_OF_SIGHT);
+		// send object extent
+		packet << (uint16)p.first;
+		get_session().send_packet(packet);
 	}
 
 	// new_view is now the current view
@@ -155,10 +159,12 @@ void player::update_view(b2AABB& aabb)
 void player::update_player()
 {
 	// we are still moving, then we need to update seeable items
-	/*if(m_position_delta.LengthSquared() > 0)
+	/*
+	if(m_position_delta.LengthSquared() > 0)
 	{
 		update_view();
-	}*/
+	}
+	*/
 
 	// no, updating the view only when moving is too easy on us
 	// instead we need to do this every fucking time to waste some
@@ -192,22 +198,97 @@ void player::attack()
 
 bool player::dequip(object *obj)
 {
+	if(!unit::dequip(obj))
+	{
+		return false;
+	}
+
+	world_packet packet(MSG_REPORT_DEQUIP);
+	packet << (uint16)obj->get_extent();
+	get_session().send_packet(packet);
+
 	return true;
 }
 
 bool player::equip(object *obj)
 {
+	if(!unit::equip(obj))
+	{
+		return false;
+	}
+
+	world_packet packet(MSG_REPORT_EQUIP);
+	packet << (uint16)obj->get_extent();
+	get_session().send_packet(packet);
+
 	return true;
 }
 
 bool player::drop(object *obj, uint32 max_dist, float x, float y)
 {
-	return true;
+	InventoryType::iterator iter = m_inventory.find(obj);
+	if(iter == m_inventory.end())
+		return false;
+
+	//dequip
+	//caution: we may want to reconsider this based on how dequip is coded
+	//if(!dequip(obj))
+	//	return false;
+	dequip(obj);
+	
+	//put x,y within max_dist
+	float delta_x = x - this->get_position_x();
+	float delta_y = y - this->get_position_y();
+
+	float magnitude = sqrt(delta_x*delta_x + delta_y * delta_y);
+	if(max_dist > 0 && magnitude > max_dist)
+	{
+		x = ((delta_x / magnitude) * max_dist) + this->get_position_x();
+		y = ((delta_y / magnitude) * max_dist) + this->get_position_y();
+	}
+
+	// we don't care what this returns since it will set x,y to
+	// either collision point or to the original point
+	this->can_see_point(x, y, &x, &y);
+
+	if(unit::drop(obj, x, y))
+	{
+		world_packet packet(MSG_REPORT_DROP);
+		packet << (uint16)obj->get_extent();
+		packet << (uint16)0;
+		get_session().send_packet(packet);
+
+		return true;
+	}
+	else
+		return false;
 }
 
 bool player::pickup(object *obj, uint32 max_dist)
 {
-	return true;
+	if(obj->is_in_inventory())
+		return false;
+
+	float delta_x = obj->get_position_x() - this->get_position_x();
+	float delta_y = obj->get_position_y() - this->get_position_y();
+
+	float lensq = delta_x*delta_x + delta_y*delta_y;
+
+	if(max_dist > 0 && lensq > (max_dist*max_dist))
+		return false;
+
+	if(unit::pickup(obj))
+	{
+		world_packet packet(MSG_REPORT_MODIFIABLE_PICKUP);
+		packet << (uint16)obj->get_extent();
+		packet << (uint16)obj->get_type();
+		packet << (uint32)0xFFFFFFFF;
+
+		get_session().send_packet(packet);
+		return true;
+	}
+	else
+		return false;
 }
 
 void player::jump()
@@ -338,6 +419,7 @@ void player::respawn()
 {
 	// Set respawn states for the player
      uint16 type;
+	 object* item;
 	/*switch(plrInfo.pclass)
 	{
 	case PLAYER_CLASS_WARRIOR:
@@ -399,6 +481,8 @@ void player::respawn()
 
 	set_position(3000, 2900);
 
+	m_health = m_max_health = 150;
+
 	get_session()._SendPlayerRespawnOpcode();
 	world_packet packet;
 	_BuildTotalHealthPacket(packet);
@@ -412,6 +496,23 @@ void player::respawn()
 	get_session().send_packet(packet);
 	_BuildDequipPacket(packet, false, 0xFFFFFFFF);
 	get_session().send_packet(packet);
+
+	type = ThingBin::instance->Thing.Object.GetIndex("StreetPants");
+	if(type)
+	{
+		item = new world_object(type);
+		object_mgr::instance->add_object(item);
+
+		pickup(item, 0);
+	}
+	type = ThingBin::instance->Thing.Object.GetIndex("StreetSneakers");
+	if(type)
+	{
+		item = new world_object(type);
+		object_mgr::instance->add_object(item);
+
+		pickup(item, 0);
+	}
 }
 void player::_BuildHealthPacket(world_packet &packet)
 {

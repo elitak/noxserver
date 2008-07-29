@@ -53,8 +53,8 @@ public:
 		update_view(true);
 	}
 	
-	bool drop(object* obj, uint32 max_dist, float x, float y);
-	bool pickup(object* obj, uint32 max_dist);
+	virtual bool drop(object* obj, uint32 max_dist, float x, float y);
+	virtual bool pickup(object* obj, uint32 max_dist);
 	bool equip(object* obj);
 	bool dequip(object* obj);
 	void equip_secondary(object* obj);

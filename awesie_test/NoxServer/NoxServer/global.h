@@ -10,6 +10,7 @@
 
 // date_time will include windows.h, so we need to have this
 #define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
 
 // timer functions
 #include "boost/date_time/posix_time/posix_time_types.hpp"
