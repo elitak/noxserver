@@ -26,8 +26,8 @@ world::world(boost::restricted) : m_is_quitting(false)
 	worldSize.upperBound.Set(5880 * SCALING_FACTOR, 5880 * SCALING_FACTOR);
 
 	// the only non-free id is 0, which is our id
-	m_free_ids.set();
-	m_free_ids[0] = false;
+	for(uint8 i = 1; i < 32; i++)
+		m_free_ids.push(i);
 
 	// we don't have gravity in n0x
 	b2Vec2 gravity(0.0f, 0.0f);
@@ -102,16 +102,13 @@ bool world::is_quiting()
 
 uint8 world::get_free_id()
 {
-	if(m_free_ids.none())
+	if(m_free_ids.empty())
 		return 0xFF;
 
-	uint8 i;
-	for(i = 1; i < 32; i++)
-		if(m_free_ids[i])
-			break;
+	uint8 id = m_free_ids.front();
+	m_free_ids.pop();
 
-	m_free_ids[i] = false;
-	return i;
+	return id;
 }
 
 void world::return_free_id(uint8 id)
@@ -119,7 +116,7 @@ void world::return_free_id(uint8 id)
 	if(id > 32)
 		return;
 
-	m_free_ids.set(id);
+	m_free_ids.push(id);
 }
 
 void world::add_player(player *plr)

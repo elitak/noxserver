@@ -23,47 +23,6 @@ void player::update_view(bool all)
 	aabb.upperBound.Set(m_body->GetPosition().x + 30, m_body->GetPosition().y + 25);
 	
 	update_view(aabb);
-
-	// all this work for nothing...
-
-	/*if(all)
-	{
-		aabb.lowerBound.Set(m_body->GetPosition().x - 20, m_body->GetPosition().y - 20);
-		aabb.upperBound.Set(m_body->GetPosition().x + 20, m_body->GetPosition().y + 20);
-		
-		update_view(aabb);
-	}
-	else
-	{
-		if(m_position_delta.y < 0)
-		{
-			aabb.lowerBound.Set(m_body->GetPosition().x - 20, m_body->GetPosition().y - 20);
-			aabb.upperBound.Set(m_body->GetPosition().x + 20, m_body->GetPosition().y - (20 + m_position_delta.y));
-
-			update_view(aabb);
-		}
-		if(m_position_delta.y > 0)
-		{
-			aabb.lowerBound.Set(m_body->GetPosition().x - 20, m_body->GetPosition().y + (20 - m_position_delta.y));
-			aabb.upperBound.Set(m_body->GetPosition().x + 20, m_body->GetPosition().y + 20);
-
-			update_view(aabb);
-		}
-		if(m_position_delta.x < 0)
-		{
-			aabb.lowerBound.Set(m_body->GetPosition().x - 20, m_body->GetPosition().y - 20);
-			aabb.upperBound.Set(m_body->GetPosition().x - (20 + m_position_delta.x), m_body->GetPosition().y + 20);
-
-			update_view(aabb);
-		}
-		if(m_position_delta.x > 0)
-		{
-			aabb.lowerBound.Set(m_body->GetPosition().x + (20 - m_position_delta.x), m_body->GetPosition().y - 20);
-			aabb.upperBound.Set(m_body->GetPosition().x + 20, m_body->GetPosition().y + 20);
-
-			update_view(aabb);
-		}
-	}*/
 }
 void player::update_view(b2AABB& aabb)
 {
@@ -158,18 +117,13 @@ void player::update_view(b2AABB& aabb)
 
 void player::update_player()
 {
-	// we are still moving, then we need to update seeable items
-	/*
-	if(m_position_delta.LengthSquared() > 0)
-	{
-		update_view();
-	}
-	*/
+	// we don't really need to call update_view every frame, do we?
+	static bool _update_view = false;
+	_update_view = !_update_view;
 
-	// no, updating the view only when moving is too easy on us
-	// instead we need to do this every fucking time to waste some
-	// cycles. you know, to warm the house a bit.
-	update_view();
+	if(_update_view)
+		update_view();
+
 	SendUpdatePacket();
 }
 void player::update(uint32 diff)
@@ -277,14 +231,17 @@ bool player::pickup(object *obj, uint32 max_dist)
 	if(max_dist > 0 && lensq > (max_dist*max_dist))
 		return false;
 
+	// we have to do this before the pickup handlers get called and equip items
+	// what is a better place to call the handler?
+	world_packet packet(MSG_REPORT_MODIFIABLE_PICKUP);
+	packet << (uint16)obj->get_extent();
+	packet << (uint16)obj->get_type();
+	packet << (uint32)0xFFFFFFFF;
+
+	get_session().send_packet(packet);
+
 	if(unit::pickup(obj))
 	{
-		world_packet packet(MSG_REPORT_MODIFIABLE_PICKUP);
-		packet << (uint16)obj->get_extent();
-		packet << (uint16)obj->get_type();
-		packet << (uint32)0xFFFFFFFF;
-
-		get_session().send_packet(packet);
 		return true;
 	}
 	else

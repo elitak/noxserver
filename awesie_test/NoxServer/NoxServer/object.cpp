@@ -20,6 +20,21 @@ m_delta_health(0), m_combined_health(0), m_updated(true), m_parent(NULL)
 		m_collide_handler = boost::bind(&object::handle_default_collide, this, _1);
 		break;
 	}
+
+	switch(get_object_info()->pickup)
+	{
+	case PICKUP_FOOD:
+		m_pickup_handler = boost::bind(&object::handle_food_pickup, this, _1);
+		break;
+	case PICKUP_ARMOR:
+		m_pickup_handler = boost::bind(&object::handle_armor_pickup, this, _1);
+		break;
+	case PICKUP_WEAPON:
+		m_pickup_handler = boost::bind(&object::handle_weapon_pickup, this, _1);
+		break;
+	default:
+		break;
+	}
 }
 
 object::~object()
@@ -165,6 +180,9 @@ void object::handle_pickup(object *parent)
 {
 	m_parent = parent;
 	this->destroy_body();
+
+	if(m_pickup_handler != NULL)
+		m_pickup_handler(parent, this);
 }
 void object::handle_drop(object *parent)
 {
@@ -180,4 +198,32 @@ bool object::should_collide(object* other)
 void object::handle_default_collide(object* other)
 {
 
+}
+
+// maybe these should be called from the other object?
+void object::handle_armor_pickup(object *parent)
+{
+	if(parent->is_unit())
+	{
+		unit* p = (unit*)parent;
+		p->equip(this);
+	}
+}
+
+void object::handle_food_pickup(object *parent)
+{
+	if(parent->get_health() < parent->get_max_health())
+	{
+		if(parent->is_unit())
+			((unit*)parent)->use(this);
+	}
+}
+
+void object::handle_weapon_pickup(object *parent)
+{
+	if(parent->is_unit())
+	{
+		unit* p = (unit*)parent;
+		p->equip(this);
+	}
 }

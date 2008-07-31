@@ -44,11 +44,15 @@ public:
 		destroy_body();
 		create_body(x, y);
 	}
+	float get_health() { return m_health; }
+	float get_max_health() { return m_max_health; }
 
 	bool is_in_inventory() { return m_parent != NULL; }
 	bool is_dead() { return m_health == 0; }
 	bool is_dirty() { return m_updated; }
 	virtual bool is_static() { return true; }
+	virtual bool is_unit() { return false; }
+
 	object* get_parent() { return m_parent; }
 
 	// tests if this object can see pt using a ray cast
@@ -104,9 +108,15 @@ private:
 
 	// function pointes would be faster, but i think we would lose OOP
 	boost::function<void (object* me, object* other)> m_collide_handler;
+	boost::function<void (object* me, object* parent)> m_pickup_handler;
 
 	// collision handlers
 	void handle_default_collide(object* other);
 	void handle_pickup_collide(object* other);
 	void handle_sign_collide(object* other);
+
+	// pickup handlers
+	void handle_food_pickup(object* parent);
+	void handle_armor_pickup(object* parent);
+	void handle_weapon_pickup(object* parent);
 };

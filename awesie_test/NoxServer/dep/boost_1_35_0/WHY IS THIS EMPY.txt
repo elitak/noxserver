@@ -1,1 +1,6 @@
 This folder is empty because the Boost C++ libraries are huge and are not going to change, and thus, should not be hosted in SVN. You can find them instead at http://www.boost.org. Currently, this project uses version 1.35.x. Make sure you either compile or download the precompiled libraries, as you will need atleast the static DateTime and RegEx libs. The project is compiled to look for these in stage/libs, which should be located in this folder.
+
+Make sure you also download the Boost.Utility/Singleton files. 
+
+http://www.nabble.com/-review--Fast-track-review-of-Boost.Utility-Singleton-begins-today-td14806506.html
+http://www.boost-consulting.com/vault/index.php?action=downloadfile&filename=singleton.zip&directory=X-Files

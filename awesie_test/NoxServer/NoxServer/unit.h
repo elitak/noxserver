@@ -215,6 +215,11 @@ public:
 	virtual bool equip(object* obj);
 	virtual bool dequip(object* obj);
 	virtual bool drop(object* obj, float x, float y);
+	virtual bool use(object* obj);
+
+	// we should probably do this a different way sometime
+	// this is improper use of virtual functions
+	virtual bool is_unit() { return true; }
 
 	void _BuildEquipPacket(world_packet& packet, bool armor, uint32 slot, uint32 modifier = 0);
 	void _BuildDequipPacket(world_packet& packet, bool armor, uint32 slot);

@@ -3,7 +3,7 @@
 #include "global.h"
 #include "contact_listener.h"
 #include "NoxMap.h"
-#include <bitset>
+#include <queue>
 #include <map>
 
 class player;
@@ -36,7 +36,7 @@ public:
 	b2World& get_the_world() { return *m_the_world; }
 private:
 	bool m_is_quitting;
-	std::bitset<32> m_free_ids;
+	std::queue<uint8> m_free_ids;
 
 	// map players ids to player objects
 	std::map<uint8, player*> m_players;

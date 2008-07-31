@@ -109,6 +109,10 @@ bool unit::equip(object* obj)
 	return true;
 }
 
+bool unit::use(object* obj)
+{
+	return true;
+}
 void unit::_BuildEquipPacket(world_packet& packet, bool armor, uint32 slot, uint32 modifier)
 {
 	uint8 opcode = 0;
